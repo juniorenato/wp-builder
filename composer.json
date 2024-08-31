@@ -1,0 +1,20 @@
+{
+    "name": "juniorenato/wp-builder",
+    "type": "library",
+    "keywords": [
+        "wordpress"
+    ],
+    "license": "GPL-3.0+",
+    "autoload": {
+        "psr-4": {
+            "WPB\\": "lib/"
+        }
+    },
+    "authors": [
+        {
+            "name": "Renato Rodrigues Jr",
+            "email": "juniorenato@msn.com"
+        }
+    ],
+    "require": {}
+}
