@@ -13,72 +13,17 @@ namespace WPB;
  */
 class Builder
 {
-    public string $td = 'default';
+    protected const WPB_PATH = __DIR__ .'/../';
+    protected const WPB_TAXONOMY_FORM_FIELDS = __DIR__ .'/../views/taxonomy/custom-fields/';
 
-    public $prefix = '';
-
-    public string $lang = 'en_US';
-
-    public bool $male = true;
-
-    /**
-     * -------------------------------------------------------------------------
-     * Configure the website's "text domain"
-     * -------------------------------------------------------------------------
-     *
-     * @param string $text_domain
-     * @return mixed
-     */
-    public function setTextDomain(string $text_domain): Builder
+    public function __construct()
     {
-        $this->td = $text_domain;
-
-        return $this;
+        add_action('init', [$this, 'initialization']);
     }
 
-    /**
-     * -------------------------------------------------------------------------
-     * Add prefix
-     * -------------------------------------------------------------------------
-     *
-     * @param string|bool $prefix
-     * @return mixed
-     */
-    public function setPrefix($prefix): Builder
+    public function initialization()
     {
-        $this->prefix = $prefix;
-
-        return $this;
+        load_plugin_textdomain('wpb', false, self::WPB_PATH .'/lang/');
+        load_theme_textdomain('wpb', false, self::WPB_PATH .'/lang/');
     }
-
-    /**
-     * -------------------------------------------------------------------------
-     * Set language
-     * -------------------------------------------------------------------------
-     *
-     * @param string $lang
-     * @param bool $male
-     * @return void
-     */
-    public function setLang(string $lang, bool $male = true): void
-    {
-        if(strpos($lang, '-')) {
-            $lang = str_replace('-', '_', $lang);
-        }
-
-        if( 1 == 0
-            || !preg_match("#[a-z]+#", $lang)
-            || !preg_match("#[A-Z]+#", $lang)
-        ) {
-            $lang = explode('_', $lang);
-            $lang[0] = strtolower($lang[0]);
-            if(isset($lang[1])) $lang[1] = strtoupper($lang[1]);
-
-            $lang = implode('_', $lang);
-        }
-
-        $this->lang = $lang;
-        $this->male = $male;
-    }
-
 }

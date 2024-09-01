@@ -1,0 +1,220 @@
+msgid ""
+msgstr ""
+"Project-Id-Version: WP-Builder\n"
+"POT-Creation-Date: 204-08-30 18:00-0300\n"
+"PO-Revision-Date: 204-08-30 18:00-0300\n"
+"Last-Translator: \n"
+"Language-Team: en\n"
+"Language: en_US\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"X-Generator: Poedit 3.0\n"
+"X-Poedit-Basepath: ..\n"
+"Plural-Forms: nplurals=2; plural=(n > 1);\n"
+"X-Poedit-KeywordsList: __;_e;_x;esc_html__;esc_html_e;_n;_nx;_n_noop;"
+"_nx_noop;_ex\n"
+"X-Poedit-SearchPath-0: .\n"
+"X-Poedit-SearchPathExcluded-0: cache\n"
+"X-Poedit-SearchPathExcluded-1: vendor\n"
+"X-Poedit-SearchPathExcluded-2: node_modules\n"
+
+#: lib/PostType/CustomPostType.php:73
+#: lib/Taxonomy/Taxonomy.php:71
+msgid "new"
+msgstr "new"
+
+#: lib/PostType/CustomPostType.php:73
+#: lib/Taxonomy/Taxonomy.php:71
+msgid "female_new"
+msgstr "new"
+
+#: lib/PostType/CustomPostType.php:74
+#: lib/Taxonomy/Taxonomy.php:72
+msgid "found"
+msgstr "found"
+
+#: lib/PostType/CustomPostType.php:74
+#: lib/Taxonomy/Taxonomy.php:72
+msgid "female_found"
+msgstr "found"
+
+#: lib/PostType/CustomPostType.php:75
+#: lib/Taxonomy/Taxonomy.php:73
+msgid "parent"
+msgstr "parent"
+
+#: lib/PostType/CustomPostType.php:75
+#: lib/Taxonomy/Taxonomy.php:73
+msgid "female_parent"
+msgstr "parent"
+
+#: lib/PostType/CustomPostType.php:76
+#: lib/Taxonomy/Taxonomy.php:74
+msgid "all"
+msgstr "all"
+
+#: lib/PostType/CustomPostType.php:76
+#: lib/Taxonomy/Taxonomy.php:74
+msgid "female_all"
+msgstr "all"
+
+#: lib/Taxonomy/Taxonomy.php:75
+msgid "used"
+msgstr "used"
+
+#: lib/Taxonomy/Taxonomy.php:75
+msgid "female_used"
+msgstr "used"
+
+#: lib/PostType/CustomPostType.php:77
+msgid "this"
+msgstr "this"
+
+#: lib/PostType/CustomPostType.php:77
+msgid "female_this"
+msgstr "this"
+
+#: lib/PostType/CustomPostType.php:78
+msgid "published"
+msgstr "published"
+
+#: lib/PostType/CustomPostType.php:78
+msgid "female_published"
+msgstr "published"
+
+#: lib/PostType/CustomPostType.php:79
+msgid "scheduled"
+msgstr "scheduled"
+
+#: lib/PostType/CustomPostType.php:79
+msgid "female_scheduled"
+msgstr "scheduled"
+
+#: lib/PostType/CustomPostType.php:80
+msgid "updated"
+msgstr "updated"
+
+#: lib/PostType/CustomPostType.php:80
+msgid "female_updated"
+msgstr "updated"
+
+#: lib/PostType/CustomPostType.php:85
+msgid "add %s"
+msgstr "add %s"
+
+#: lib/PostType/CustomPostType.php:86
+#: lib/Taxonomy/Taxonomy.php:92
+msgid "add %s %s"
+msgstr "add %s %s"
+
+#: lib/PostType/CustomPostType.php:87
+#: lib/Taxonomy/Taxonomy.php:89
+msgid "edit %s"
+msgstr "edit %s"
+
+#: lib/PostType/CustomPostType.php:89
+#: lib/PostType/CustomPostType.php:90
+#: lib/Taxonomy/Taxonomy.php:90
+msgid "view %s"
+msgstr "view %s"
+
+#: lib/PostType/CustomPostType.php:91
+#: lib/Taxonomy/Taxonomy.php:80
+msgid "search %s"
+msgstr "search %s"
+
+#: lib/PostType/CustomPostType.php:92
+#: lib/Taxonomy/Taxonomy.php:97
+msgid "%s not %s"
+msgstr "%s not %s"
+
+#: lib/PostType/CustomPostType.php:93
+msgid "%s not %s in trash"
+msgstr "%s not %s in trash"
+
+#: lib/PostType/CustomPostType.php:96
+msgid "archives of %s"
+msgstr "archives of %s"
+
+#: lib/PostType/CustomPostType.php:97
+msgid "attributes"
+msgstr "attributes"
+
+#: lib/PostType/CustomPostType.php:98
+msgid "insert into %s"
+msgstr "insert into %s"
+
+#: lib/PostType/CustomPostType.php:99
+msgid "updated to %s %s"
+msgstr "updated to %s %s"
+
+#: lib/PostType/CustomPostType.php:105
+msgid "%s %s privately"
+msgstr "%s %s privately"
+
+#: lib/PostType/CustomPostType.php:106
+msgid "%s reverted to draft"
+msgstr "%s reverted to draft"
+
+#: lib/PostType/CustomPostType.php:107
+msgid "%s trashed"
+msgstr "%s trashed"
+
+#: lib/PostType/CustomPostType.php:110
+#: lib/Taxonomy/Taxonomy.php:104
+msgid "link to %s"
+msgstr "link to %s"
+
+#: lib/PostType/CustomPostType.php:111
+#: lib/Taxonomy/Taxonomy.php:105
+msgid "a link to %s"
+msgstr "a link to %s"
+
+#: lib/Taxonomy/Taxonomy.php:81
+msgid "popular %s"
+msgstr "popular %s"
+
+#: lib/Taxonomy/Taxonomy.php:87
+msgid "update %s"
+msgstr "update %s"
+
+#: lib/Taxonomy/Taxonomy.php:89
+msgid "%s name"
+msgstr "%s name"
+
+#: lib/Taxonomy/Taxonomy.php:90
+msgid "separate %s with commas"
+msgstr "separate %s with commas"
+
+#: lib/Taxonomy/Taxonomy.php:91
+msgid "add or remove %s"
+msgstr "add or remove %s"
+
+#: lib/Taxonomy/Taxonomy.php:92
+msgid "%s not %s"
+msgstr "%s not %s"
+
+#: lib/Taxonomy/Taxonomy.php:93
+msgid "without %s"
+msgstr "without %s"
+
+#: lib/Taxonomy/Taxonomy.php:94
+msgid "filter by %s"
+msgstr "filter by %s"
+
+#: lib/Taxonomy/Taxonomy.php:95
+msgid "%s list navigation"
+msgstr "%s list navigation"
+
+#: lib/Taxonomy/Taxonomy.php:96
+msgid "%s list"
+msgstr "%s list"
+
+#: lib/Taxonomy/Taxonomy.php:97
+msgid "%s most %s"
+msgstr "%s most %s"
+
+#: lib/Taxonomy/Taxonomy.php:98
+msgid "back to %s"
+msgstr "back to %s"

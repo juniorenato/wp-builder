@@ -1,12 +1,12 @@
 <?php
 
-namespace WPB\Taxonomy;
+namespace WPB\Taxonomies;
 
 use WPB\Builder;
 
 /**
  * -----------------------------------------------------------------------------
- * Taxonomy creator
+ * Taxonomy builder
  * -----------------------------------------------------------------------------
  *
  * @see https://developer.wordpress.org/reference/functions/register_taxonomy/
@@ -14,16 +14,15 @@ use WPB\Builder;
  * @author Renato Rodrigues Jr <juniorenato@msn.com>
  * @package hoststyle/hswp-theme-builder
  */
-class Taxonomy extends Builder
+class Taxonomy
 {
-    use CustomFields;
-    use I18n;
-
-    private string $name = '';
+    private string $taxonomy = '';
 
     protected string $singular = '';
 
     protected string $plural = '';
+
+    private bool $male = true;
 
     private array $labels = [];
 
@@ -35,27 +34,17 @@ class Taxonomy extends Builder
 
     private array $args = [];
 
-    public function __construct(?Builder $builder = null)
-    {
-        if($builder) {
-            $this->td = $builder->td;
-            $this->prefix = $builder->prefix;
-            $this->lang = $builder->lang;
-            $this->male = $builder->male;
-        }
-    }
-
     /**
      * -------------------------------------------------------------------------
-     * Adicionar a chave
+     * Add taxonomy name
      * -------------------------------------------------------------------------
      *
-     * @param string $key
+     * @param string $taxonomy
      * @return Taxonomy
      */
-    public function setName(string $name): Taxonomy
+    public function taxonomy(string $taxonomy): Taxonomy
     {
-        $this->name = $name;
+        $this->taxonomy = $taxonomy;
 
         return $this;
     }
@@ -75,14 +64,72 @@ class Taxonomy extends Builder
         $this->singular = $singular;
         $this->plural = $plural;
         if($male) $this->male = $male;
+
+        $new    = ($this->male) ? __('new', 'wpb') : __('female_new', 'wpb');
+        $found  = ($this->male) ? __('found', 'wpb') : __('female_found', 'wpb');
+        $parent = ($this->male) ? __('parent', 'wpb') : __('female_parent', 'wpb');
+        $all    = ($this->male) ? __('all', 'wpb') : __('female_all', 'wpb');
+        $used   = ($this->male) ? __('used', 'wpb') : __('female_used', 'wpb');
+
+        $this->labels = [
+            'name'                       => ucfirst(__($this->plural, 'wpb')),
+            'singular_name'              => ucfirst(__($this->singular, 'wpb')),
+            'search_items'               => ucfirst(sprintf(__('search %s','wpb'), $this->plural)),
+            'popular_items'              => ucfirst(sprintf(__('popular %s','wpb'), $this->plural)),
+            'all_items'                  => ucfirst($all .' '. $this->plural),
+            'parent_item'                => ucfirst($this->singular .' '. $parent),
+            'parent_item_colon'          => ucfirst($this->singular .' '. $parent .':'),
+            'edit_item'                  => ucfirst(sprintf(__('edit %s','wpb'), $this->singular)),
+            'view_item'                  => ucfirst(sprintf(__('view %s','wpb'), $this->singular)),
+            'update_item'                => ucfirst(sprintf(__('update %s','wpb'), $this->singular)),
+            'add_new_item'               => ucfirst(sprintf(__('add %s %s','wpb'), $new, $this->singular)),
+            'new_item_name'              => ucfirst(sprintf(__('%s name','wpb'), $new)),
+            'separate_items_with_commas' => ucfirst(sprintf(__('separate %s with commas','wpb'), $this->plural)),
+            'add_or_remove_items'        => ucfirst(sprintf(__('add or remove %s','wpb'), $this->plural)),
+            'not_found'                  => ucfirst(sprintf(__('%s not %s','wpb'), $this->singular, $found)),
+            'no_terms'                   => ucfirst(sprintf(__('without %s','wpb'), $this->plural)),
+            'filter_by_item'             => ucfirst(sprintf(__('filter by %s','wpb'), $this->singular)),
+            'items_list_navigation'      => ucfirst(sprintf(__('%s list navigation','wpb'), $this->plural)),
+            'items_list'                 => ucfirst(sprintf(__('%s list','wpb'), $this->plural)),
+            'most_used'                  => ucfirst(sprintf(__('%s most %s', 'wpb'), $this->singular, $used)),
+            'back_to_items'              => ucfirst(sprintf(__('back to %s', 'wpb'), $this->plural)),
+            'item_link'                  => ucfirst(sprintf(__('item link %s.'), $this->plural)),
+            'item_link_description'      => ucfirst(sprintf(__('a link to %s.'), $this->plural)),
+        ];
     }
 
     /**
      * -------------------------------------------------------------------------
-     * Adicionar os nomes para exibição
+     * Set arguments
      * -------------------------------------------------------------------------
      *
-     * Opções:
+     * @return void
+     */
+    private function setArgs(): void
+    {
+        $args = [
+            'label'                 => ucfirst($this->plural),
+            'labels'                => $this->labels,
+            'public'                => true,
+            'publicly_queryable'    => true,
+            'show_ui'               => true,
+            'show_in_menu'          => true,
+            'show_in_nav_menus'     => true,
+            'show_in_rest'          => true,
+            'show_admin_column'     => false,
+            'description'           => get_option('_tax_'. $this->taxonomy .'_description'),
+            'hierarchical'          => true,
+            'rewrite'               => $this->rewrite,
+            'capabilities'          => $this->capabilities,
+            '_builtin'              => false,
+        ];
+
+        $this->args = array_merge($args, $this->args);
+    }
+    /**
+     * -------------------------------------------------------------------------
+     * Edit labels
+     * -------------------------------------------------------------------------
      *
      * - menu_name
      * - name
@@ -121,7 +168,7 @@ class Taxonomy extends Builder
      *
      * @see https://developer.wordpress.org/reference/functions/get_taxonomy_labels/
      */
-    public function addLabels($labels, string $val, bool $ucfirst = true): Taxonomy
+    public function labels($labels, string $val, bool $ucfirst = true): Taxonomy
     {
         if(!is_array($labels) && $val) {
             $this->labels[$labels] = ($ucfirst) ? ucfirst($val) : $val;
@@ -141,10 +188,8 @@ class Taxonomy extends Builder
     }
     /**
      * -------------------------------------------------------------------------
-     * Configurar URLs
+     * Edit rewrite
      * -------------------------------------------------------------------------
-     *
-     * Opções padão:
      *
      * - slug
      * - with_front
@@ -155,7 +200,7 @@ class Taxonomy extends Builder
      * @param string|null $val
      * @return Taxonomy
      */
-    public function addRewrite($rewrite, ?string $val = null): Taxonomy
+    public function rewrite($rewrite, ?string $val = null): Taxonomy
     {
         if(is_bool($rewrite)) {
             $this->rewrite = [
@@ -181,10 +226,8 @@ class Taxonomy extends Builder
 
     /**
      * -------------------------------------------------------------------------
-     * Configurar capacidades
+     * Edit capacidades
      * -------------------------------------------------------------------------
-     *
-     * Opções padão:
      *
      * - manage_terms
      * - edit_terms
@@ -195,7 +238,7 @@ class Taxonomy extends Builder
      * @param string|null $val
      * @return Taxonomy
      */
-    public function addCapabilities($capabilities, ?string $val = null): Taxonomy
+    public function capabilities($capabilities, ?string $val = null): Taxonomy
     {
         if(is_array($capabilities)) {
             foreach($capabilities as $key => $val) $this->capabilities[$key] = $val;
@@ -219,7 +262,7 @@ class Taxonomy extends Builder
      * @param string|null $val
      * @return Taxonomy
      */
-    public function addPostTypes($post_types): Taxonomy
+    public function postTypes($post_types): Taxonomy
     {
         if(is_array($post_types)) {
             $this->postTypes = array_merge($this->postTypes, $post_types);
@@ -234,14 +277,37 @@ class Taxonomy extends Builder
 
     /**
      * -------------------------------------------------------------------------
-     * Configure arguments
+     * Edit arguments
      * -------------------------------------------------------------------------
+     *
+     * label
+     * labels
+     * public
+     * publicly_queryable
+     * show_ui
+     * show_in_menu
+     * show_in_nav_menus
+     * show_in_rest
+     * rest_base
+     * rest_controller_class
+     * show_tagcloud
+     * show_in_quick_edit
+     * meta_box_cb
+     * show_admin_column
+     * description
+     * hierarchical
+     * update_count_callback
+     * query_var
+     * rewrite
+     * capabilities
+     * sort
+     * _builtin
      *
      * @param string|list<string> $args
      * @param string|bool|null $val
      * @return Taxonomy
      */
-    public function addArgs($args, $val = null): Taxonomy
+    public function args($args, $val = null): Taxonomy
     {
         if(!is_array($args) && $val !== null) {
             $this->args[$args] = $val;
@@ -263,52 +329,63 @@ class Taxonomy extends Builder
      * Create taxonomy
      * -------------------------------------------------------------------------
      *
+     * @param string|boolean $taxonomy
+     * @param string $singular
+     * @param string $plural
+     * @param boolean $male
      * @param boolean $reset
-     * @return void
+     * @return Taxonomy
      */
-    public function register(?string $name = null, ?string $singular = null, ?string $plural = null, bool $reset = true): bool
+    public function register(?string $taxonomy = null, ?string $singular = null, ?string $plural = null, bool $male = true, bool $reset = true): Taxonomy
     {
-        // Set default prefix
-        if($this->prefix === true) {
-            $this->setPrefix('tax_');
+        if(1 == 1
+            && $taxonomy
+            && is_string($taxonomy)
+            && $singular
+            && $plural
+        ) {
+            $this->taxonomy($taxonomy);
+            $this->setLabels($singular, $plural, $male);
         }
 
-        if($name && $singular && $plural) {
-            $this->setName($name);
-            $this->setLabels($singular, $plural);
+        elseif (is_bool($taxonomy)) {
+            $reset = $taxonomy;
         }
 
         // Return error if any configuration is missing
         if(1 == 0
-            || !$this->name
+            || !$this->taxonomy
             || !$this->singular
             || !$this->plural
             || !$this->postTypes
         ) { return false; }
 
-        // Set selected language
-        if($this->lang) {
-            if(function_exists($this->{$this->lang}())) {
-                $this->{$this->lang}();
-            }
-        }
-
-        // Insert arguments
+        // Set args
         $this->setArgs();
 
-        // Insert custom fields
-        if($this->customFields) $this->setCustomFields();
-
-        register_taxonomy(
-            $this->prefix . $this->name,
-            $this->postTypes,
-            $this->args
-        );
+        // WordPress - Register Taxonomy
+        add_action('init', [$this, 'registerTaxonomy']);
 
         // Reset the class
         if($reset) $this->reset();
 
-        return true;
+        return $this;
+    }
+
+    /**
+     * -------------------------------------------------------------------------
+     * Register taxonomy callback
+     * -------------------------------------------------------------------------
+     *
+     * @return void
+     */
+    public function registerTaxonomy()
+    {
+        register_taxonomy(
+            $this->taxonomy,
+            $this->postTypes,
+            $this->args
+        );
     }
 
     /**
@@ -320,7 +397,7 @@ class Taxonomy extends Builder
      */
     public function reset(): void
     {
-        $this->name = '';
+        $this->taxonomy = '';
         $this->plural = '';
         $this->singular = '';
         $this->labels = [];
@@ -328,42 +405,5 @@ class Taxonomy extends Builder
         $this->capabilities = [];
         $this->postTypes = [];
         $this->args = [];
-    }
-
-    /**
-     * -------------------------------------------------------------------------
-     * Start Settings
-     * -------------------------------------------------------------------------
-     *
-     * @return void
-     */
-    private function setArgs(): void
-    {
-        $args = [
-            'label'                 => ucfirst($this->plural),
-            'labels'                => $this->labels,
-            'public'                => true,
-            'publicly_queryable'    => true,
-            'show_ui'               => true,
-            'show_in_menu'          => true,
-            'show_in_nav_menus'     => true,
-            'show_in_rest'          => true,
-            //'rest_base'             => true,
-            //'rest_controller_class' => true,
-            //'show_tagcloud'         => false,
-            //'show_in_quick_edit'    => false,
-            //'meta_box_cb'           => false,
-            'show_admin_column'     => false,
-            'description'           => get_option('_tax_'. $this->name .'_description'),
-            'hierarchical'          => true,
-            //'update_count_callback' => true,
-            //'query_var'             => true,
-            'rewrite'               => $this->rewrite,
-            'capabilities'          => $this->capabilities,
-            //'sort'                => false,
-            '_builtin'              => false,
-        ];
-
-        $this->args = array_merge($args, $this->args);
     }
 }
