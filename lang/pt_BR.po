@@ -2,16 +2,16 @@ msgid ""
 msgstr ""
 "Project-Id-Version: WP-Builder\n"
 "POT-Creation-Date: 204-08-30 18:00-0300\n"
-"PO-Revision-Date: 204-08-30 18:00-0300\n"
+"PO-Revision-Date: 2024-09-01 02:15-0300\n"
 "Last-Translator: \n"
 "Language-Team: pt\n"
 "Language: pt_BR\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"X-Generator: Poedit 3.0\n"
-"X-Poedit-Basepath: ..\n"
 "Plural-Forms: nplurals=2; plural=(n > 1);\n"
+"X-Generator: Poedit 3.5\n"
+"X-Poedit-Basepath: ..\n"
 "X-Poedit-KeywordsList: __;_e;_x;esc_html__;esc_html_e;_n;_nx;_n_noop;"
 "_nx_noop;_ex\n"
 "X-Poedit-SearchPath-0: .\n"
@@ -19,51 +19,43 @@ msgstr ""
 "X-Poedit-SearchPathExcluded-1: vendor\n"
 "X-Poedit-SearchPathExcluded-2: node_modules\n"
 
-#: lib/PostType/CustomPostType.php:73
-#: lib/Taxonomy/Taxonomy.php:71
+#: lib/PostType/CustomPostType.php:73 lib/Taxonomies/Taxonomy.php:68
 msgid "new"
 msgstr "novo"
 
-#: lib/PostType/CustomPostType.php:73
-#: lib/Taxonomy/Taxonomy.php:71
+#: lib/PostType/CustomPostType.php:73 lib/Taxonomies/Taxonomy.php:68
 msgid "female_new"
 msgstr "nova"
 
-#: lib/PostType/CustomPostType.php:74
-#: lib/Taxonomy/Taxonomy.php:72
+#: lib/PostType/CustomPostType.php:74 lib/Taxonomies/Taxonomy.php:69
 msgid "found"
 msgstr "encontrado"
 
-#: lib/PostType/CustomPostType.php:74
-#: lib/Taxonomy/Taxonomy.php:72
+#: lib/PostType/CustomPostType.php:74 lib/Taxonomies/Taxonomy.php:69
 msgid "female_found"
 msgstr "encontrada"
 
-#: lib/PostType/CustomPostType.php:75
-#: lib/Taxonomy/Taxonomy.php:73
+#: lib/PostType/CustomPostType.php:75 lib/Taxonomies/Taxonomy.php:70
 msgid "parent"
 msgstr "pai"
 
-#: lib/PostType/CustomPostType.php:75
-#: lib/Taxonomy/Taxonomy.php:73
+#: lib/PostType/CustomPostType.php:75 lib/Taxonomies/Taxonomy.php:70
 msgid "female_parent"
 msgstr "mãe"
 
-#: lib/PostType/CustomPostType.php:76
-#: lib/Taxonomy/Taxonomy.php:74
+#: lib/PostType/CustomPostType.php:76 lib/Taxonomies/Taxonomy.php:71
 msgid "all"
 msgstr "todos os"
 
-#: lib/PostType/CustomPostType.php:76
-#: lib/Taxonomy/Taxonomy.php:74
+#: lib/PostType/CustomPostType.php:76 lib/Taxonomies/Taxonomy.php:71
 msgid "female_all"
 msgstr "todas as"
 
-#: lib/Taxonomy/Taxonomy.php:75
+#: lib/Taxonomies/Taxonomy.php:75
 msgid "used"
 msgstr "usado"
 
-#: lib/Taxonomy/Taxonomy.php:75
+#: lib/Taxonomies/Taxonomy.php:75
 msgid "female_used"
 msgstr "usada"
 
@@ -103,29 +95,24 @@ msgstr "atualizada"
 msgid "add %s"
 msgstr "adicionar %s"
 
-#: lib/PostType/CustomPostType.php:86
-#: lib/Taxonomy/Taxonomy.php:92
+#: lib/PostType/CustomPostType.php:86 lib/Taxonomies/Taxonomy.php:85
 msgid "add %s %s"
 msgstr "adicionar %s %s"
 
-#: lib/PostType/CustomPostType.php:87
-#: lib/Taxonomy/Taxonomy.php:89
+#: lib/PostType/CustomPostType.php:87 lib/Taxonomies/Taxonomy.php:82
 msgid "edit %s"
 msgstr "editar %s"
 
 #: lib/PostType/CustomPostType.php:89
-#: lib/PostType/CustomPostType.php:90
-#: lib/Taxonomy/Taxonomy.php:90
+#: lib/PostType/CustomPostType.php:90 lib/Taxonomies/Taxonomy.php:83
 msgid "view %s"
 msgstr "ver %s"
 
-#: lib/PostType/CustomPostType.php:91
-#: lib/Taxonomy/Taxonomy.php:80
+#: lib/PostType/CustomPostType.php:91 lib/Taxonomies/Taxonomy.php:77
 msgid "search %s"
 msgstr "pesquisar %s"
 
-#: lib/PostType/CustomPostType.php:92
-#: lib/Taxonomy/Taxonomy.php:97
+#: lib/PostType/CustomPostType.php:92 lib/Taxonomies/Taxonomy.php:89
 msgid "%s not %s"
 msgstr "%s não %s"
 
@@ -161,60 +148,54 @@ msgstr "%s voltou para rascunho"
 msgid "%s trashed"
 msgstr "%s na lixeira"
 
-#: lib/PostType/CustomPostType.php:110
-#: lib/Taxonomy/Taxonomy.php:104
+#: lib/PostType/CustomPostType.php:110 lib/Taxonomies/Taxonomy.php:96
 msgid "link to %s"
 msgstr "link para %s"
 
-#: lib/PostType/CustomPostType.php:111
-#: lib/Taxonomy/Taxonomy.php:105
+#: lib/PostType/CustomPostType.php:111 lib/Taxonomies/Taxonomy.php:97
 msgid "a link to %s"
 msgstr "um link para %s"
 
-#: lib/Taxonomy/Taxonomy.php:81
+#: lib/Taxonomies/Taxonomy.php:73
 msgid "popular %s"
 msgstr "popular %s"
 
-#: lib/Taxonomy/Taxonomy.php:87
+#: lib/Taxonomies/Taxonomy.php:84
 msgid "update %s"
 msgstr "update %s"
 
-#: lib/Taxonomy/Taxonomy.php:89
+#: lib/Taxonomies/Taxonomy.php:86
 msgid "%s name"
 msgstr "%s name"
 
-#: lib/Taxonomy/Taxonomy.php:90
+#: lib/Taxonomies/Taxonomy.php:87
 msgid "separate %s with commas"
-msgstr "separate %s with commas"
+msgstr "separar %s com vírgulas"
 
-#: lib/Taxonomy/Taxonomy.php:91
+#: lib/Taxonomies/Taxonomy.php:88
 msgid "add or remove %s"
-msgstr "add or remove %s"
+msgstr "adicionar ou remover %s"
 
-#: lib/Taxonomy/Taxonomy.php:92
-msgid "%s not %s"
-msgstr "%s not %s"
-
-#: lib/Taxonomy/Taxonomy.php:93
+#: lib/Taxonomies/Taxonomy.php:90
 msgid "without %s"
-msgstr "without %s"
+msgstr "sem %s"
 
-#: lib/Taxonomy/Taxonomy.php:94
+#: lib/Taxonomies/Taxonomy.php:91
 msgid "filter by %s"
-msgstr "filter by %s"
+msgstr "filtrar por %s"
 
-#: lib/Taxonomy/Taxonomy.php:95
+#: lib/Taxonomies/Taxonomy.php:92
 msgid "%s list navigation"
-msgstr "%s list navigation"
+msgstr "navegação em lista de %s"
 
-#: lib/Taxonomy/Taxonomy.php:96
+#: lib/Taxonomies/Taxonomy.php:93
 msgid "%s list"
-msgstr "%s list"
+msgstr "lista de %s"
 
-#: lib/Taxonomy/Taxonomy.php:97
+#: lib/Taxonomies/Taxonomy.php:94
 msgid "%s most %s"
-msgstr "%s most %s"
+msgstr "%s mais %s"
 
-#: lib/Taxonomy/Taxonomy.php:98
+#: lib/Taxonomies/Taxonomy.php:95
 msgid "back to %s"
-msgstr "back to %s"
+msgstr "voltar para %s"

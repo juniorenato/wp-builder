@@ -93,7 +93,7 @@ class Taxonomy
             'items_list'                 => ucfirst(sprintf(__('%s list','wpb'), $this->plural)),
             'most_used'                  => ucfirst(sprintf(__('%s most %s', 'wpb'), $this->singular, $used)),
             'back_to_items'              => ucfirst(sprintf(__('back to %s', 'wpb'), $this->plural)),
-            'item_link'                  => ucfirst(sprintf(__('item link %s.'), $this->plural)),
+            'item_link'                  => ucfirst(sprintf(__('link to %s.'), $this->plural)),
             'item_link_description'      => ucfirst(sprintf(__('a link to %s.'), $this->plural)),
         ];
     }
