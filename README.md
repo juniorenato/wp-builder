@@ -93,9 +93,10 @@ $tax = new Taxonomy($builder);
 
 ## Versioning
 
-The current version is: **v0.1.2**
+The current version is: **v0.1.3**
 
 ### Version LOG
+- **v0.1.2** 01/09/2024 - Translation
 - **v0.1.2** 23/07/2024 - Add a custom text field to taxonomy
 - **v0.1.1** 23/07/2024 - Separate global settings
 - **v0.1.0** 13/07/2024 - Post Types and Taxonomies
