@@ -50,7 +50,7 @@ trait TaxonomyCustomField
     {
         $this->id = $term->term_id;
 
-        $this->echoFields(true);
+        $this->echoFields('table');
     }
 
     public function createTerm($term_id)
