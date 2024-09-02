@@ -2,7 +2,8 @@
 
 namespace WPB\Taxonomies;
 
-use WPB\Builder;
+use WPB\Forms\AdminForm;
+use WPB\Forms\TaxonomyCustomField;
 
 /**
  * -----------------------------------------------------------------------------
@@ -12,27 +13,50 @@ use WPB\Builder;
  * @see https://developer.wordpress.org/reference/functions/register_taxonomy/
  * @since 0.1.0
  * @author Renato Rodrigues Jr <juniorenato@msn.com>
- * @package hoststyle/hswp-theme-builder
+ * @package juniorenato/wp-builder
  */
 class Taxonomy
 {
-    private string $taxonomy = '';
+    use AdminForm;
+    use TaxonomyCustomField;
 
-    protected string $singular = '';
+    private string $taxonomy;
+    protected string $singular;
+    protected string $plural;
+    private bool $male;
+    private array $labels;
+    private array $rewrite;
+    private array $capabilities;
+    private array $postTypes;
+    private array $args;
+    private bool $reset;
 
-    protected string $plural = '';
+    public function __construct()
+    {
+        $this->valueType = 'taxonomy';
 
-    private bool $male = true;
+        $this->init();
+    }
 
-    private array $labels = [];
-
-    private array $rewrite = [];
-
-    private array $capabilities = [];
-
-    private array $postTypes = [];
-
-    private array $args = [];
+    /**
+     * -------------------------------------------------------------------------
+     * Init the class
+     * -------------------------------------------------------------------------
+     *
+     * @return void
+     */
+    public function init(): void
+    {
+        $this->taxonomy = '';
+        $this->plural = '';
+        $this->singular = '';
+        $this->labels = [];
+        $this->rewrite = [];
+        $this->capabilities = [];
+        $this->postTypes = [];
+        $this->args = [];
+        $this->reset = false;
+    }
 
     /**
      * -------------------------------------------------------------------------
@@ -204,8 +228,8 @@ class Taxonomy
     {
         if(is_bool($rewrite)) {
             $this->rewrite = [
-                'slug'       => sanitize_title($this->singular),
-                'with_front'    => true,
+                'slug' => sanitize_title($this->singular),
+                'with_front' => true,
             ];
         }
 
@@ -348,10 +372,6 @@ class Taxonomy
             $this->setLabels($singular, $plural, $male);
         }
 
-        elseif (is_bool($taxonomy)) {
-            $reset = $taxonomy;
-        }
-
         // Return error if any configuration is missing
         if(1 == 0
             || !$this->taxonomy
@@ -366,9 +386,6 @@ class Taxonomy
         // WordPress - Register Taxonomy
         add_action('init', [$this, 'registerTaxonomy']);
 
-        // Reset the class
-        if($reset) $this->reset();
-
         return $this;
     }
 
@@ -381,29 +398,12 @@ class Taxonomy
      */
     public function registerTaxonomy()
     {
+        if($this->fields) $this->setTermFields();
+
         register_taxonomy(
             $this->taxonomy,
             $this->postTypes,
             $this->args
         );
-    }
-
-    /**
-     * -------------------------------------------------------------------------
-     * Reset the class
-     * -------------------------------------------------------------------------
-     *
-     * @return void
-     */
-    public function reset(): void
-    {
-        $this->taxonomy = '';
-        $this->plural = '';
-        $this->singular = '';
-        $this->labels = [];
-        $this->rewrite = [];
-        $this->capabilities = [];
-        $this->postTypes = [];
-        $this->args = [];
     }
 }
