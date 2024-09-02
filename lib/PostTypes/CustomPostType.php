@@ -10,30 +10,45 @@ namespace WPB\PostTypes;
  * @see https://developer.wordpress.org/reference/functions/register_post_type/
  * @since 0.1.0
  * @author Renato Rodrigues Jr <juniorenato@msn.com>
- * @package hoststyle/hswp-theme-builder
+ * @package juniorenato/wp-builder
  */
-class CustomPostType
+class CustomPostType extends PostType
 {
-    private string $postType = '';
+    private array $customPostTypes;
+    protected string $singular;
+    protected string $plural;
+    protected bool $male;
 
-    protected string $singular = '';
+    public function __construct()
+    {
+        $this->valueType = 'post';
 
-    protected string $plural = '';
+        $this->init();
+    }
+    /**
+     * -------------------------------------------------------------------------
+     * Reset the class
+     * -------------------------------------------------------------------------
+     *
+     * @return void
+     */
+    private function init(): CustomPostType
+    {
+        $this->postType = '';
+        $this->singular = '';
+        $this->plural = '';
+        $this->male = true;
+        $this->labels = [];
+        $this->rewrite = [];
+        $this->taxonomies = [];
+        $this->supports = [
+            'title',
+            'editor',
+        ];
+        $this->args = [];
 
-    private bool $male = true;
-
-    private array $labels = [];
-
-    private array $rewrite = [];
-
-    private array $taxonomies = [];
-
-    private array $supports = [
-        'title',
-        'editor',
-    ];
-
-    private array $args = [];
+        return $this;
+    }
 
     /**
      * -------------------------------------------------------------------------
@@ -43,8 +58,10 @@ class CustomPostType
      * @param string $postType
      * @return CustomPostType
      */
-    public function postType(string $postType): CustomPostType
+    public function setPostType(string $postType): CustomPostType
     {
+        if($this->postType) $this->init();
+
         $this->postType = sanitize_title($postType);
 
         return $this;
@@ -142,116 +159,6 @@ class CustomPostType
 
     /**
      * -------------------------------------------------------------------------
-     * Edit labels
-     * -------------------------------------------------------------------------
-     *
-     * Opções:
-     *
-     * - menu_name
-     * - name
-     * - singular_name
-     * - add_new
-     * - add_new_item
-     * - edit_item
-     * - new_item
-     * - view_item
-     * - view_items
-     * - search_items
-     * - not_found
-     * - not_found_in_trash
-     * - parent_item_colon
-     * - all_items
-     * - archives
-     * - attributes
-     * - insert_into_item
-     * - uploaded_to_this_item
-     * - featured_image
-     * - set_featured_image
-     * - remove_featured_image
-     * - use_featured_image
-     * - menu_name
-     * - filter_items_list
-     * - filter_by_date
-     * - items_list_navigation
-     * - items_list
-     * - item_published
-     * - item_published_privately
-     * - item_reverted_to_draft
-     * - item_trashed
-     * - item_scheduled
-     * - item_updated
-     * - item_link
-     * - item_link_description
-     *
-     * @param string|list<string> $labels
-     * @param string $val
-     * @param boolean $ucfirst
-     * @return CustomPostType
-     */
-    public function labels($labels, string $val, bool $ucfirst = true): CustomPostType
-    {
-        if(!is_array($labels) && $val) {
-            $this->labels[$labels] = ($ucfirst) ? ucfirst($val) : $val;
-
-            return $this;
-        }
-
-        else {
-            foreach($labels as $key => $val) {
-                $this->labels[$key] = ($ucfirst) ? ucfirst($val) : $val;
-            }
-
-            return $this;
-        }
-
-        return $this;
-    }
-
-    /**
-     * -------------------------------------------------------------------------
-     * Edit rewrite
-     * -------------------------------------------------------------------------
-     *
-     * Opções:
-     *
-     * - slug
-     * - with_front
-     * - feeds
-     * - pages
-     * - ep_mask
-     *
-     * @param boolean|string|array $rewrite
-     * @param string|null $val
-     * @return CustomPostType
-     */
-    public function rewrite($rewrite, ?string $val = null): CustomPostType
-    {
-        if(is_bool($rewrite)) {
-            $this->rewrite = [
-                'slug'       => sanitize_title($this->singular),
-                'with_front' => true,
-                'pages'      => true,
-                'feeds'      => true,
-            ];
-        }
-
-        elseif(is_array($rewrite)) {
-            foreach($rewrite as $key => $val) $this->rewrite[$key] = $val;
-
-            return $this;
-        }
-
-        else {
-            $this->rewrite[$rewrite] = $val;
-
-            if($rewrite == 'slug') $this->rewrite['with_front'] = true;
-
-            return $this;
-        }
-    }
-
-    /**
-     * -------------------------------------------------------------------------
      * Add taxonomies
      * -------------------------------------------------------------------------
      *
@@ -266,108 +173,6 @@ class CustomPostType
 
         else {
             $this->taxonomies[] = $taxonomies;
-
-            return $this;
-        }
-    }
-
-    /**
-     * -------------------------------------------------------------------------
-     * Edit supported features
-     * -------------------------------------------------------------------------
-     *
-     * Opções padrão:
-     *
-     * - title
-     * - editor
-     * - author
-     * - thumbnail
-     * - excerpt
-     * - trackbacks
-     * - custom-fields
-     * - comments
-     * - revisions
-     * - page-attributes
-     * - post-formats
-     *
-     * @param string|array $supports
-     * @param integer|string|bool|null $val
-     * @return CustomPostType
-     */
-    public function supports($supports, $val = null): CustomPostType
-    {
-        if(is_array($supports) && $val) {
-            foreach($supports as $k => $val) {
-                $this->supports[$k] = $val;
-            }
-        }
-
-        else {
-            $this->supports[$supports] = $val;
-        }
-
-        return $this;
-    }
-
-    /**
-     * -------------------------------------------------------------------------
-     * Edit arguments
-     * -------------------------------------------------------------------------
-     *
-     * Options:
-     *
-     * - label
-     * - labels
-     * - description
-     * - public
-     * - hierarchical
-     * - exclude_from_search
-     * - publicly_queryable
-     * - show_ui
-     * - show_in_menu
-     * - show_in_nav_menus
-     * - show_in_admin_bar
-     * - show_in_rest
-     * - rest_base
-     * - rest_namespace
-     * - rest_controller_class
-     * - autosave_rest_controller_class
-     * - revisions_rest_controller_class
-     * - late_route_registration
-     * - menu_position
-     * - menu_icon
-     * - capability_type
-     * - capabilities
-     * - map_meta_cap
-     * - supports
-     * - register_meta_box_cb
-     * - taxonomies
-     * - has_archive
-     * - rewrite
-     * - query_var
-     * - can_export
-     * - delete_with_user
-     * - template
-     * - template_lock
-     * - _builtin
-     * - _edit_link
-     *
-     * @param string|list<string> $config
-     * @param string|null $val
-     * @return CustomPostType
-     */
-    public function args($config, ?string $val = null): CustomPostType
-    {
-        if(!is_array($config) && $val) {
-            $this->args[$config] = $val;
-
-            return $this;
-        }
-
-        else {
-            foreach($config as $key => $value) {
-                $this->args[$key] = $value;
-            }
 
             return $this;
         }
@@ -419,20 +224,18 @@ class CustomPostType
      * @param boolean $reset
      * @return CustomPostType
      */
-    public function register(?string $postType = null, ?string $singular = null, ?string $plural = null, bool $male = true, bool $reset = true): CustomPostType
+    public function add(?string $postType = null, ?string $singular = null, ?string $plural = null, bool $male = true): bool
     {
+        $this->init();
+
         if(1 == 1
             && $postType
             && is_string($postType)
             && $singular
             && $plural
         ) {
-            $this->postType($postType);
+            $this->setPostType($postType);
             $this->setLabels($singular, $plural, $male);
-        }
-
-        elseif (is_bool($postType)) {
-            $reset = $postType;
         }
 
         // Return error if any configuration is missing
@@ -444,14 +247,25 @@ class CustomPostType
 
         // Set args
         $this->setArgs();
+        $this->addCustomPostType();
+
+        // Insert custom fields
+        if(isset($this->fields) && $this->fields) {
+            $this->setPostTypeMetaBoxes();
+        }
+
+        return true;
+    }
+
+    public function register(): void
+    {
+        if(1 == 0
+            || $this->metaBoxes
+            || $this->metaFields
+        ) { $this->registerMetaBoxes(); }
 
         // WordPress - Register Post Type
         add_action('init', [$this, 'registerPostType']);
-
-        // Resetar a classe
-        if($reset) $this->reset();
-
-        return $this;
     }
 
     /**
@@ -461,30 +275,16 @@ class CustomPostType
      *
      * @return void
      */
-    public function registerPostType()
+    public function registerPostType(): void
     {
-        register_post_type(
-            $this->postType,
-            $this->args
-        );
+        foreach($this->customPostTypes as $type => $args) {
+            register_post_type($type, $args);
+        }
     }
 
-    /**
-     * -------------------------------------------------------------------------
-     * Reset the class
-     * -------------------------------------------------------------------------
-     *
-     * @return void
-     */
-    public function reset(): void
+    private function addCustomPostType()
     {
-        $this->postType = '';
-        $this->singular = '';
-        $this->plural = '';
-        $this->labels = [];
-        $this->rewrite = [];
-        $this->taxonomies = [];
-        $this->supports = [];
-        $this->args = [];
+        $this->customPostTypes[$this->postType] = $this->args;
     }
+
 }
