@@ -25,6 +25,7 @@ class AdminPage
     private string $menuSlug;
     private string $iconUrl;
     private int $position;
+    private $callback;
 
     public function __construct()
     {
@@ -40,8 +41,12 @@ class AdminPage
         $this->menuTitle = '';
         $this->capability = 'manage_options';
         $this->menuSlug = '';
-        $this->iconUrl = 'dashicons-admin-post';
+        $this->iconUrl = 'dashicons-laptop';
         $this->position = 2;
+        $this->callback = [
+            $this,
+            'buildPage'
+        ];
     }
 
     public function parent(string $slug): AdminPage
@@ -79,14 +84,14 @@ class AdminPage
 
     public function pageTitle(string $title): AdminPage
     {
-        $this->pageTitle = $title;
+        $this->pageTitle = ucfirst($title);
 
         return $this;
     }
 
     public function menuTitle(string $title): AdminPage
     {
-        $this->menuTitle = $title;
+        $this->menuTitle = ucfirst($title);
 
         return $this;
     }
@@ -119,14 +124,38 @@ class AdminPage
         return $this;
     }
 
-    public function register(?string $title = null, ?string $parent = null, ?string $icon = null, ?int $position = null)
+    public function callback($callback): AdminPage
     {
-        if($parent) $this->parent($parent);
+        $this->callback = $callback;
+
+        return $this;
+    }
+
+    /**
+     * -------------------------------------------------------------------------
+     * Register Admin Page
+     * -------------------------------------------------------------------------
+     *
+     * @param string|null $title
+     * @param string|list<string>|null $callback
+     * @param string|null $parent
+     * @return boolean
+     */
+    public function register(?string $title = null, $callback = null, ?string $parent = null): bool
+    {
         if($title) $this->title($title);
-        if($icon) $this->icon($icon);
-        if($position) $this->position($position);
+        if($parent) $this->parent($parent);
+        if($callback) $this->callback($callback);
+
+        if(1 == 0
+            || !$this->pageTitle
+            || !$this->menuTitle
+            || !$this->menuSlug
+        ) { return false; }
 
         add_action('admin_menu', [$this, 'addMenuPage']);
+
+        return true;
     }
 
     public function addMenuPage()
@@ -137,7 +166,7 @@ class AdminPage
                 $this->menuTitle,
                 $this->capability,
                 $this->menuSlug,
-                [$this, 'buildPage'],
+                $this->callback,
                 $this->iconUrl,
                 $this->position,
             );
@@ -150,7 +179,7 @@ class AdminPage
                 $this->menuTitle,
                 $this->capability,
                 $this->menuSlug,
-                [$this, 'buildPage'],
+                $this->callback,
                 $this->position,
             );
         }
