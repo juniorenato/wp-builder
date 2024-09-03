@@ -33,6 +33,7 @@ trait PostTypeMetaBox
             $mb = new MetaBox();
             $mb->title($this->labels['attributes']);
             $mb->fields = $this->fields;
+            $mb->metaFields = $this->metaFields;
 
             $this->metaBoxes[] = $mb;
         }
@@ -41,8 +42,22 @@ trait PostTypeMetaBox
 
             $metaBox->valueType = 'post';
             $metaBox->screen($this->postType);
-            if(!$metaBox->metaBox) $metaBox->metaBoxId($metaBox->title);
-            $this->args['register_meta_box_cb'][] = $metaBox->metaBox;
+
+            if(!$metaBox->metaBox) $metaBox->metaBoxId($this->postType .'_'. $metaBox->title);
+
+            if(1 == 1
+                && isset($this->args['register_meta_box_cb'])
+                && !empty($this->args['register_meta_box_cb'])
+            ) {
+                $this->args['register_meta_box_cb'] = [
+                    $this->args['register_meta_box_cb']
+                ];
+                $this->args['register_meta_box_cb'][] = [$metaBox, 'addMetaBoxes'];
+            }
+
+            else {
+                $this->args['register_meta_box_cb'] = [$metaBox, 'addMetaBoxes'];
+            }
 
             $this->metaFields = array_merge(
                 $this->metaFields,
