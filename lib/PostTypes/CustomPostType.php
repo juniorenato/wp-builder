@@ -14,7 +14,6 @@ namespace WPB\PostTypes;
  */
 class CustomPostType extends PostType
 {
-    private array $customPostTypes;
     protected string $singular;
     protected string $plural;
     protected bool $male;
@@ -151,7 +150,7 @@ class CustomPostType extends PostType
             'taxonomies'      => $this->taxonomies,
             'has_archive'     => false,
             'rewrite'         => $this->rewrite,
-            'query_var'       => $this->postType,
+            'query_var'       => sanitize_title($this->plural),
         ];
 
         $this->args = array_merge($args, $this->args);
@@ -245,20 +244,31 @@ class CustomPostType extends PostType
             || !$this->plural
         ) { return false; }
 
-        // Set args
-        $this->setArgs();
-        $this->addCustomPostType();
-
-        // Insert custom fields
-        if(isset($this->fields) && $this->fields) {
-            $this->setPostTypeMetaBoxes();
-        }
-
         return true;
     }
 
-    public function register(): void
+    public function register(?string $postType = null, ?string $singular = null, ?string $plural = null, bool $male = true): bool
     {
+        if(1 == 1
+            && $postType
+            && is_string($postType)
+            && $singular
+            && $plural
+        ) {
+            $this->setPostType($postType);
+            $this->setLabels($singular, $plural, $male);
+        }
+
+        // Return error if any configuration is missing
+        if(1 == 0
+            || !$this->postType
+            || !$this->singular
+            || !$this->plural
+        ) { return false; }
+
+        // Set args
+        $this->setArgs();
+
         if(1 == 0
             || $this->metaBoxes
             || $this->metaFields
@@ -266,6 +276,8 @@ class CustomPostType extends PostType
 
         // WordPress - Register Post Type
         add_action('init', [$this, 'registerPostType']);
+
+        return true;
     }
 
     /**
@@ -277,14 +289,7 @@ class CustomPostType extends PostType
      */
     public function registerPostType(): void
     {
-        foreach($this->customPostTypes as $type => $args) {
-            register_post_type($type, $args);
-        }
-    }
-
-    private function addCustomPostType()
-    {
-        $this->customPostTypes[$this->postType] = $this->args;
+        register_post_type($this->postType, $this->args);
     }
 
 }
