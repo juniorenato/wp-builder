@@ -29,7 +29,6 @@ class Taxonomy
     private array $capabilities;
     private array $postTypes;
     private array $args;
-    private bool $reset;
 
     public function __construct()
     {
@@ -55,7 +54,6 @@ class Taxonomy
         $this->capabilities = [];
         $this->postTypes = [];
         $this->args = [];
-        $this->reset = false;
     }
 
     /**
@@ -353,31 +351,32 @@ class Taxonomy
      * Create taxonomy
      * -------------------------------------------------------------------------
      *
-     * @param string|boolean $taxonomy
+     * @param string $taxonomy
+     * @param string|list<string> $postType
      * @param string $singular
      * @param string $plural
      * @param boolean $male
-     * @param boolean $reset
      * @return Taxonomy
      */
-    public function register(?string $taxonomy = null, ?string $singular = null, ?string $plural = null, bool $male = true, bool $reset = true): Taxonomy
+    public function register(?string $taxonomy = null, $postType = null, ?string $singular = null, ?string $plural = null, bool $male = true): Taxonomy
     {
         if(1 == 1
             && $taxonomy
-            && is_string($taxonomy)
+            && $postType
             && $singular
             && $plural
         ) {
             $this->taxonomy($taxonomy);
+            $this->postTypes($postType);
             $this->setLabels($singular, $plural, $male);
         }
 
         // Return error if any configuration is missing
         if(1 == 0
             || !$this->taxonomy
+            || !$this->postTypes
             || !$this->singular
             || !$this->plural
-            || !$this->postTypes
         ) { return false; }
 
         // Set args
