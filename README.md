@@ -93,12 +93,13 @@ $tax = new Taxonomy($builder);
 
 ## Versioning
 
-The current version is: **v0.2.1**
+The current version is: **v0.2.2**
 
 ### Version LOG
 
 #### v0.2
 
+- **03/09/2024 | v0.2.2** - Taxonomy and Admin Page fast mode
 - **03/09/2024 | v0.2.1** - Change CPT registration method
 - **02/09/2024 | v0.2.0**
     - New post type structure
