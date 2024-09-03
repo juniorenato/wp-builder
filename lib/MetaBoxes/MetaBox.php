@@ -87,7 +87,6 @@ class MetaBox
             && $title
             && $screen
         ) {
-            $this->init();
             $this->title($title);
             $this->screen($screen);
         }
