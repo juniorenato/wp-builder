@@ -29,7 +29,6 @@ class Taxonomy
     private array $capabilities;
     private array $postTypes;
     private array $args;
-    private bool $reset;
 
     public function __construct()
     {
@@ -55,7 +54,6 @@ class Taxonomy
         $this->capabilities = [];
         $this->postTypes = [];
         $this->args = [];
-        $this->reset = false;
     }
 
     /**
