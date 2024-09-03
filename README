@@ -19,8 +19,6 @@ This builder **was created for developers**. It aims to speed up and facilitate 
     3.4. [Change default args](#change-default-args)
 
 4. [Version LOG](#version-log)
-    4.1 [v0.2](#v02)
-    4.2 [v0.1](#v01)
 
 ---
 
@@ -165,11 +163,12 @@ $postType->addArgs('rest_base', 'product');
 
 ## Version LOG
 
-The current version is: **v0.2.2**
+The current version is: **v0.3.0**
+
+### v0.3
+- **03/09/2024 | v0.3.0** - Documentation structure
 
 ### v0.2
-
-- **03/09/2024 | v0.2.3** - Documentation structure
 - **03/09/2024 | v0.2.2** - Taxonomy and Admin Page fast mode
 - **03/09/2024 | v0.2.1** - Change CPT registration method
 - **02/09/2024 | v0.2.0**
@@ -179,7 +178,6 @@ The current version is: **v0.2.2**
     - Admin pages and Submenu pages
 
 ### v0.1
-
 - **01/09/2024 | v0.1.3** - Translation
 - **23/07/2024 | v0.1.2** - Add a custom text field to taxonomy
 - **23/07/2024 | v0.1.1** - Separate global settings
