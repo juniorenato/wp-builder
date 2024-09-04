@@ -166,6 +166,7 @@ $postType->addArgs('rest_base', 'product');
 The current version is: **v0.4.1**
 
 ### v0.4
+- **03/09/2024 | v0.4.2** - Fix input text on page
 - **03/09/2024 | v0.4.1**
     - Remove trait constants
     - Register on constructs
