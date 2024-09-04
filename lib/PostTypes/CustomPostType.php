@@ -8,7 +8,7 @@ namespace WPB\PostTypes;
  * -----------------------------------------------------------------------------
  *
  * @see https://developer.wordpress.org/reference/functions/register_post_type/
- * @since 0.1.0
+ * @since v0.1.0
  * @author Renato Rodrigues Jr <juniorenato@msn.com>
  * @package juniorenato/wp-builder
  */

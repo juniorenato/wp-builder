@@ -3,7 +3,6 @@
 namespace WPB\Pages;
 
 use WPB\Forms\AdminForm;
-use WPB\Builder;
 
 /**
  * -----------------------------------------------------------------------------

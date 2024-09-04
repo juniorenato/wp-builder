@@ -4,6 +4,15 @@ namespace WPB\MetaBoxes;
 
 use WPB\Forms\AdminForm;
 
+/**
+ * -----------------------------------------------------------------------------
+ * Meta Box
+ * -----------------------------------------------------------------------------
+ *
+ * @since v0.3.0
+ * @author Renato Rodrigues Jr <juniorenato@msn.com>
+ * @package juniorenato/wp-builder
+ */
 class MetaBox
 {
     use AdminForm;
@@ -131,7 +140,7 @@ class MetaBox
         $this->id = $post->ID ?? 0;
         $this->fieldsType = 'box';
 
-        $this->echoFields();
+        $this->field();
     }
 
 }

@@ -11,7 +11,7 @@ use WPB\Forms\TaxonomyCustomField;
  * -----------------------------------------------------------------------------
  *
  * @see https://developer.wordpress.org/reference/functions/register_taxonomy/
- * @since 0.1.0
+ * @since v0.1.0
  * @author Renato Rodrigues Jr <juniorenato@msn.com>
  * @package juniorenato/wp-builder
  */
