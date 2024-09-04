@@ -2,6 +2,16 @@
 
 namespace WPB\PostTypes;
 
+
+/**
+ * -----------------------------------------------------------------------------
+ * Post Type Meta Box
+ * -----------------------------------------------------------------------------
+ *
+ * @since v0.4.0
+ * @author Renato Rodrigues Jr <juniorenato@msn.com>
+ * @package juniorenato/wp-builder
+ */
 class RemovePostType extends EditPostType
 {
     public function __construct(?string $postType)

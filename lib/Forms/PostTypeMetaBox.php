@@ -4,6 +4,15 @@ namespace WPB\Forms;
 
 use WPB\MetaBoxes\MetaBox;
 
+/**
+ * -----------------------------------------------------------------------------
+ * Post Type Meta Box
+ * -----------------------------------------------------------------------------
+ *
+ * @since v0.2.0
+ * @author Renato Rodrigues Jr <juniorenato@msn.com>
+ * @package juniorenato/wp-builder
+ */
 trait PostTypeMetaBox
 {
     protected array $metaBoxes = [];

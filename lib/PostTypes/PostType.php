@@ -5,6 +5,16 @@ namespace WPB\PostTypes;
 use WPB\Forms\AdminForm;
 use WPB\Forms\PostTypeMetaBox;
 
+
+/**
+ * -----------------------------------------------------------------------------
+ * Post Type
+ * -----------------------------------------------------------------------------
+ *
+ * @since v0.2.0
+ * @author Renato Rodrigues Jr <juniorenato@msn.com>
+ * @package juniorenato/wp-builder
+ */
 class PostType
 {
     use AdminForm;

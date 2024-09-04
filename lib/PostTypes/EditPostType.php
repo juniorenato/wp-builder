@@ -2,6 +2,15 @@
 
 namespace WPB\PostTypes;
 
+/**
+ * -----------------------------------------------------------------------------
+ * Edit Post Type
+ * -----------------------------------------------------------------------------
+ *
+ * @since v0.4.0
+ * @author Renato Rodrigues Jr <juniorenato@msn.com>
+ * @package juniorenato/wp-builder
+ */
 class EditPostType extends PostType
 {
     public function __construct(?string $postType = null, ?array $args = null)

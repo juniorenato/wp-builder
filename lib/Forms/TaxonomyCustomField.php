@@ -43,14 +43,17 @@ trait TaxonomyCustomField
 
     public function createTermFormFields()
     {
-        $this->echoFields();
+        $this->fieldsType = 'term';
+
+        $this->field();
     }
 
     public function editTermFormFields($term)
     {
         $this->id = $term->term_id;
+        $this->fieldsType = 'table';
 
-        $this->echoFields('table');
+        $this->field();
     }
 
     public function createTerm($term_id)
