@@ -15,12 +15,10 @@ trait AdminForm
 {
     protected int $id = 0;
 
-    protected const PAGE_PATH  = __DIR__ .'/../../views/';
-    protected const FIELD_PATH = __DIR__ .'/../../views/form/';
-
     protected array $field = [];
 
     public array $fields = [];
+    public string $fieldsType = '';
     public array $metaFields = [];
     public string $valueType = '';
 
@@ -39,7 +37,7 @@ trait AdminForm
             'val' => wp_create_nonce(__FILE__),
         ];
 
-        require self::FIELD_PATH . 'hidden.php';
+        require WPB_FIELD_PATH . 'hidden.php';
     }
 
     public function savePost($post_id, $post)
@@ -86,7 +84,7 @@ trait AdminForm
      * @param string $description
      * @return void
      */
-    public function addFormField(string $type, string $name, string $label = '', array $attributes = [], array $options = [], string $description = '')
+    public function formField(string $type, string $name, string $label = '', array $attributes = [], array $options = [], string $description = ''): void
     {
         // Prepare description
         if($description) $attributes['aria-describedby'] = $name .'-description';
@@ -104,14 +102,25 @@ trait AdminForm
         $this->metaFields[] = $name;
     }
 
-    public function addTextField(string $name, string $label, string $description = '', string $class = '')
+    /**
+     * -------------------------------------------------------------------------
+     * Add a text field
+     * -------------------------------------------------------------------------
+     *
+     * @param string $name
+     * @param string $label
+     * @param string $description
+     * @param string $class
+     * @return void
+     */
+    public function addTextField(string $name, string $label, string $description = '', string $class = ''): void
     {
         $class.= ($this->valueType == 'post' && strpos($class, 'widefat') === false) ? ' widefat' : '';
         $class.= (strpos($class, 'widefat') === false) ? ' regular-text' : '';
 
         $attributes['class'] = trim($class);
 
-        $this->addFormField('text', $name, $label, $attributes, [], $description);
+        $this->formField('text', $name, $label, $attributes, [], $description);
     }
 
     /**
@@ -215,13 +224,11 @@ trait AdminForm
         return $attributes;
     }
 
-    protected function echoFields(string $place = '')
+    protected function field()
     {
-        $place = ($place) ? $place .'-' : '';
-
         foreach($this->fields as $name => $this->field) {
             $this->field['val'] = $this->getValue($name);
-            require self::FIELD_PATH . $place . $this->field['type'] .'.php';
+            require WPB_FIELD_PATH . $this->field['type'] .'.php';
         }
     }
 }

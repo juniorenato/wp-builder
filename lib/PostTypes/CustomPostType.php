@@ -8,18 +8,24 @@ namespace WPB\PostTypes;
  * -----------------------------------------------------------------------------
  *
  * @see https://developer.wordpress.org/reference/functions/register_post_type/
- * @since 0.1.0
+ * @since v0.1.0
  * @author Renato Rodrigues Jr <juniorenato@msn.com>
  * @package juniorenato/wp-builder
  */
 class CustomPostType extends PostType
 {
 
-    public function __construct()
+    public function __construct(?string $postType = null, ?string $singular = null, ?string $plural = null, bool $male = true)
     {
         $this->valueType = 'post';
 
         $this->init();
+
+        if(1 == 1
+            && $postType
+            && $singular
+            && $plural
+        ) { $this->register($postType, $singular, $plural, $male); }
     }
 
     /**

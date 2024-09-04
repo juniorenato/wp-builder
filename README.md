@@ -163,9 +163,14 @@ $postType->addArgs('rest_base', 'product');
 
 ## Version LOG
 
-The current version is: **v0.4.0**
+The current version is: **v0.4.1**
 
 ### v0.4
+- **03/09/2024 | v0.4.1**
+    - Remove trait constants
+    - Register on constructs
+    - Unify form fields
+
 - **03/09/2024 | v0.4.0** - Edit and Delete Post Type
 
 ### v0.3
