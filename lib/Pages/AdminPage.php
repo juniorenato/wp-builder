@@ -26,11 +26,20 @@ class AdminPage
     private int $position;
     private $callback;
 
-    public function __construct()
-    {
+    public function __construct(
+        ?string $title = null,
+        $callback = null,
+        ?string $parent = null
+    ) {
         $this->valueType = 'option';
 
         $this->init();
+
+        if(1 == 1
+            && $title
+            && $callback
+        ) { $this->register($title, $callback, $parent); }
+
     }
 
     public function init()
@@ -140,8 +149,11 @@ class AdminPage
      * @param string|null $parent
      * @return boolean
      */
-    public function register(?string $title = null, $callback = null, ?string $parent = null): bool
-    {
+    public function register(
+        ?string $title = null,
+        $callback = null,
+        ?string $parent = null
+    ): bool {
         if($title) $this->title($title);
         if($parent) $this->parent($parent);
         if($callback) $this->callback($callback);
@@ -197,6 +209,6 @@ class AdminPage
     {
         wp_nonce_field($this->menuSlug .'-settings');
 
-        require self::PAGE_PATH .'page.php';
+        require WPB_PAGE_PATH .'page.php';
     }
 }

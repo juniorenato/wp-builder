@@ -13,13 +13,15 @@ namespace WPB;
  */
 class Builder
 {
-    protected const WPB_LANG_PATH = __DIR__ .'/../lang';
-
     private $env = null;
 
     public function __construct(?string $env = null)
     {
         if($env) $this->env = $env;
+
+        define('WPB_FIELD_PATH', __DIR__ .'/../views/form/');
+        define('WPB_LANG_PATH', __DIR__ .'/../lang');
+        define('WPB_PAGE_PATH', __DIR__ .'/../views/');
 
         add_action('init', [$this, 'build']);
     }
@@ -41,12 +43,12 @@ class Builder
             if(!is_dir($path)) mkdir($path);
 
             foreach($arr_lang as $lang) {
-                if(file_exists(self::WPB_LANG_PATH .'/'. $lang .'.mo') && !file_exists($path .'/wpb-'. $lang .'.mo')) {
-                    copy(self::WPB_LANG_PATH .'/'. $lang .'.mo', $path .'/wpb-'. $lang .'.mo');
+                if(file_exists(WPB_LANG_PATH .'/'. $lang .'.mo') && !file_exists($path .'/wpb-'. $lang .'.mo')) {
+                    copy(WPB_LANG_PATH .'/'. $lang .'.mo', $path .'/wpb-'. $lang .'.mo');
                 }
             }
 
-            load_theme_textdomain('wpb', self::WPB_LANG_PATH);
+            load_theme_textdomain('wpb', WPB_LANG_PATH);
         }
 
         if(!$this->env || $this->env == 'plugin') {
@@ -54,12 +56,12 @@ class Builder
             if(!is_dir($path)) mkdir($path);
 
             foreach($arr_lang as $lang) {
-                if(file_exists(self::WPB_LANG_PATH .'/'. $lang .'.mo') && !file_exists($path .'/wpb-'. $lang .'.mo')) {
-                    copy(self::WPB_LANG_PATH .'/'. $lang .'.mo', $path .'/wpb-'. $lang .'.mo');
+                if(file_exists(WPB_LANG_PATH .'/'. $lang .'.mo') && !file_exists($path .'/wpb-'. $lang .'.mo')) {
+                    copy(WPB_LANG_PATH .'/'. $lang .'.mo', $path .'/wpb-'. $lang .'.mo');
                 }
             }
 
-            load_plugin_textdomain('wpb', false, self::WPB_LANG_PATH .'/lang');
+            load_plugin_textdomain('wpb', false, WPB_LANG_PATH .'/lang');
         }
     }
 }

@@ -15,11 +15,17 @@ namespace WPB\PostTypes;
 class CustomPostType extends PostType
 {
 
-    public function __construct()
+    public function __construct(?string $postType = null, ?string $singular = null, ?string $plural = null, bool $male = true)
     {
         $this->valueType = 'post';
 
         $this->init();
+
+        if(1 == 1
+            && $postType
+            && $singular
+            && $plural
+        ) { $this->register($postType, $singular, $plural, $male); }
     }
 
     /**

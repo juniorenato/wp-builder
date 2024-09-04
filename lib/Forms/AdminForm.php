@@ -15,9 +15,6 @@ trait AdminForm
 {
     protected int $id = 0;
 
-    protected const PAGE_PATH  = __DIR__ .'/../../views/';
-    protected const FIELD_PATH = __DIR__ .'/../../views/form/';
-
     protected array $field = [];
 
     public array $fields = [];
@@ -40,7 +37,7 @@ trait AdminForm
             'val' => wp_create_nonce(__FILE__),
         ];
 
-        require self::FIELD_PATH . 'hidden.php';
+        require WPB_FIELD_PATH . 'hidden.php';
     }
 
     public function savePost($post_id, $post)
@@ -231,7 +228,7 @@ trait AdminForm
     {
         foreach($this->fields as $name => $this->field) {
             $this->field['val'] = $this->getValue($name);
-            require self::FIELD_PATH . $this->field['type'] .'.php';
+            require WPB_FIELD_PATH . $this->field['type'] .'.php';
         }
     }
 }

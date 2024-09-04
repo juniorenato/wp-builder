@@ -30,11 +30,23 @@ class Taxonomy
     private array $postTypes;
     private array $args;
 
-    public function __construct()
-    {
+    public function __construct(
+        ?string $taxonomy = null,
+        $postType = null,
+        ?string $singular = null,
+        ?string $plural = null,
+        bool $male = true
+    ) {
         $this->valueType = 'taxonomy';
 
         $this->init();
+
+        if(1 == 1
+            && $taxonomy
+            && $postType
+            && $singular
+            && $plural
+        ) { $this->register($taxonomy, $postType, $singular, $plural, $male); }
     }
 
     /**
