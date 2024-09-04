@@ -10,7 +10,7 @@
 
         <?php foreach($this->fields as $field) : ?>
             <?php $this->field = $field; ?>
-            <?php require 'form/table-'. $field['type'] .'.php' ?>
+            <?php require 'form/'. $field['type'] .'.php' ?>
         <?php endforeach ?>
 
     </table>
