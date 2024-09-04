@@ -21,6 +21,7 @@ trait AdminForm
     protected array $field = [];
 
     public array $fields = [];
+    public string $fieldsType = '';
     public array $metaFields = [];
     public string $valueType = '';
 
@@ -215,13 +216,11 @@ trait AdminForm
         return $attributes;
     }
 
-    protected function echoFields(string $place = '')
+    protected function echoFields()
     {
-        $place = ($place) ? $place .'-' : '';
-
         foreach($this->fields as $name => $this->field) {
             $this->field['val'] = $this->getValue($name);
-            require self::FIELD_PATH . $place . $this->field['type'] .'.php';
+            require self::FIELD_PATH . $this->field['type'] .'.php';
         }
     }
 }

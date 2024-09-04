@@ -129,8 +129,9 @@ class MetaBox
         global $post;
 
         $this->id = $post->ID ?? 0;
+        $this->fieldsType = 'box';
 
-        $this->echoFields('box');
+        $this->echoFields();
     }
 
 }
