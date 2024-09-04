@@ -15,35 +15,51 @@ class Builder
 {
     protected const WPB_LANG_PATH = __DIR__ .'/../lang';
 
-    public function __construct()
+    private $env = null;
+
+    public function __construct(?string $env = null)
     {
-        add_action('init', [$this, 'i18n']);
+        if($env) $this->env = $env;
+
+        add_action('init', [$this, 'build']);
     }
 
-    public function i18n()
+    public function build()
+    {
+        $this->i18n();
+    }
+
+    private function i18n()
     {
         $arr_lang = [
             'en_US',
             get_locale(),
         ];
 
-        $theme_path =  WP_CONTENT_DIR .'/languages/themes';
-        if(!is_dir($theme_path)) mkdir($theme_path);
+        if(!$this->env || $this->env == 'theme') {
+            $path = WP_CONTENT_DIR .'/languages/themes';
+            if(!is_dir($path)) mkdir($path);
 
-        $plugin_path =  WP_CONTENT_DIR .'/languages/plugins';
-        if(!is_dir($plugin_path)) mkdir($plugin_path);
-
-        foreach($arr_lang as $lang) {
-            if(file_exists(self::WPB_LANG_PATH .'/'. $lang .'.mo') && !file_exists($theme_path .'/wpb-'. $lang .'.mo')) {
-                copy(self::WPB_LANG_PATH .'/'. $lang .'.mo', $theme_path .'/wpb-'. $lang .'.mo');
+            foreach($arr_lang as $lang) {
+                if(file_exists(self::WPB_LANG_PATH .'/'. $lang .'.mo') && !file_exists($path .'/wpb-'. $lang .'.mo')) {
+                    copy(self::WPB_LANG_PATH .'/'. $lang .'.mo', $path .'/wpb-'. $lang .'.mo');
+                }
             }
 
-            if(file_exists(self::WPB_LANG_PATH .'/'. $lang .'.mo') && !file_exists($plugin_path .'/wpb-'. $lang .'.mo')) {
-                copy(self::WPB_LANG_PATH .'/'. $lang .'.mo', $plugin_path .'/wpb-'. $lang .'.mo');
-            }
+            load_theme_textdomain('wpb', self::WPB_LANG_PATH);
         }
 
-        load_theme_textdomain('wpb', self::WPB_LANG_PATH);
-        load_plugin_textdomain('wpb', false, self::WPB_LANG_PATH .'/lang');
+        if(!$this->env || $this->env == 'plugin') {
+            $path =  WP_CONTENT_DIR .'/languages/plugins';
+            if(!is_dir($path)) mkdir($path);
+
+            foreach($arr_lang as $lang) {
+                if(file_exists(self::WPB_LANG_PATH .'/'. $lang .'.mo') && !file_exists($path .'/wpb-'. $lang .'.mo')) {
+                    copy(self::WPB_LANG_PATH .'/'. $lang .'.mo', $path .'/wpb-'. $lang .'.mo');
+                }
+            }
+
+            load_plugin_textdomain('wpb', false, self::WPB_LANG_PATH .'/lang');
+        }
     }
 }
