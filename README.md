@@ -163,7 +163,10 @@ $postType->addArgs('rest_base', 'product');
 
 ## Version LOG
 
-The current version is: **v0.3.0**
+The current version is: **v0.4.0**
+
+### v0.4
+- **03/09/2024 | v0.4.0** - Edit and Delete Post Type
 
 ### v0.3
 - **03/09/2024 | v0.3.0** - Documentation structure
