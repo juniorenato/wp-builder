@@ -5,18 +5,18 @@ First of all, if you are looking for a tool that gives you functions in the admi
 This builder **was created for developers**. It aims to speed up and facilitate the development of WordPress.
 
 1. [Installation](#installation)
-    1.1. [Compsoer installation](#composer-installation)
+    1. [Compsoer installation](#composer-installation)
 
 2. [Fast mode](#fast-mode)
-    2.1. [Custom Post Types](#custom-post-types)
-    2.2. [Taxonomies](#taxonomies)
-    2.2. [Pages](#pages)
+    1. [Custom Post Types](#custom-post-types)
+    2. [Taxonomies](#taxonomies)
+    2. [Pages](#pages)
 
 3. [Post Types](#post-types)
-    3.1. [Creating a new custom post type](#post-types)
-    3.2. [Aditional helper methods](#aditional-helper-methods)
-    3.3. [Change default labels](#change-default-labels)
-    3.4. [Change default args](#change-default-args)
+    1. [Creating a new custom post type](#post-types)
+    2. [Aditional helper methods](#aditional-helper-methods)
+    3. [Change default labels](#change-default-labels)
+    4. [Change default args](#change-default-args)
 
 4. [Version LOG](#version-log)
 
