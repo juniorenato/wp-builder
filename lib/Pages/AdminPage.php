@@ -2,6 +2,7 @@
 
 namespace WPB\Pages;
 
+use WPB\Builder;
 use WPB\Forms\AdminForm;
 
 /**
@@ -209,6 +210,6 @@ class AdminPage
     {
         wp_nonce_field($this->menuSlug .'-settings');
 
-        require WPB_PAGE_PATH .'page.php';
+        require Builder::PATH['PAGE'] .'page.php';
     }
 }
