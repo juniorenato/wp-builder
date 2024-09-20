@@ -2,6 +2,15 @@
 
 namespace WPB\Comments;
 
+/**
+ * -----------------------------------------------------------------------------
+ * Comments
+ * -----------------------------------------------------------------------------
+ *
+ * @since v0.6.0
+ * @author Renato Rodrigues Jr <juniorenato@msn.com>
+ * @package juniorenato/wp-builder
+ */
 class Comment
 {
     /**
