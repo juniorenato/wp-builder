@@ -7,28 +7,66 @@ namespace WPB;
  * Default plugin settings
  * -----------------------------------------------------------------------------
  *
+ * @param string $env `theme | plugin`
+ *
  * @since v0.1.0
  * @author Renato Rodrigues Jr <juniorenato@msn.com>
  * @package juniorenato/wp-builder
  */
 class Builder
 {
-    private $env = null;
+    public const THEME = 'theme';
+    public const PLUGIN = 'plugin';
+    public const PATH = [
+        'FORM' => __DIR__ .'/../views/form/',
+        'LANG' => __DIR__ .'/../lang',
+        'PAGE' => __DIR__ .'/../views/',
+    ];
 
-    public function __construct(?string $env = null)
+    public function __construct(string $env)
     {
-        if($env) $this->env = $env;
+        global $wp_builder;
 
-        define('WPB_FIELD_PATH', __DIR__ .'/../views/form/');
-        define('WPB_LANG_PATH', __DIR__ .'/../lang');
-        define('WPB_PAGE_PATH', __DIR__ .'/../views/');
+        if(strtolower($env) === 'theme' || strtolower($env) === 'plugin') {
+            $wp_builder = strtolower($env);
+        }
 
         add_action('init', [$this, 'build']);
     }
 
-    public function build()
+    /**
+     * -------------------------------------------------------------------------
+     * Check if it's a plugin
+     * -------------------------------------------------------------------------
+     *
+     * @return boolean
+     */
+    public static function isPlugin(): bool
+    {
+        global $wp_builder;
+
+        return (self::PLUGIN === $wp_builder);
+    }
+
+    /**
+     * -------------------------------------------------------------------------
+     * Check if it's a theme
+     * -------------------------------------------------------------------------
+     *
+     * @return boolean
+     */
+    public static function isTheme(): bool
+    {
+        global $wp_builder;
+
+        return (self::THEME === $wp_builder);
+    }
+
+    public function build(): Builder
     {
         $this->i18n();
+
+        return $this;
     }
 
     private function i18n()
@@ -38,30 +76,30 @@ class Builder
             get_locale(),
         ];
 
-        if(!$this->env || $this->env == 'theme') {
+        if(!static::isPlugin()) {
             $path = WP_CONTENT_DIR .'/languages/themes';
             if(!is_dir($path)) mkdir($path);
 
             foreach($arr_lang as $lang) {
-                if(file_exists(WPB_LANG_PATH .'/'. $lang .'.mo') && !file_exists($path .'/wpb-'. $lang .'.mo')) {
-                    copy(WPB_LANG_PATH .'/'. $lang .'.mo', $path .'/wpb-'. $lang .'.mo');
+                if(file_exists(self::PATH['LANG'] .'/'. $lang .'.mo') && !file_exists($path .'/wpb-'. $lang .'.mo')) {
+                    copy(self::PATH['LANG'] .'/'. $lang .'.mo', $path .'/wpb-'. $lang .'.mo');
                 }
             }
 
-            load_theme_textdomain('wpb', WPB_LANG_PATH);
+            load_theme_textdomain('wpb', self::PATH['LANG']);
         }
 
-        if(!$this->env || $this->env == 'plugin') {
-            $path =  WP_CONTENT_DIR .'/languages/plugins';
+        if(!static::isTheme()) {
+            $path = WP_CONTENT_DIR .'/languages/plugins';
             if(!is_dir($path)) mkdir($path);
 
             foreach($arr_lang as $lang) {
-                if(file_exists(WPB_LANG_PATH .'/'. $lang .'.mo') && !file_exists($path .'/wpb-'. $lang .'.mo')) {
-                    copy(WPB_LANG_PATH .'/'. $lang .'.mo', $path .'/wpb-'. $lang .'.mo');
+                if(file_exists(self::PATH['LANG'] .'/'. $lang .'.mo') && !file_exists($path .'/wpb-'. $lang .'.mo')) {
+                    copy(self::PATH['LANG'] .'/'. $lang .'.mo', $path .'/wpb-'. $lang .'.mo');
                 }
             }
 
-            load_plugin_textdomain('wpb', false, WPB_LANG_PATH .'/lang');
+            load_plugin_textdomain('wpb', false, self::PATH['LANG'] .'/lang');
         }
     }
 }

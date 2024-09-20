@@ -2,6 +2,8 @@
 
 namespace WPB\Forms;
 
+use WPB\Builder;
+
 /**
  * -----------------------------------------------------------------------------
  * Admin Form Builder
@@ -37,7 +39,7 @@ trait AdminForm
             'val' => wp_create_nonce(__FILE__),
         ];
 
-        require WPB_FIELD_PATH . 'hidden.php';
+        require Builder::PATH['FORM'] . 'hidden.php';
     }
 
     public function savePost($post_id, $post)
@@ -228,7 +230,7 @@ trait AdminForm
     {
         foreach($this->fields as $name => $this->field) {
             $this->field['val'] = $this->getValue($name);
-            require WPB_FIELD_PATH . $this->field['type'] .'.php';
+            require Builder::PATH['FIELD'] . $this->field['type'] .'.php';
         }
     }
 }
