@@ -1,0 +1,30 @@
+{
+    "$schema": "https://schemas.wp.org/trunk/block.json",
+    "apiVersion": 2,
+    "name": "wpb/opcoes",
+    "title": "G\u00eanero",
+    "category": "common",
+    "icon": "admin-generic",
+    "editorScript": "wpb-generic-block-loader",
+    "attributes": {
+        "genero": {
+            "html_type": "select",
+            "type": "string",
+            "source": "meta",
+            "meta": "genero",
+            "options": [
+                {
+                    "label": "Masculino",
+                    "value": "m"
+                },
+                {
+                    "label": "Feminino",
+                    "value": "f"
+                }
+            ]
+        }
+    },
+    "supports": {
+        "html": false
+    }
+}

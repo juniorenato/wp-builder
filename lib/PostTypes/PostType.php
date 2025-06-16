@@ -195,7 +195,7 @@ class PostType
      * @param boolean $ucfirst
      * @return PostType
      */
-    public function labels($labels, string $val = null, bool $ucfirst = true): PostType
+    public function labels($labels, ?string $val = null, bool $ucfirst = true): PostType
     {
         if(!is_array($labels) && $val) {
             $this->labels[$labels] = ($ucfirst) ? ucfirst($val) : $val;
@@ -229,9 +229,9 @@ class PostType
      *
      * @param boolean|string|array $rewrite
      * @param string|null $val
-     * @return PostType
+     * @return this
      */
-    public function rewrite($rewrite, ?string $val = null): PostType
+    public function rewrite($rewrite, ?string $val = null)
     {
         if(is_bool($rewrite)) {
             $this->rewrite = [
@@ -301,9 +301,9 @@ class PostType
      * -------------------------------------------------------------------------
      *
      * @param string|list<string> $taxonomies
-     * @return CustomPostType
+     * @return this
      */
-    public function taxonomies($taxonomies): CustomPostType
+    public function taxonomies($taxonomies)
     {
         if(is_array($taxonomies)) {
             $this->taxonomies = array_merge($this->taxonomies, $taxonomies);
@@ -386,11 +386,11 @@ class PostType
      * -------------------------------------------------------------------------
      *
      * @param string $icon
-     * @return CustomPostType
+     * @return this
      *
      * @see https://developer.wordpress.org/resource/dashicons/
      */
-    public function icon(string $icon): CustomPostType
+    public function icon(string $icon)
     {
         $this->args['menu_icon'] = $icon;
 
@@ -403,11 +403,11 @@ class PostType
      * -------------------------------------------------------------------------
      *
      * @param string $position
-     * @return CustomPostType
+     * @return this
      *
      * @see https://developer.wordpress.org/resource/dashicons/
      */
-    public function position(string $position): CustomPostType
+    public function position(string $position)
     {
         $this->args['menu_position'] = $position;
 

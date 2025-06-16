@@ -1,0 +1,39 @@
+{
+    "$schema": "https://schemas.wp.org/trunk/block.json",
+    "apiVersion": 2,
+    "name": "wpb/texto-simples",
+    "title": "Texto simples",
+    "category": "common",
+    "icon": "admin-generic",
+    "editorScript": "wpb-generic-block-loader",
+    "attributes": {
+        "titulo": {
+            "type": "string",
+            "source": "meta",
+            "meta": "titulo"
+        },
+        "exibir": {
+            "type": "string",
+            "source": "meta",
+            "meta": "exibir"
+        },
+        "categoria": {
+            "type": "string",
+            "source": "meta",
+            "meta": "categoria"
+        },
+        "descricao": {
+            "type": "string",
+            "source": "meta",
+            "meta": "descricao"
+        },
+        "quantidade": {
+            "type": "string",
+            "source": "meta",
+            "meta": "quantidade"
+        }
+    },
+    "supports": {
+        "html": true
+    }
+}
