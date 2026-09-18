@@ -118,6 +118,9 @@ trait AdminForm
      * Renders the WordPress nonce field used by meta boxes.
      *
      * @since 0.2.0
+     *
+     * @see https://developer.wordpress.org/reference/functions/wp_create_nonce/
+     * @see https://developer.wordpress.org/reference/functions/wp_nonce_field/
      */
     public function addNonceName(): void
     {
@@ -140,6 +143,11 @@ trait AdminForm
      * @param \WP_Post $post    Post object being saved.
      *
      * @return int Post ID.
+     *
+     * @see https://developer.wordpress.org/reference/hooks/save_post/
+     * @see https://developer.wordpress.org/reference/functions/wp_verify_nonce/
+     * @see https://developer.wordpress.org/reference/functions/update_post_meta/
+     * @see https://developer.wordpress.org/reference/functions/current_user_can/
      */
     public function savePost($post_id, $post): int
     {
@@ -385,6 +393,8 @@ trait AdminForm
      * @param array<string, mixed> $editorSettings `wp_editor()` settings.
      * @param string               $description    Field description.
      * @param array<string, mixed> $attrs          Extra HTML attributes.
+     *
+     * @see https://developer.wordpress.org/reference/functions/wp_editor/
      */
     public function addRichTextField(
         string $name,
@@ -411,6 +421,11 @@ trait AdminForm
      * @return mixed Stored value, or an empty string when unavailable.
      *
      * @throws InvalidArgumentException If `$type` is not allowed.
+     *
+     * @see https://developer.wordpress.org/reference/functions/get_option/
+     * @see https://developer.wordpress.org/reference/functions/get_post_meta/
+     * @see https://developer.wordpress.org/reference/functions/get_term_meta/
+     * @see https://developer.wordpress.org/reference/functions/get_user_meta/
      */
     protected function getValue(string $key, ?string $type = null): mixed
     {
@@ -464,6 +479,11 @@ trait AdminForm
      * @return int|bool|string Write result, or an empty string when unavailable.
      *
      * @throws InvalidArgumentException If the current value type is not allowed.
+     *
+     * @see https://developer.wordpress.org/reference/functions/update_option/
+     * @see https://developer.wordpress.org/reference/functions/update_post_meta/
+     * @see https://developer.wordpress.org/reference/functions/update_term_meta/
+     * @see https://developer.wordpress.org/reference/functions/update_user_meta/
      */
     protected function setValue(string $key, mixed $value): int|bool|string
     {
@@ -624,6 +644,11 @@ trait AdminForm
      * @param mixed                $value Submitted value.
      *
      * @return string|list<string> Sanitized value.
+     *
+     * @see https://developer.wordpress.org/reference/functions/sanitize_text_field/
+     * @see https://developer.wordpress.org/reference/functions/sanitize_textarea_field/
+     * @see https://developer.wordpress.org/reference/functions/wp_kses_post/
+     * @see https://developer.wordpress.org/reference/functions/rest_sanitize_boolean/
      */
     protected function sanitizeFieldValue(array $field, mixed $value): string|array
     {
@@ -673,6 +698,8 @@ trait AdminForm
      * @param array<string, mixed> $field Field configuration.
      *
      * @return mixed Unslashed submitted value.
+     *
+     * @see https://developer.wordpress.org/reference/functions/wp_unslash/
      */
     protected function getPostedValue(array $field): mixed
     {
@@ -815,6 +842,8 @@ trait AdminForm
      * @param array<string, mixed> $arr_attributes Attribute map.
      *
      * @return string Escaped attribute string.
+     *
+     * @see https://developer.wordpress.org/reference/functions/esc_attr/
      */
     private function formatAttributes(array $arr_attributes): string
     {

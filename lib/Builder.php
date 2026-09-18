@@ -81,6 +81,10 @@ class Builder
      *
      * @param callable $callback Callback to run.
      * @param int      $priority Hook priority.
+     *
+     * @see https://developer.wordpress.org/reference/functions/add_action/
+     * @see https://developer.wordpress.org/reference/functions/did_action/
+     * @see https://developer.wordpress.org/reference/hooks/init/
      */
     public static function onInit(callable $callback, int $priority = 10): void
     {
@@ -99,6 +103,10 @@ class Builder
      * @since 0.1.0
      *
      * @return bool True after `after_setup_theme` has started.
+     *
+     * @see https://developer.wordpress.org/reference/functions/did_action/
+     * @see https://developer.wordpress.org/reference/hooks/after_setup_theme/
+     * @see https://make.wordpress.org/core/2024/10/21/i18n-improvements-6-7/
      */
     public static function canLoadTranslations(): bool
     {
@@ -157,6 +165,9 @@ class Builder
      * @since 0.1.0
      *
      * @see https://make.wordpress.org/core/2024/10/21/i18n-improvements-6-7/
+     * @see https://developer.wordpress.org/reference/functions/load_theme_textdomain/
+     * @see https://developer.wordpress.org/reference/functions/load_plugin_textdomain/
+     * @see https://developer.wordpress.org/reference/functions/determine_locale/
      */
     private function i18n(): void
     {
@@ -186,6 +197,9 @@ class Builder
      *
      * @param 'plugins'|'themes' $type    Language subdirectory for the environment.
      * @param list<string>       $locales Locales to install.
+     *
+     * @see https://developer.wordpress.org/reference/functions/wp_mkdir_p/
+     * @see https://developer.wordpress.org/reference/functions/load_plugin_textdomain/
      */
     private function installTranslationFiles(string $type, array $locales): void
     {

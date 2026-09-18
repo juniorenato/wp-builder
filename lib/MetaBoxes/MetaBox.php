@@ -18,6 +18,8 @@ use WPB\Forms\AdminForm;
  *
  * @since  0.3.0
  * @author Renato Rodrigues Jr <juniorenato@msn.com>
+ *
+ * @see https://developer.wordpress.org/reference/functions/add_meta_box/
  */
 class MetaBox
 {
@@ -103,6 +105,8 @@ class MetaBox
      * @since 0.3.0
      *
      * @param string $metaBoxId Unsanitized identifier.
+     *
+     * @see https://developer.wordpress.org/reference/functions/add_meta_box/
      */
     public function metaBoxId(string $metaBoxId): void
     {
@@ -117,6 +121,8 @@ class MetaBox
      * @param string $title Meta box title.
      *
      * @return static
+     *
+     * @see https://developer.wordpress.org/reference/functions/add_meta_box/
      */
     public function title(string $title): static
     {
@@ -137,6 +143,8 @@ class MetaBox
      * @param mixed $screen Post type slug, screen ID, or `WP_Screen`.
      *
      * @return static
+     *
+     * @see https://developer.wordpress.org/reference/functions/add_meta_box/
      */
     public function screen(mixed $screen): static
     {
@@ -153,6 +161,8 @@ class MetaBox
      * @param string $context Context (`normal`, `side`, or `advanced`).
      *
      * @return static
+     *
+     * @see https://developer.wordpress.org/reference/functions/add_meta_box/
      */
     public function context(string $context): static
     {
@@ -169,6 +179,8 @@ class MetaBox
      * @param string $priority Priority (`high`, `core`, `default`, or `low`).
      *
      * @return static
+     *
+     * @see https://developer.wordpress.org/reference/functions/add_meta_box/
      */
     public function priority(string $priority): static
     {
@@ -185,6 +197,8 @@ class MetaBox
      * @param mixed $callbackArgs Argument map or a single argument.
      *
      * @return static
+     *
+     * @see https://developer.wordpress.org/reference/functions/add_meta_box/
      */
     public function args(mixed $callbackArgs): static
     {
@@ -206,6 +220,9 @@ class MetaBox
      * @param mixed       $screen Screen where the meta box should appear.
      *
      * @return bool True when required configuration is present.
+     *
+     * @see https://developer.wordpress.org/reference/functions/add_meta_box/
+     * @see https://developer.wordpress.org/reference/hooks/add_meta_boxes/
      */
     public function register(?string $title = null, mixed $screen = null): bool
     {
@@ -227,6 +244,8 @@ class MetaBox
      * Hooks the meta box into `add_meta_boxes`.
      *
      * @since 0.3.0
+     *
+     * @see https://developer.wordpress.org/reference/hooks/add_meta_boxes/
      */
     public function setMetaboxes(): void
     {
@@ -241,6 +260,8 @@ class MetaBox
      * Registers the meta box with WordPress.
      *
      * @since 0.3.0
+     *
+     * @see https://developer.wordpress.org/reference/functions/add_meta_box/
      */
     public function addMetaBoxes(): void
     {
@@ -261,6 +282,8 @@ class MetaBox
      * @since 0.3.0
      *
      * @global \WP_Post $post Current post object.
+     *
+     * @see https://developer.wordpress.org/reference/functions/add_meta_box/
      */
     public function registerMetabox(): void
     {

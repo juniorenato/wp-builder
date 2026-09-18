@@ -15,6 +15,9 @@ namespace WPB\PostTypes;
  *
  * @since  0.4.0
  * @author Renato Rodrigues Jr <juniorenato@msn.com>
+ *
+ * @see https://developer.wordpress.org/reference/functions/get_post_type_object/
+ * @see https://developer.wordpress.org/reference/hooks/register_post_type_post_type_args/
  */
 class EditPostType extends PostType
 {
@@ -69,6 +72,8 @@ class EditPostType extends PostType
      * @param string $postType Post type key.
      *
      * @return static
+     *
+     * @see https://developer.wordpress.org/reference/functions/get_post_type_object/
      */
     #[\Override]
     public function setPostType(string $postType): static
@@ -96,6 +101,8 @@ class EditPostType extends PostType
      *
      * @param string|null               $postType Post type key.
      * @param array<string, mixed>|null $args     Arguments to merge.
+     *
+     * @see https://developer.wordpress.org/reference/hooks/register_post_type_post_type_args/
      */
     public function edit(?string $postType = null, ?array $args = null): void
     {
@@ -122,6 +129,8 @@ class EditPostType extends PostType
      * @param array<string, mixed> $args Current post type arguments.
      *
      * @return array<string, mixed> Merged arguments.
+     *
+     * @see https://developer.wordpress.org/reference/hooks/register_post_type_post_type_args/
      */
     public function registerArgs(array $args): array
     {

@@ -3,6 +3,11 @@
  * Admin settings page layout.
  *
  * @package WPB\Pages
+ *
+ * @see https://developer.wordpress.org/plugins/settings/settings-api/
+ * @see https://developer.wordpress.org/reference/functions/settings_fields/
+ * @see https://developer.wordpress.org/reference/functions/do_settings_sections/
+ * @see https://developer.wordpress.org/reference/functions/submit_button/
  */
 ?>
 <div class="wrap">

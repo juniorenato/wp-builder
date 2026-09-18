@@ -15,6 +15,9 @@ namespace WPB\Comments;
  *
  * @since  0.6.0
  * @author Renato Rodrigues Jr <juniorenato@msn.com>
+ *
+ * @see https://developer.wordpress.org/reference/hooks/comments_open/
+ * @see https://developer.wordpress.org/reference/hooks/pings_open/
  */
 class Comment
 {
@@ -22,6 +25,11 @@ class Comment
      * Disables comments, pings, and related admin UI.
      *
      * @since 0.6.0
+     *
+     * @see https://developer.wordpress.org/reference/hooks/comments_open/
+     * @see https://developer.wordpress.org/reference/hooks/pings_open/
+     * @see https://developer.wordpress.org/reference/hooks/admin_init/
+     * @see https://developer.wordpress.org/reference/hooks/admin_menu/
      */
     public function disable(): void
     {
@@ -37,6 +45,10 @@ class Comment
      * @since 0.6.0
      *
      * @global string $pagenow Current admin page.
+     *
+     * @see https://developer.wordpress.org/reference/functions/remove_post_type_support/
+     * @see https://developer.wordpress.org/reference/functions/remove_meta_box/
+     * @see https://developer.wordpress.org/reference/functions/wp_safe_redirect/
      */
     public function admin(): void
     {
@@ -63,6 +75,9 @@ class Comment
      * @since 0.6.0
      *
      * @return bool Always false.
+     *
+     * @see https://developer.wordpress.org/reference/hooks/comments_open/
+     * @see https://developer.wordpress.org/reference/hooks/pings_open/
      */
     public function status(): bool
     {
@@ -73,6 +88,8 @@ class Comment
      * Removes the comments screen from the admin menu.
      *
      * @since 0.6.0
+     *
+     * @see https://developer.wordpress.org/reference/functions/remove_menu_page/
      */
     public function menu(): void
     {

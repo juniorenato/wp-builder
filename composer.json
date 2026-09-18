@@ -1,6 +1,6 @@
 {
     "name": "juniorenato/wp-builder",
-    "description": "A developer-oriented builder for WordPress custom post types, taxonomies, meta boxes, and admin pages.",
+    "description": "A developer-oriented builder for WordPress custom post types, taxonomies, meta boxes, admin pages, and PHP-only Gutenberg blocks.",
     "type": "library",
     "keywords": [
         "wordpress"

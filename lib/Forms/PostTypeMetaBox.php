@@ -18,6 +18,8 @@ use WPB\MetaBoxes\MetaBox;
  *
  * @since  0.2.0
  * @author Renato Rodrigues Jr <juniorenato@msn.com>
+ *
+ * @see https://developer.wordpress.org/reference/functions/add_meta_box/
  */
 trait PostTypeMetaBox
 {
@@ -50,6 +52,9 @@ trait PostTypeMetaBox
      * Registers attached meta boxes and their save hooks.
      *
      * @since 0.2.0
+     *
+     * @see https://developer.wordpress.org/reference/functions/add_meta_box/
+     * @see https://developer.wordpress.org/reference/functions/register_post_type/
      */
     public function registerMetaBoxes(): void
     {
@@ -97,6 +102,9 @@ trait PostTypeMetaBox
      * Hooks nonce output and post-save handling for the post type.
      *
      * @since 0.2.0
+     *
+     * @see https://developer.wordpress.org/reference/hooks/edit_form_after_title/
+     * @see https://developer.wordpress.org/reference/hooks/save_post_post-post_type/
      */
     public function setPostTypeMetaBoxes(): void
     {

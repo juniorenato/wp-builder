@@ -73,6 +73,8 @@ class CustomPostType extends PostType
      * Merges default arguments with user-provided arguments.
      *
      * @since 0.1.0
+     *
+     * @see https://developer.wordpress.org/reference/functions/register_post_type/
      */
     protected function setArgs(): void
     {
@@ -106,6 +108,9 @@ class CustomPostType extends PostType
      * @param bool        $male     Whether to use masculine translations.
      *
      * @return bool True when required configuration is present.
+     *
+     * @see https://developer.wordpress.org/reference/functions/register_post_type/
+     * @see https://developer.wordpress.org/reference/hooks/init/
      */
     public function register(?string $postType = null, ?string $singular = null, ?string $plural = null, bool $male = true): bool
     {
@@ -127,6 +132,8 @@ class CustomPostType extends PostType
      * Registers the post type with WordPress.
      *
      * @since 0.1.0
+     *
+     * @see https://developer.wordpress.org/reference/functions/register_post_type/
      */
     public function registerPostType(): void
     {
