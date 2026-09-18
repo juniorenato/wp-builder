@@ -58,19 +58,25 @@ trait TaxonomyCustomField
 
     public function createTerm($term_id)
     {
-        $this->id = $term_id;
-
-        foreach($this->fields as $name => $field) {
-            $this->setValue($name, $_POST[$field['name']]);
+        if (!current_user_can('manage_terms', $this->taxonomy)) {
+            return;
         }
+
+        check_admin_referer('add-' . $this->taxonomy, '_wpnonce');
+
+        $this->id = $term_id;
+        $this->saveFieldsFromPost();
     }
 
     public function editTerm($term_id)
     {
-        $this->id = $term_id;
-
-        foreach($this->fields as $name => $field) {
-            $this->setValue($name, $_POST[$field['name']]);
+        if (!current_user_can('edit_term', $term_id)) {
+            return;
         }
+
+        check_admin_referer('update-tag_' . $term_id);
+
+        $this->id = $term_id;
+        $this->saveFieldsFromPost();
     }
 }

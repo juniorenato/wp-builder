@@ -128,7 +128,7 @@ class AdminPage
 
     public function position(string $position): AdminPage
     {
-        $this->position = $position;
+        $this->position = (int) $position;
 
         return $this;
     }
@@ -202,14 +202,16 @@ class AdminPage
     public function registerSettings()
     {
         foreach($this->fields as $field) {
-            register_setting($this->menuSlug .'-group', $field['name']);
+            register_setting($this->menuSlug .'-group', $field['name'], [
+                'sanitize_callback' => function ($value) use ($field) {
+                    return $this->sanitizeFieldValue($field, $value);
+                },
+            ]);
         }
     }
 
     public function buildPage()
     {
-        wp_nonce_field($this->menuSlug .'-settings');
-
         require Builder::PATH['PAGE'] .'page.php';
     }
 }

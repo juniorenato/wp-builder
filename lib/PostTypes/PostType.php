@@ -244,17 +244,15 @@ class PostType
 
         elseif(is_array($rewrite)) {
             foreach($rewrite as $key => $val) $this->rewrite[$key] = $val;
-
-            return $this;
         }
 
         else {
             $this->rewrite[$rewrite] = $val;
 
             if($rewrite == 'slug') $this->rewrite['with_front'] = true;
-
-            return $this;
         }
+
+        return $this;
     }
 
     /**
@@ -311,9 +309,9 @@ class PostType
 
         else {
             $this->taxonomies[] = $taxonomies;
-
-            return $this;
         }
+
+        return $this;
     }
 
     /**

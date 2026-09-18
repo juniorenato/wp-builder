@@ -16,6 +16,8 @@ class RemovePostType extends EditPostType
 {
     public function __construct(?string $postType)
     {
+        parent::__construct();
+
         if($postType) $this->remove($postType);
     }
 
