@@ -18,9 +18,9 @@ class Builder
     public const THEME = 'theme';
     public const PLUGIN = 'plugin';
     public const PATH = [
-        'FORM' => __DIR__ .'/../views/form/',
-        'LANG' => __DIR__ .'/../lang',
-        'PAGE' => __DIR__ .'/../views/',
+        'FORM' => __DIR__ . '/../views/form/',
+        'LANG' => __DIR__ . '/../lang',
+        'PAGE' => __DIR__ . '/../views/',
     ];
 
     public function __construct(string $env)

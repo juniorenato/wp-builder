@@ -230,7 +230,7 @@ trait AdminForm
     {
         foreach($this->fields as $name => $this->field) {
             $this->field['val'] = $this->getValue($name);
-            require Builder::PATH['FIELD'] . $this->field['type'] .'.php';
+            require Builder::PATH['FORM'] . $this->field['type'] .'.php';
         }
     }
 }
