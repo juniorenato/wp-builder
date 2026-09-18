@@ -161,6 +161,8 @@ class Taxonomy
      * @param string $taxonomy Taxonomy key.
      *
      * @return static
+     *
+     * @see https://developer.wordpress.org/reference/functions/register_taxonomy/
      */
     public function taxonomy(string $taxonomy): static
     {
@@ -180,6 +182,8 @@ class Taxonomy
      * @param string $singular Singular name.
      * @param string $plural   Plural name.
      * @param bool   $male     Whether to use masculine translations.
+     *
+     * @see https://developer.wordpress.org/reference/functions/get_taxonomy_labels/
      */
     public function setLabels(string $singular, string $plural, bool $male = true): void
     {
@@ -197,6 +201,8 @@ class Taxonomy
      * Builds the default translated taxonomy labels.
      *
      * @since 0.1.0
+     *
+     * @see https://developer.wordpress.org/reference/functions/get_taxonomy_labels/
      */
     private function buildDefaultLabels(): void
     {
@@ -239,6 +245,8 @@ class Taxonomy
      * Merges default arguments with user-provided arguments.
      *
      * @since 0.1.0
+     *
+     * @see https://developer.wordpress.org/reference/functions/register_taxonomy/
      */
     private function setArgs(): void
     {
@@ -338,6 +346,8 @@ class Taxonomy
      * @param string|null                      $val     Value when `$rewrite` is a key.
      *
      * @return static
+     *
+     * @see https://developer.wordpress.org/reference/functions/register_taxonomy/
      */
     public function rewrite(bool|string|array $rewrite, ?string $val = null): static
     {
@@ -377,6 +387,8 @@ class Taxonomy
      * @param string|null                  $val          Capability value when `$capabilities` is a key.
      *
      * @return static
+     *
+     * @see https://developer.wordpress.org/reference/functions/register_taxonomy/
      */
     public function capabilities(string|array $capabilities, ?string $val = null): static
     {
@@ -401,6 +413,8 @@ class Taxonomy
      * @param string|list<string> $post_types Post type slug or list of slugs.
      *
      * @return static
+     *
+     * @see https://developer.wordpress.org/reference/functions/register_taxonomy/
      */
     public function postTypes(string|array $post_types): static
     {
@@ -447,6 +461,8 @@ class Taxonomy
      * @param mixed                       $val  Value when `$args` is a key.
      *
      * @return static
+     *
+     * @see https://developer.wordpress.org/reference/functions/register_taxonomy/
      */
     public function args(string|array $args, mixed $val = null): static
     {
@@ -475,6 +491,9 @@ class Taxonomy
      * @param bool                     $male     Whether to use masculine translations.
      *
      * @return static|false The taxonomy instance, or false when configuration is incomplete.
+     *
+     * @see https://developer.wordpress.org/reference/functions/register_taxonomy/
+     * @see https://developer.wordpress.org/reference/hooks/init/
      */
     public function register(
         ?string $taxonomy = null,
@@ -504,6 +523,8 @@ class Taxonomy
      * Labels and arguments are finalized here so `__()` runs on `init`.
      *
      * @since 0.1.0
+     *
+     * @see https://developer.wordpress.org/reference/functions/register_taxonomy/
      */
     public function registerTaxonomy(): void
     {

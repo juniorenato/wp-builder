@@ -33,6 +33,8 @@ class PostType
      * @since 0.2.0
      *
      * @var list<string>
+     *
+     * @see https://developer.wordpress.org/reference/functions/register_post_type/
      */
     protected const array ARGS = [
         'label',
@@ -160,6 +162,8 @@ class PostType
      * @param string $postType Post type key.
      *
      * @return static
+     *
+     * @see https://developer.wordpress.org/reference/functions/register_post_type/
      */
     public function setPostType(string $postType): static
     {
@@ -199,6 +203,8 @@ class PostType
      * Builds the default translated post type labels.
      *
      * @since 0.2.0
+     *
+     * @see https://developer.wordpress.org/reference/functions/get_post_type_labels/
      */
     protected function buildDefaultLabels(): void
     {
@@ -297,6 +303,8 @@ class PostType
      * @param bool                         $ucfirst  Whether to uppercase the first character.
      *
      * @return static
+     *
+     * @see https://developer.wordpress.org/reference/functions/get_post_type_labels/
      */
     public function labels(string|array $labels, ?string $val = null, bool $ucfirst = true): static
     {
@@ -330,6 +338,8 @@ class PostType
      * @param string|null                      $val     Value when `$rewrite` is a key.
      *
      * @return static
+     *
+     * @see https://developer.wordpress.org/reference/functions/register_post_type/
      */
     public function rewrite(bool|string|array $rewrite, ?string $val = null): static
     {
@@ -378,6 +388,9 @@ class PostType
      * @param int|string|bool|null            $val      Value when `$supports` is a feature name.
      *
      * @return static
+     *
+     * @see https://developer.wordpress.org/reference/functions/add_post_type_support/
+     * @see https://developer.wordpress.org/reference/functions/register_post_type/
      */
     public function supports(string|array $supports, int|string|bool|null $val = null): static
     {
@@ -400,6 +413,9 @@ class PostType
      * @param string|list<string> $taxonomies Taxonomy slug or list of slugs.
      *
      * @return static
+     *
+     * @see https://developer.wordpress.org/reference/functions/register_taxonomy_for_object_type/
+     * @see https://developer.wordpress.org/reference/functions/register_post_type/
      */
     public function taxonomies(string|array $taxonomies): static
     {
@@ -459,6 +475,8 @@ class PostType
      * @param mixed                       $val    Value when `$config` is a key.
      *
      * @return static
+     *
+     * @see https://developer.wordpress.org/reference/functions/register_post_type/
      */
     public function args(string|array $config, mixed $val = null): static
     {
@@ -485,6 +503,7 @@ class PostType
      * @return static
      *
      * @see https://developer.wordpress.org/resource/dashicons/
+     * @see https://developer.wordpress.org/reference/functions/register_post_type/
      */
     public function icon(string $icon): static
     {

@@ -15,6 +15,9 @@ namespace WPB\Forms;
  *
  * @since  0.2.0
  * @author Renato Rodrigues Jr <juniorenato@msn.com>
+ *
+ * @see https://developer.wordpress.org/reference/hooks/taxonomy_add_form_fields/
+ * @see https://developer.wordpress.org/reference/hooks/taxonomy_edit_form_fields/
  */
 trait TaxonomyCustomField
 {
@@ -22,6 +25,11 @@ trait TaxonomyCustomField
      * Hooks term form rendering and save callbacks.
      *
      * @since 0.2.0
+     *
+     * @see https://developer.wordpress.org/reference/hooks/taxonomy_add_form_fields/
+     * @see https://developer.wordpress.org/reference/hooks/taxonomy_edit_form_fields/
+     * @see https://developer.wordpress.org/reference/hooks/created_taxonomy/
+     * @see https://developer.wordpress.org/reference/hooks/edited_taxonomy/
      */
     protected function setTermFields(): void
     {
@@ -35,6 +43,8 @@ trait TaxonomyCustomField
      * Renders fields on the add-term form.
      *
      * @since 0.2.0
+     *
+     * @see https://developer.wordpress.org/reference/hooks/taxonomy_add_form_fields/
      */
     public function createTermFormFields(): void
     {
@@ -49,6 +59,8 @@ trait TaxonomyCustomField
      * @since 0.2.0
      *
      * @param \WP_Term $term Term being edited.
+     *
+     * @see https://developer.wordpress.org/reference/hooks/taxonomy_edit_form_fields/
      */
     public function editTermFormFields($term): void
     {
@@ -64,6 +76,10 @@ trait TaxonomyCustomField
      * @since 0.2.0
      *
      * @param int $term_id Created term ID.
+     *
+     * @see https://developer.wordpress.org/reference/hooks/created_taxonomy/
+     * @see https://developer.wordpress.org/reference/functions/current_user_can/
+     * @see https://developer.wordpress.org/reference/functions/check_admin_referer/
      */
     public function createTerm($term_id): void
     {
@@ -83,6 +99,10 @@ trait TaxonomyCustomField
      * @since 0.2.0
      *
      * @param int $term_id Updated term ID.
+     *
+     * @see https://developer.wordpress.org/reference/hooks/edited_taxonomy/
+     * @see https://developer.wordpress.org/reference/functions/current_user_can/
+     * @see https://developer.wordpress.org/reference/functions/check_admin_referer/
      */
     public function editTerm($term_id): void
     {
