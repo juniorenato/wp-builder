@@ -1,4 +1,9 @@
 <?php
+/**
+ * Field wrapper used by admin forms.
+ *
+ * @package WPB\Forms
+ */
 
 use WPB\Builder;
 
@@ -12,7 +17,8 @@ if ($fieldType === 'hidden') {
     return;
 }
 
-if ($this->fieldsType === 'box') : ?>
+if ($this->fieldsType === 'box') :
+    ?>
 
     <p class="post-attributes-label-wrapper">
         <?php require $formPath . 'partials/label.php'; ?>
@@ -20,15 +26,19 @@ if ($this->fieldsType === 'box') : ?>
     <?php require $partialPath; ?>
     <?php require $formPath . 'partials/description.php'; ?>
 
-<?php elseif ($this->fieldsType === 'term') : ?>
+    <?php
+elseif ($this->fieldsType === 'term') :
+    ?>
 
-    <div class="form-field term-<?= esc_attr($this->field['name']) ?>-wrap">
+    <div class="form-field term-<?php echo esc_attr($this->field['name']); ?>-wrap">
         <?php require $formPath . 'partials/label.php'; ?>
         <?php require $partialPath; ?>
         <?php require $formPath . 'partials/description.php'; ?>
     </div>
 
-<?php else : ?>
+    <?php
+else :
+    ?>
 
     <tr>
         <th scope="row">
@@ -40,4 +50,5 @@ if ($this->fieldsType === 'box') : ?>
         </td>
     </tr>
 
-<?php endif; ?>
+    <?php
+endif;

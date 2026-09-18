@@ -1,54 +1,56 @@
 <?php
 
+/**
+ * Taxonomy custom field helpers.
+ *
+ * @author  Renato Rodrigues Jr <juniorenato@msn.com>
+ * @license GPL-3.0-or-later
+ * @package WPB\Forms
+ */
+
 namespace WPB\Forms;
 
 /**
- * -----------------------------------------------------------------------------
- * Taxonomy Custom Fields Builder
- * -----------------------------------------------------------------------------
+ * Adds and saves custom fields on taxonomy term screens.
  *
- * @since v0.2.0
+ * @since  0.2.0
  * @author Renato Rodrigues Jr <juniorenato@msn.com>
- * @package juniorenato/wp-builder
  */
 trait TaxonomyCustomField
 {
     /**
-     * -------------------------------------------------------------------------
-     * Set fields in the forms
-     * -------------------------------------------------------------------------
+     * Hooks term form rendering and save callbacks.
      *
-     * Actions:
-     * - Add fields to a new term form
-     * - Add fields to edit a term form
-     * - Save at create action
-     * - Save at edit action
-     *
-     * @return void
+     * @since 0.2.0
      */
     protected function setTermFields(): void
     {
-        // Add fields to new term form
-        add_action($this->taxonomy .'_add_form_fields', [$this, 'createTermFormFields']);
-
-        // Add fields to edit term form
-        add_action($this->taxonomy .'_edit_form_fields', [$this, 'editTermFormFields'], 10, 2);
-
-        // Save at creation action
-        add_action('created_'. $this->taxonomy, [$this, 'createTerm'], 10, 3);
-
-        // Save at edit action
-        add_action('edited_'. $this->taxonomy, [$this, 'editTerm'], 10, 2);
+        add_action($this->taxonomy . '_add_form_fields', [$this, 'createTermFormFields']);
+        add_action($this->taxonomy . '_edit_form_fields', [$this, 'editTermFormFields'], 10, 2);
+        add_action('created_' . $this->taxonomy, [$this, 'createTerm'], 10, 3);
+        add_action('edited_' . $this->taxonomy, [$this, 'editTerm'], 10, 2);
     }
 
-    public function createTermFormFields()
+    /**
+     * Renders fields on the add-term form.
+     *
+     * @since 0.2.0
+     */
+    public function createTermFormFields(): void
     {
         $this->fieldsType = 'term';
 
         $this->field();
     }
 
-    public function editTermFormFields($term)
+    /**
+     * Renders fields on the edit-term form.
+     *
+     * @since 0.2.0
+     *
+     * @param \WP_Term $term Term being edited.
+     */
+    public function editTermFormFields($term): void
     {
         $this->id = $term->term_id;
         $this->fieldsType = 'table';
@@ -56,7 +58,14 @@ trait TaxonomyCustomField
         $this->field();
     }
 
-    public function createTerm($term_id)
+    /**
+     * Saves custom fields when a term is created.
+     *
+     * @since 0.2.0
+     *
+     * @param int $term_id Created term ID.
+     */
+    public function createTerm($term_id): void
     {
         if (!current_user_can('manage_terms', $this->taxonomy)) {
             return;
@@ -68,7 +77,14 @@ trait TaxonomyCustomField
         $this->saveFieldsFromPost();
     }
 
-    public function editTerm($term_id)
+    /**
+     * Saves custom fields when a term is updated.
+     *
+     * @since 0.2.0
+     *
+     * @param int $term_id Updated term ID.
+     */
+    public function editTerm($term_id): void
     {
         if (!current_user_can('edit_term', $term_id)) {
             return;

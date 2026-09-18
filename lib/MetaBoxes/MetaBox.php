@@ -1,35 +1,90 @@
 <?php
 
+/**
+ * Standalone meta box factory.
+ *
+ * @author  Renato Rodrigues Jr <juniorenato@msn.com>
+ * @license GPL-3.0-or-later
+ * @package WPB\MetaBoxes
+ */
+
 namespace WPB\MetaBoxes;
 
+use WPB\Builder;
 use WPB\Forms\AdminForm;
 
 /**
- * -----------------------------------------------------------------------------
- * Meta Box
- * -----------------------------------------------------------------------------
+ * Registers a meta box and its fields in the WordPress admin.
  *
- * @since v0.3.0
+ * @since  0.3.0
  * @author Renato Rodrigues Jr <juniorenato@msn.com>
- * @package juniorenato/wp-builder
  */
 class MetaBox
 {
     use AdminForm;
 
+    /**
+     * Meta box identifier.
+     *
+     * @since 0.3.0
+     */
     public string $metaBox;
-    public string $title;
-    private array  $screen;
-    private string $context;
-    private string $priority;
-    private array  $args;
 
+    /**
+     * Meta box title.
+     *
+     * @since 0.3.0
+     */
+    public string $title;
+
+    /**
+     * Screens where the meta box is shown.
+     *
+     * @since 0.3.0
+     *
+     * @var list<mixed>
+     */
+    private array $screen;
+
+    /**
+     * Meta box context.
+     *
+     * @since 0.3.0
+     */
+    private string $context;
+
+    /**
+     * Meta box priority.
+     *
+     * @since 0.3.0
+     */
+    private string $priority;
+
+    /**
+     * Callback arguments passed to `add_meta_box()`.
+     *
+     * @since 0.3.0
+     *
+     * @var array<int|string, mixed>
+     */
+    private array $args;
+
+    /**
+     * Initializes a new meta box.
+     *
+     * @since 0.3.0
+     */
     public function __construct()
     {
         $this->init();
     }
 
-    private function init()
+    /**
+     * Resets the meta box configuration to defaults.
+     *
+     * @since 0.3.0
+     */
+    private function init(): void
     {
         $this->metaBox  = '';
         $this->title    = '';
@@ -42,86 +97,153 @@ class MetaBox
         $this->fields = [];
     }
 
-    public function metaBoxId(string $metaBoxId)
+    /**
+     * Sets the meta box identifier.
+     *
+     * @since 0.3.0
+     *
+     * @param string $metaBoxId Unsanitized identifier.
+     */
+    public function metaBoxId(string $metaBoxId): void
     {
         $this->metaBox = sanitize_title($metaBoxId);
     }
 
-    public function title(string $title): MetaBox
+    /**
+     * Sets the meta box title and resets previous field state when reused.
+     *
+     * @since 0.3.0
+     *
+     * @param string $title Meta box title.
+     *
+     * @return static
+     */
+    public function title(string $title): static
     {
-        if($this->title) $this->init();
+        if ($this->title) {
+            $this->init();
+        }
 
         $this->title = ucfirst($title);
 
         return $this;
     }
 
-    public function screen($screen): MetaBox
+    /**
+     * Adds a screen where the meta box should appear.
+     *
+     * @since 0.3.0
+     *
+     * @param mixed $screen Post type slug, screen ID, or `WP_Screen`.
+     *
+     * @return static
+     */
+    public function screen(mixed $screen): static
     {
         $this->screen[] = $screen;
 
         return $this;
     }
 
-    public function context(string $context): MetaBox
+    /**
+     * Sets the meta box context.
+     *
+     * @since 0.3.0
+     *
+     * @param string $context Context (`normal`, `side`, or `advanced`).
+     *
+     * @return static
+     */
+    public function context(string $context): static
     {
         $this->context = $context;
 
         return $this;
     }
 
-    public function priority(string $priority): MetaBox
+    /**
+     * Sets the meta box priority.
+     *
+     * @since 0.3.0
+     *
+     * @param string $priority Priority (`high`, `core`, `default`, or `low`).
+     *
+     * @return static
+     */
+    public function priority(string $priority): static
     {
         $this->priority = $priority;
 
         return $this;
     }
 
-    public function args($callbackArgs): MetaBox
+    /**
+     * Sets callback arguments passed to the meta box.
+     *
+     * @since 0.3.0
+     *
+     * @param mixed $callbackArgs Argument map or a single argument.
+     *
+     * @return static
+     */
+    public function args(mixed $callbackArgs): static
     {
-        if(is_array($callbackArgs)) {
+        if (is_array($callbackArgs)) {
             $this->args = array_merge($this->args, $callbackArgs);
-        }
-
-        else {
+        } else {
             $this->args[] = $callbackArgs;
         }
 
         return $this;
     }
 
-    public function register(?string $title = null, $screen = null): bool
+    /**
+     * Queues the meta box for registration.
+     *
+     * @since 0.3.0
+     *
+     * @param string|null $title  Meta box title.
+     * @param mixed       $screen Screen where the meta box should appear.
+     *
+     * @return bool True when required configuration is present.
+     */
+    public function register(?string $title = null, mixed $screen = null): bool
     {
-        if(1 == 1
-            && $title
-            && $screen
-        ) {
+        if ($title && $screen) {
             $this->title($title);
             $this->screen($screen);
         }
 
-        if(1 == 0
-            || !$this->metaBox
-            || !$this->title
-            || !$this->screen
-        ) { return false; }
+        if (!$this->metaBox || !$this->title || !$this->screen) {
+            return false;
+        }
 
-        add_action('init', [$this, 'setMetaboxes']);
+        Builder::onInit([$this, 'setMetaboxes']);
 
         return true;
     }
 
+    /**
+     * Hooks the meta box into `add_meta_boxes`.
+     *
+     * @since 0.3.0
+     */
     public function setMetaboxes(): void
     {
-        if(!$this->metaBox) $this->metaBox = sanitize_title($this->title);
+        if (!$this->metaBox) {
+            $this->metaBox = sanitize_title($this->title);
+        }
 
-        // WordPress - Add Meta Box
         add_action('add_meta_boxes', [$this, 'addMetaBoxes']);
     }
 
+    /**
+     * Registers the meta box with WordPress.
+     *
+     * @since 0.3.0
+     */
     public function addMetaBoxes(): void
     {
-        // Create the meta box
         add_meta_box(
             $this->metaBox,
             $this->title,
@@ -133,7 +255,14 @@ class MetaBox
         );
     }
 
-    public function registerMetabox()
+    /**
+     * Renders the meta box fields for the current post.
+     *
+     * @since 0.3.0
+     *
+     * @global \WP_Post $post Current post object.
+     */
+    public function registerMetabox(): void
     {
         global $post;
 
@@ -142,5 +271,4 @@ class MetaBox
 
         $this->field();
     }
-
 }

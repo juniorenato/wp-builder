@@ -1,105 +1,218 @@
 <?php
 
+/**
+ * Bootstraps the WP Builder library.
+ *
+ * @author  Renato Rodrigues Jr <juniorenato@msn.com>
+ * @license GPL-3.0-or-later
+ * @package WPB
+ */
+
 namespace WPB;
 
 /**
- * -----------------------------------------------------------------------------
- * Default plugin settings
- * -----------------------------------------------------------------------------
+ * Stores default library settings and loads translations.
  *
- * @param string $env `theme | plugin`
- *
- * @since v0.1.0
+ * @since  0.1.0
  * @author Renato Rodrigues Jr <juniorenato@msn.com>
- * @package juniorenato/wp-builder
  */
 class Builder
 {
-    public const THEME = 'theme';
-    public const PLUGIN = 'plugin';
-    public const PATH = [
+    /**
+     * Theme environment identifier.
+     *
+     * @since 0.1.0
+     */
+    public const string THEME = 'theme';
+
+    /**
+     * Plugin environment identifier.
+     *
+     * @since 0.1.0
+     */
+    public const string PLUGIN = 'plugin';
+
+    /**
+     * Absolute paths used by the library.
+     *
+     * @since 0.1.0
+     *
+     * @var array{
+     *     FORM: string,
+     *     LANG: string,
+     *     PAGE: string
+     * }
+     */
+    public const array PATH = [
         'FORM' => __DIR__ . '/../views/form/',
         'LANG' => __DIR__ . '/../lang',
         'PAGE' => __DIR__ . '/../views/',
     ];
 
+    /**
+     * Registers the library bootstrap for the given environment.
+     *
+     * @since 0.1.0
+     *
+     * @param string $env `theme` or `plugin`.
+     *
+     * @global string $wp_builder Current library environment.
+     */
     public function __construct(string $env)
     {
         global $wp_builder;
 
-        if(strtolower($env) === 'theme' || strtolower($env) === 'plugin') {
-            $wp_builder = strtolower($env);
+        $env = strtolower($env);
+
+        if ($env === self::THEME || $env === self::PLUGIN) {
+            $wp_builder = $env;
         }
 
-        add_action('init', [$this, 'build']);
+        self::onInit([$this, 'build'], 0);
     }
 
     /**
-     * -------------------------------------------------------------------------
-     * Check if it's a plugin
-     * -------------------------------------------------------------------------
+     * Runs a callback on `init`, or immediately when `init` has already started.
      *
-     * @return boolean
+     * WordPress 6.7+ forbids loading translations before `after_setup_theme`.
+     * This keeps constructors safe to call from a plugin or theme bootstrap file.
+     *
+     * @since 0.1.0
+     *
+     * @param callable $callback Callback to run.
+     * @param int      $priority Hook priority.
+     */
+    public static function onInit(callable $callback, int $priority = 10): void
+    {
+        if (did_action('init')) {
+            $callback();
+
+            return;
+        }
+
+        add_action('init', $callback, $priority);
+    }
+
+    /**
+     * Determines whether translation functions may run without a 6.7 notice.
+     *
+     * @since 0.1.0
+     *
+     * @return bool True after `after_setup_theme` has started.
+     */
+    public static function canLoadTranslations(): bool
+    {
+        return (bool) did_action('after_setup_theme');
+    }
+
+    /**
+     * Determines whether the library is running as a plugin.
+     *
+     * @since 0.1.0
+     *
+     * @global string $wp_builder Current library environment.
+     *
+     * @return bool True when the environment is a plugin.
      */
     public static function isPlugin(): bool
     {
         global $wp_builder;
 
-        return (self::PLUGIN === $wp_builder);
+        return self::PLUGIN === $wp_builder;
     }
 
     /**
-     * -------------------------------------------------------------------------
-     * Check if it's a theme
-     * -------------------------------------------------------------------------
+     * Determines whether the library is running as a theme.
      *
-     * @return boolean
+     * @since 0.1.0
+     *
+     * @global string $wp_builder Current library environment.
+     *
+     * @return bool True when the environment is a theme.
      */
     public static function isTheme(): bool
     {
         global $wp_builder;
 
-        return (self::THEME === $wp_builder);
+        return self::THEME === $wp_builder;
     }
 
-    public function build(): Builder
+    /**
+     * Bootstraps library services hooked to `init`.
+     *
+     * @since 0.1.0
+     *
+     * @return static
+     */
+    public function build(): static
     {
         $this->i18n();
 
         return $this;
     }
 
-    private function i18n()
+    /**
+     * Loads the library text domain for the current environment.
+     *
+     * @since 0.1.0
+     *
+     * @see https://make.wordpress.org/core/2024/10/21/i18n-improvements-6-7/
+     */
+    private function i18n(): void
     {
-        $arr_lang = [
+        $locales = array_unique([
             'en_US',
-            get_locale(),
-        ];
+            determine_locale(),
+        ]);
 
-        if(!static::isPlugin()) {
-            $path = WP_CONTENT_DIR .'/languages/themes';
-            if(!is_dir($path)) mkdir($path);
-
-            foreach($arr_lang as $lang) {
-                if(file_exists(self::PATH['LANG'] .'/'. $lang .'.mo') && !file_exists($path .'/wpb-'. $lang .'.mo')) {
-                    copy(self::PATH['LANG'] .'/'. $lang .'.mo', $path .'/wpb-'. $lang .'.mo');
-                }
-            }
-
+        if (!static::isPlugin()) {
+            $this->installTranslationFiles('themes', $locales);
             load_theme_textdomain('wpb', self::PATH['LANG']);
         }
 
-        if(!static::isTheme()) {
-            $path = WP_CONTENT_DIR .'/languages/plugins';
-            if(!is_dir($path)) mkdir($path);
+        if (!static::isTheme()) {
+            $this->installTranslationFiles('plugins', $locales);
+            load_plugin_textdomain('wpb', false, plugin_basename(self::PATH['LANG']));
+        }
+    }
 
-            foreach($arr_lang as $lang) {
-                if(file_exists(self::PATH['LANG'] .'/'. $lang .'.mo') && !file_exists($path .'/wpb-'. $lang .'.mo')) {
-                    copy(self::PATH['LANG'] .'/'. $lang .'.mo', $path .'/wpb-'. $lang .'.mo');
+    /**
+     * Copies packaged translations into the WordPress language directory.
+     *
+     * JIT loading looks for `{domain}-{locale}.mo` and `{domain}-{locale}.l10n.php`
+     * inside `WP_LANG_DIR/plugins` or `WP_LANG_DIR/themes`.
+     *
+     * @since 0.1.0
+     *
+     * @param 'plugins'|'themes' $type    Language subdirectory for the environment.
+     * @param list<string>       $locales Locales to install.
+     */
+    private function installTranslationFiles(string $type, array $locales): void
+    {
+        $destinationDir = WP_LANG_DIR . '/' . $type;
+
+        wp_mkdir_p($destinationDir);
+
+        foreach ($locales as $locale) {
+            foreach (['mo', 'l10n.php'] as $extension) {
+                $destination = $destinationDir . '/wpb-' . $locale . '.' . $extension;
+                $sources = [
+                    self::PATH['LANG'] . '/wpb-' . $locale . '.' . $extension,
+                    self::PATH['LANG'] . '/' . $locale . '.' . $extension,
+                ];
+
+                foreach ($sources as $source) {
+                    if (!is_readable($source)) {
+                        continue;
+                    }
+
+                    if (!file_exists($destination) || filemtime($source) > filemtime($destination)) {
+                        copy($source, $destination);
+                    }
+
+                    break;
                 }
             }
-
-            load_plugin_textdomain('wpb', false, self::PATH['LANG'] .'/lang');
         }
     }
 }
