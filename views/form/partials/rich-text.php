@@ -3,6 +3,8 @@
  * Rich text editor field.
  *
  * @package WPB\Forms
+ *
+ * @see https://developer.wordpress.org/reference/functions/wp_editor/
  */
 
 $editorId = 'field_' . (preg_replace('/[^a-z0-9_]/i', '_', (string) $this->field['name']) ?? '');

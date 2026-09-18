@@ -15,6 +15,9 @@ namespace WPB\PostTypes;
  *
  * @since  0.4.0
  * @author Renato Rodrigues Jr <juniorenato@msn.com>
+ *
+ * @see https://developer.wordpress.org/reference/hooks/register_post_type_post_type_args/
+ * @see https://developer.wordpress.org/reference/functions/register_post_type/
  */
 class RemovePostType extends EditPostType
 {
@@ -40,6 +43,9 @@ class RemovePostType extends EditPostType
      * @since 0.4.0
      *
      * @param string $postType Post type key.
+     *
+     * @see https://developer.wordpress.org/reference/hooks/register_post_type_post_type_args/
+     * @see https://developer.wordpress.org/reference/functions/register_post_type/
      */
     public function remove(string $postType): void
     {
