@@ -1,44 +1,59 @@
 <?php
 
+/**
+ * Post type meta box helpers.
+ *
+ * @author  Renato Rodrigues Jr <juniorenato@msn.com>
+ * @license GPL-3.0-or-later
+ * @package WPB\Forms
+ */
+
 namespace WPB\Forms;
 
+use WPB\Builder;
 use WPB\MetaBoxes\MetaBox;
 
 /**
- * -----------------------------------------------------------------------------
- * Post Type Meta Box
- * -----------------------------------------------------------------------------
+ * Attaches meta boxes and save callbacks to a post type.
  *
- * @since v0.2.0
+ * @since  0.2.0
  * @author Renato Rodrigues Jr <juniorenato@msn.com>
- * @package juniorenato/wp-builder
  */
 trait PostTypeMetaBox
 {
+    /**
+     * Meta boxes attached to the post type.
+     *
+     * @since 0.2.0
+     *
+     * @var list<MetaBox>
+     */
     protected array $metaBoxes = [];
 
     /**
-     * -------------------------------------------------------------------------
-     * Add a Meta Box to Post Type
-     * -------------------------------------------------------------------------
+     * Adds one or more meta boxes to the post type.
      *
-     * @param MetaBox $metaBox
-     * @return void
+     * @since 0.2.0
+     *
+     * @param MetaBox|list<MetaBox> $metaBox Meta box instance or list of instances.
      */
-    public function metaBox($metaBox): void
+    public function metaBox(MetaBox|array $metaBox): void
     {
-        if(is_array($metaBox)) {
+        if (is_array($metaBox)) {
             $this->metaBoxes = $metaBox;
-        }
-
-        else {
+        } else {
             $this->metaBoxes[] = $metaBox;
         }
     }
 
+    /**
+     * Registers attached meta boxes and their save hooks.
+     *
+     * @since 0.2.0
+     */
     public function registerMetaBoxes(): void
     {
-        if(!$this->metaBoxes) {
+        if (!$this->metaBoxes) {
             $mb = new MetaBox();
             $mb->title($this->labels['attributes']);
             $mb->fields = $this->fields;
@@ -47,24 +62,23 @@ trait PostTypeMetaBox
             $this->metaBoxes[] = $mb;
         }
 
-        foreach($this->metaBoxes as $metaBox) {
-
+        foreach ($this->metaBoxes as $metaBox) {
             $metaBox->valueType = 'post';
             $metaBox->screen($this->postType);
 
-            if(!$metaBox->metaBox) $metaBox->metaBoxId($this->postType .'_'. $metaBox->title);
+            if (!$metaBox->metaBox) {
+                $metaBox->metaBoxId($this->postType . '_' . $metaBox->title);
+            }
 
-            if(1 == 1
-                && isset($this->args['register_meta_box_cb'])
+            if (
+                isset($this->args['register_meta_box_cb'])
                 && !empty($this->args['register_meta_box_cb'])
             ) {
                 $this->args['register_meta_box_cb'] = [
                     $this->args['register_meta_box_cb']
                 ];
                 $this->args['register_meta_box_cb'][] = [$metaBox, 'addMetaBoxes'];
-            }
-
-            else {
+            } else {
                 $this->args['register_meta_box_cb'] = [$metaBox, 'addMetaBoxes'];
             }
 
@@ -76,15 +90,17 @@ trait PostTypeMetaBox
             $metaBox->register();
         }
 
-        add_action('init', [$this, 'setPostTypeMetaBoxes']);
+        Builder::onInit([$this, 'setPostTypeMetaBoxes']);
     }
 
+    /**
+     * Hooks nonce output and post-save handling for the post type.
+     *
+     * @since 0.2.0
+     */
     public function setPostTypeMetaBoxes(): void
     {
-        // Add noncename field
         add_action('edit_form_after_title', [$this, 'addNonceName']);
-
-        // Add save actions
-        add_action('save_post_'. $this->postType, [$this, 'savePost'], 10 , 2);
+        add_action('save_post_' . $this->postType, [$this, 'savePost'], 10, 2);
     }
 }

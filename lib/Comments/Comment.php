@@ -1,24 +1,27 @@
 <?php
 
+/**
+ * Comment helpers.
+ *
+ * @author  Renato Rodrigues Jr <juniorenato@msn.com>
+ * @license GPL-3.0-or-later
+ * @package WPB\Comments
+ */
+
 namespace WPB\Comments;
 
 /**
- * -----------------------------------------------------------------------------
- * Comments
- * -----------------------------------------------------------------------------
+ * Disables WordPress comments in the admin and on the front end.
  *
- * @since v0.6.0
+ * @since  0.6.0
  * @author Renato Rodrigues Jr <juniorenato@msn.com>
- * @package juniorenato/wp-builder
  */
 class Comment
 {
     /**
-     * -------------------------------------------------------------------------
-     * Disable WordPress comments
-     * -------------------------------------------------------------------------
+     * Disables comments, pings, and related admin UI.
      *
-     * @return void
+     * @since 0.6.0
      */
     public function disable(): void
     {
@@ -29,38 +32,37 @@ class Comment
     }
 
     /**
-     * -------------------------------------------------------------------------
-     * Remove from WP Admin
-     * -------------------------------------------------------------------------
+     * Removes comment support and the comments dashboard widget.
      *
-     * @return void
+     * @since 0.6.0
+     *
+     * @global string $pagenow Current admin page.
      */
     public function admin(): void
     {
         global $pagenow;
 
-        // Redirect from comments page
-        if($pagenow === 'edit-comments.php') {
-            wp_redirect(admin_url()); exit;
+        if ($pagenow === 'edit-comments.php') {
+            wp_safe_redirect(admin_url());
+            exit;
         }
-        // Remove comments for all post types
-        foreach(get_post_types() as $post_type) {
-            if(post_type_supports($post_type, 'comments')) {
+
+        foreach (get_post_types() as $post_type) {
+            if (post_type_supports($post_type, 'comments')) {
                 remove_post_type_support($post_type, 'comments');
                 remove_post_type_support($post_type, 'trackbacks');
             }
         }
 
-        // Remove comments metabox from dasboard
         remove_meta_box('dashboard_recent_comments', 'dashboard', 'normal');
     }
 
     /**
-     * -------------------------------------------------------------------------
-     * Force comment status to false
-     * -------------------------------------------------------------------------
+     * Forces comment and ping status to closed.
      *
-     * @return boolean
+     * @since 0.6.0
+     *
+     * @return bool Always false.
      */
     public function status(): bool
     {
@@ -68,11 +70,9 @@ class Comment
     }
 
     /**
-     * -------------------------------------------------------------------------
-     * Remove from admin menu
-     * -------------------------------------------------------------------------
+     * Removes the comments screen from the admin menu.
      *
-     * @return void
+     * @since 0.6.0
      */
     public function menu(): void
     {

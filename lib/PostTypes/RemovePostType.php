@@ -1,27 +1,47 @@
 <?php
 
+/**
+ * Hides an existing post type from the admin and public queries.
+ *
+ * @author  Renato Rodrigues Jr <juniorenato@msn.com>
+ * @license GPL-3.0-or-later
+ * @package WPB\PostTypes
+ */
+
 namespace WPB\PostTypes;
 
-
 /**
- * -----------------------------------------------------------------------------
- * Post Type Meta Box
- * -----------------------------------------------------------------------------
+ * Removes a post type from menus, search, and public queries.
  *
- * @since v0.4.0
+ * @since  0.4.0
  * @author Renato Rodrigues Jr <juniorenato@msn.com>
- * @package juniorenato/wp-builder
  */
 class RemovePostType extends EditPostType
 {
+    /**
+     * Optionally removes a post type immediately.
+     *
+     * @since 0.4.0
+     *
+     * @param string|null $postType Post type key.
+     */
     public function __construct(?string $postType)
     {
         parent::__construct();
 
-        if($postType) $this->remove($postType);
+        if ($postType) {
+            $this->remove($postType);
+        }
     }
 
-    public function remove(string $postType)
+    /**
+     * Hides the given post type without unregistering it.
+     *
+     * @since 0.4.0
+     *
+     * @param string $postType Post type key.
+     */
+    public function remove(string $postType): void
     {
         $this->setPostType($postType);
 
@@ -37,7 +57,6 @@ class RemovePostType extends EditPostType
             'can_export'          => false,
         ]);
 
-        // WordPress - Register Post Type Args
-        add_filter('register_'. $this->postType .'_post_type_args', [$this, 'registerArgs']);
+        add_filter('register_' . $this->postType . '_post_type_args', [$this, 'registerArgs']);
     }
 }
