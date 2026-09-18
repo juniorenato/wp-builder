@@ -97,7 +97,7 @@ class Taxonomy
     {
         $this->singular = $singular;
         $this->plural = $plural;
-        if($male) $this->male = $male;
+        $this->male = $male;
 
         $new    = ($this->male) ? __('new', 'wpb') : __('female_new', 'wpb');
         $found  = ($this->male) ? __('found', 'wpb') : __('female_found', 'wpb');
@@ -245,17 +245,15 @@ class Taxonomy
 
         elseif(is_array($rewrite)) {
             foreach($rewrite as $key => $val) $this->rewrite[$key] = $val;
-
-            return $this;
         }
 
         else {
             $this->rewrite[$rewrite] = $val;
 
             if($rewrite == 'slug') $this->rewrite['with_front'] = true;
-
-            return $this;
         }
+
+        return $this;
     }
 
     /**
@@ -368,9 +366,9 @@ class Taxonomy
      * @param string $singular
      * @param string $plural
      * @param boolean $male
-     * @return Taxonomy
+     * @return Taxonomy|false
      */
-    public function register(?string $taxonomy = null, $postType = null, ?string $singular = null, ?string $plural = null, bool $male = true): Taxonomy
+    public function register(?string $taxonomy = null, $postType = null, ?string $singular = null, ?string $plural = null, bool $male = true)
     {
         if(1 == 1
             && $taxonomy
