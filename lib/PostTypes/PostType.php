@@ -1,26 +1,40 @@
 <?php
 
+/**
+ * Shared post type configuration helpers.
+ *
+ * @author  Renato Rodrigues Jr <juniorenato@msn.com>
+ * @license GPL-3.0-or-later
+ * @package WPB\PostTypes
+ */
+
 namespace WPB\PostTypes;
 
+use WPB\Builder;
 use WPB\Forms\AdminForm;
 use WPB\Forms\PostTypeMetaBox;
 
-
 /**
- * -----------------------------------------------------------------------------
- * Post Type
- * -----------------------------------------------------------------------------
+ * Stores labels, rewrite rules, supports, and arguments for a post type.
  *
- * @since v0.2.0
+ * @since  0.2.0
  * @author Renato Rodrigues Jr <juniorenato@msn.com>
- * @package juniorenato/wp-builder
+ *
+ * @see https://developer.wordpress.org/reference/functions/register_post_type/
  */
 class PostType
 {
     use AdminForm;
     use PostTypeMetaBox;
 
-    protected const ARGS = [
+    /**
+     * Accepted `register_post_type()` argument keys.
+     *
+     * @since 0.2.0
+     *
+     * @var list<string>
+     */
+    protected const array ARGS = [
         'label',
         'labels',
         'description',
@@ -58,25 +72,96 @@ class PostType
         '_edit_link',
     ];
 
+    /**
+     * Post type slug.
+     *
+     * @since 0.2.0
+     */
     protected string $postType;
+
+    /**
+     * Singular label.
+     *
+     * @since 0.2.0
+     */
     protected string $singular;
+
+    /**
+     * Plural label.
+     *
+     * @since 0.2.0
+     */
     protected string $plural;
+
+    /**
+     * Whether generated labels use the masculine form.
+     *
+     * @since 0.2.0
+     */
     protected bool $male;
+
+    /**
+     * Post type labels.
+     *
+     * @since 0.2.0
+     *
+     * @var array<string, string>
+     */
     protected array $labels;
+
+    /**
+     * Whether default translated labels have been generated.
+     *
+     * @since 0.2.0
+     */
+    protected bool $defaultLabelsBuilt = false;
+
+    /**
+     * Rewrite arguments.
+     *
+     * @since 0.2.0
+     *
+     * @var array<string, mixed>
+     */
     protected array $rewrite;
+
+    /**
+     * Attached taxonomy slugs.
+     *
+     * @since 0.2.0
+     *
+     * @var list<string>
+     */
     protected array $taxonomies;
+
+    /**
+     * Supported editor features.
+     *
+     * @since 0.2.0
+     *
+     * @var array<int|string, mixed>
+     */
     protected array $supports;
+
+    /**
+     * Arguments passed to `register_post_type()`.
+     *
+     * @since 0.2.0
+     *
+     * @var array<string, mixed>
+     */
     protected array $args;
 
     /**
-     * -------------------------------------------------------------------------
-     * Add post type name
-     * -------------------------------------------------------------------------
+     * Sets the post type slug.
      *
-     * @param string $postType
-     * @return PostType
+     * @since 0.2.0
+     *
+     * @param string $postType Post type key.
+     *
+     * @return static
      */
-    public function setPostType(string $postType): PostType
+    public function setPostType(string $postType): static
     {
         $this->postType = sanitize_title($postType);
 
@@ -84,75 +169,91 @@ class PostType
     }
 
     /**
-     * -------------------------------------------------------------------------
-     * Set labels
-     * -------------------------------------------------------------------------
+     * Builds the default post type labels.
      *
-     * @param string $singular
-     * @param string $plural
-     * @param boolean $female
-     * @return PostType
+     * @since 0.2.0
+     *
+     * @param string $singular Singular name.
+     * @param string $plural   Plural name.
+     * @param bool   $male     Whether to use masculine translations.
+     *
+     * @return static
      *
      * @see https://developer.wordpress.org/reference/functions/get_post_type_labels/
      */
-    public function setLabels(string $singular, string $plural, bool $male = true): PostType
+    public function setLabels(string $singular, string $plural, bool $male = true): static
     {
         $this->singular = mb_strtolower($singular);
         $this->plural = mb_strtolower($plural);
         $this->male = $male;
+        $this->defaultLabelsBuilt = false;
 
-        $new       = ($this->male) ? __('new', 'wpb')       : __('female_new', 'wpb');
-        $found     = ($this->male) ? __('found', 'wpb')     : __('female_found', 'wpb');
-        $parent    = ($this->male) ? __('parent', 'wpb')    : __('female_parent', 'wpb');
-        $all       = ($this->male) ? __('all', 'wpb')       : __('female_all', 'wpb');
-        $item      = ($this->male) ? __('this', 'wpb')      : __('female_this', 'wpb');
-        $published = ($this->male) ? __('published', 'wpb') : __('female_published', 'wpb');
-        $scheduled = ($this->male) ? __('scheduled', 'wpb') : __('female_scheduled', 'wpb');
-        $updated   = ($this->male) ? __('updated', 'wpb')   : __('female_updated', 'wpb');
-
-        $this->labels = [
-            'name'                     => ucfirst($this->plural),
-            'singular_name'            => ucfirst($this->singular),
-            'add_new'                  => ucfirst(sprintf(__('add %s %s', 'wpb'), $new, $this->singular)),
-            'add_new_item'             => ucfirst(sprintf(__('add %s %s', 'wpb'), $new, $this->singular)),
-            'edit_item'                => ucfirst(sprintf(__('edit %s', 'wpb'), $this->singular)),
-            'new_item'                 => ucfirst($new .' '. $this->singular),
-            'view_item'                => ucfirst(sprintf(__('view %s', 'wpb'), $this->singular)),
-            'view_items'               => ucfirst(sprintf(__('view %s', 'wpb'), $this->plural)),
-            'search_items'             => ucfirst(sprintf(__('search %s', 'wpb'), $this->plural)),
-            'not_found'                => ucfirst(sprintf(__('%s not %s', 'wpb'), $this->plural, $found)),
-            'not_found_in_trash'       => ucfirst(sprintf(__('%s not %s in trash', 'wpb'), $this->plural, $found)),
-            'parent_item_colon'        => ucfirst($this->singular .' '. $parent),
-            'all_items'                => ucfirst($all .' '. $this->plural),
-            'archives'                 => ucfirst(sprintf(__('archives of %s', 'wpb'), $this->plural)),
-            'attributes'               => ucfirst(__('attributes', 'wpb')),
-            'insert_into_item'         => ucfirst(sprintf(__('insert into %s', 'wpb'), $this->plural)),
-            'uploaded_to_this_item'    => ucfirst(sprintf(__('updated to %s %s', 'wpb'), $item ,$this->singular)),
-            'menu_name'                => ucfirst($this->plural),
-            'filter_items_list'        => ucfirst($this->plural),
-            'items_list_navigation'    => ucfirst($this->plural),
-            'items_list'               => ucfirst($this->plural),
-            'item_published'           => ucfirst($this->singular . ' '. $published),
-            'item_published_privately' => ucfirst(sprintf(__('%s %s privately', 'wpb'), $this->singular, $published)),
-            'item_reverted_to_draft'   => ucfirst(__('%s reverted to draft', 'wpb', $this->singular)),
-            'item_trashed'             => ucfirst(__('%s trashed', 'wpb')),
-            'item_scheduled'           => ucfirst($this->singular .' '. $scheduled),
-            'item_updated'             => ucfirst($this->singular .' '. $updated),
-            'item_link'                => ucfirst(sprintf(__('link to %s', 'wpb'), $this->plural)),
-            'item_link_description'    => ucfirst(sprintf(__('a link to %s', 'wpb'), $this->singular)),
-        ];
-
-        $this->args('labels', $this->labels);
+        if (Builder::canLoadTranslations()) {
+            $this->buildDefaultLabels();
+        }
 
         return $this;
     }
 
     /**
-     * -------------------------------------------------------------------------
-     * Edit labels
-     * -------------------------------------------------------------------------
+     * Builds the default translated post type labels.
      *
-     * Opções:
+     * @since 0.2.0
+     */
+    protected function buildDefaultLabels(): void
+    {
+        $new       = $this->male ? __('new', 'wpb') : __('female_new', 'wpb');
+        $found     = $this->male ? __('found', 'wpb') : __('female_found', 'wpb');
+        $parent    = $this->male ? __('parent', 'wpb') : __('female_parent', 'wpb');
+        $all       = $this->male ? __('all', 'wpb') : __('female_all', 'wpb');
+        $item      = $this->male ? __('this', 'wpb') : __('female_this', 'wpb');
+        $published = $this->male ? __('published', 'wpb') : __('female_published', 'wpb');
+        $scheduled = $this->male ? __('scheduled', 'wpb') : __('female_scheduled', 'wpb');
+        $updated   = $this->male ? __('updated', 'wpb') : __('female_updated', 'wpb');
+
+        $this->labels = array_merge([
+            'name'                     => ucfirst($this->plural),
+            'singular_name'            => ucfirst($this->singular),
+            'add_new'                  => ucfirst(sprintf(__('add %s %s', 'wpb'), $new, $this->singular)),
+            'add_new_item'             => ucfirst(sprintf(__('add %s %s', 'wpb'), $new, $this->singular)),
+            'edit_item'                => ucfirst(sprintf(__('edit %s', 'wpb'), $this->singular)),
+            'new_item'                 => ucfirst($new . ' ' . $this->singular),
+            'view_item'                => ucfirst(sprintf(__('view %s', 'wpb'), $this->singular)),
+            'view_items'               => ucfirst(sprintf(__('view %s', 'wpb'), $this->plural)),
+            'search_items'             => ucfirst(sprintf(__('search %s', 'wpb'), $this->plural)),
+            'not_found'                => ucfirst(sprintf(__('%s not %s', 'wpb'), $this->plural, $found)),
+            'not_found_in_trash'       => ucfirst(sprintf(__('%s not %s in trash', 'wpb'), $this->plural, $found)),
+            'parent_item_colon'        => ucfirst($this->singular . ' ' . $parent),
+            'all_items'                => ucfirst($all . ' ' . $this->plural),
+            'archives'                 => ucfirst(sprintf(__('archives of %s', 'wpb'), $this->plural)),
+            'attributes'               => ucfirst(__('attributes', 'wpb')),
+            'insert_into_item'         => ucfirst(sprintf(__('insert into %s', 'wpb'), $this->plural)),
+            'uploaded_to_this_item'    => ucfirst(sprintf(__('updated to %s %s', 'wpb'), $item, $this->singular)),
+            'menu_name'                => ucfirst($this->plural),
+            'filter_items_list'        => ucfirst($this->plural),
+            'items_list_navigation'    => ucfirst($this->plural),
+            'items_list'               => ucfirst($this->plural),
+            'item_published'           => ucfirst($this->singular . ' ' . $published),
+            'item_published_privately' => ucfirst(sprintf(__('%s %s privately', 'wpb'), $this->singular, $published)),
+            'item_reverted_to_draft'   => ucfirst(sprintf(__('%s reverted to draft', 'wpb'), $this->singular)),
+            'item_trashed'             => ucfirst(sprintf(__('%s trashed', 'wpb'), $this->singular)),
+            'item_scheduled'           => ucfirst($this->singular . ' ' . $scheduled),
+            'item_updated'             => ucfirst($this->singular . ' ' . $updated),
+            'item_link'                => ucfirst(sprintf(__('link to %s', 'wpb'), $this->plural)),
+            'item_link_description'    => ucfirst(sprintf(__('a link to %s', 'wpb'), $this->singular)),
+        ], $this->labels);
+
+        if (!isset($this->args['labels'])) {
+            $this->args('labels', $this->labels);
+        }
+
+        $this->defaultLabelsBuilt = true;
+    }
+
+    /**
+     * Overrides one or more post type labels.
+     *
+     * Accepted keys:
      *
      * - menu_name
      * - name
@@ -176,7 +277,6 @@ class PostType
      * - set_featured_image
      * - remove_featured_image
      * - use_featured_image
-     * - menu_name
      * - filter_items_list
      * - filter_by_date
      * - items_list_navigation
@@ -190,36 +290,33 @@ class PostType
      * - item_link
      * - item_link_description
      *
-     * @param string|list<string> $labels
-     * @param string|null $val
-     * @param boolean $ucfirst
-     * @return PostType
+     * @since 0.2.0
+     *
+     * @param string|array<string, string> $labels   Label key or a map of labels.
+     * @param string|null                  $val      Label value when `$labels` is a key.
+     * @param bool                         $ucfirst  Whether to uppercase the first character.
+     *
+     * @return static
      */
-    public function labels($labels, string $val = null, bool $ucfirst = true): PostType
+    public function labels(string|array $labels, ?string $val = null, bool $ucfirst = true): static
     {
-        if(!is_array($labels) && $val) {
-            $this->labels[$labels] = ($ucfirst) ? ucfirst($val) : $val;
+        if (!is_array($labels) && $val) {
+            $this->labels[$labels] = $ucfirst ? ucfirst($val) : $val;
 
             return $this;
         }
 
-        else {
-            foreach($labels as $key => $val) {
-                $this->labels[$key] = ($ucfirst) ? ucfirst($val) : $val;
-            }
-
-            return $this;
+        foreach ($labels as $key => $label) {
+            $this->labels[$key] = $ucfirst ? ucfirst($label) : $label;
         }
 
         return $this;
     }
 
     /**
-     * -------------------------------------------------------------------------
-     * Edit rewrite
-     * -------------------------------------------------------------------------
+     * Sets rewrite arguments.
      *
-     * Opções:
+     * Accepted keys:
      *
      * - slug
      * - with_front
@@ -227,40 +324,41 @@ class PostType
      * - pages
      * - ep_mask
      *
-     * @param boolean|string|array $rewrite
-     * @param string|null $val
-     * @return PostType
+     * @since 0.2.0
+     *
+     * @param bool|string|array<string, mixed> $rewrite Rewrite flag, key, or map of values.
+     * @param string|null                      $val     Value when `$rewrite` is a key.
+     *
+     * @return static
      */
-    public function rewrite($rewrite, ?string $val = null): PostType
+    public function rewrite(bool|string|array $rewrite, ?string $val = null): static
     {
-        if(is_bool($rewrite)) {
+        if (is_bool($rewrite)) {
             $this->rewrite = [
                 'slug' => sanitize_title($this->labels['name']) ?? $this->postType,
                 'with_front' => true,
                 'pages' => true,
                 'feeds' => true,
             ];
-        }
-
-        elseif(is_array($rewrite)) {
-            foreach($rewrite as $key => $val) $this->rewrite[$key] = $val;
-        }
-
-        else {
+        } elseif (is_array($rewrite)) {
+            foreach ($rewrite as $key => $value) {
+                $this->rewrite[$key] = $value;
+            }
+        } else {
             $this->rewrite[$rewrite] = $val;
 
-            if($rewrite == 'slug') $this->rewrite['with_front'] = true;
+            if ($rewrite === 'slug') {
+                $this->rewrite['with_front'] = true;
+            }
         }
 
         return $this;
     }
 
     /**
-     * -------------------------------------------------------------------------
-     * Edit supported features
-     * -------------------------------------------------------------------------
+     * Sets supported editor features.
      *
-     * Opções padrão:
+     * Default options:
      *
      * - title
      * - editor
@@ -274,19 +372,20 @@ class PostType
      * - page-attributes
      * - post-formats
      *
-     * @param string|array $supports
-     * @param integer|string|bool|null $val
-     * @return PostType
+     * @since 0.2.0
+     *
+     * @param string|array<int|string, mixed> $supports Feature name or map of features.
+     * @param int|string|bool|null            $val      Value when `$supports` is a feature name.
+     *
+     * @return static
      */
-    public function supports($supports, $val = null): PostType
+    public function supports(string|array $supports, int|string|bool|null $val = null): static
     {
-        if(is_array($supports) && $val) {
-            foreach($supports as $k => $val) {
-                $this->supports[$k] = $val;
+        if (is_array($supports) && $val) {
+            foreach ($supports as $key => $value) {
+                $this->supports[$key] = $value;
             }
-        }
-
-        else {
+        } else {
             $this->supports[$supports] = $val;
         }
 
@@ -294,20 +393,19 @@ class PostType
     }
 
     /**
-     * -------------------------------------------------------------------------
-     * Add taxonomies
-     * -------------------------------------------------------------------------
+     * Attaches taxonomies to the post type.
      *
-     * @param string|list<string> $taxonomies
-     * @return CustomPostType
+     * @since 0.2.0
+     *
+     * @param string|list<string> $taxonomies Taxonomy slug or list of slugs.
+     *
+     * @return static
      */
-    public function taxonomies($taxonomies): CustomPostType
+    public function taxonomies(string|array $taxonomies): static
     {
-        if(is_array($taxonomies)) {
+        if (is_array($taxonomies)) {
             $this->taxonomies = array_merge($this->taxonomies, $taxonomies);
-        }
-
-        else {
+        } else {
             $this->taxonomies[] = $taxonomies;
         }
 
@@ -315,9 +413,7 @@ class PostType
     }
 
     /**
-     * -------------------------------------------------------------------------
-     * Edit arguments
-     * -------------------------------------------------------------------------
+     * Sets `register_post_type()` arguments.
      *
      * Options:
      *
@@ -357,38 +453,40 @@ class PostType
      * - _builtin
      * - _edit_link
      *
-     * @param string|list<string> $config
-     * @param string|list<string>|null $val
-     * @return PostType
+     * @since 0.2.0
+     *
+     * @param string|array<string, mixed> $config Argument key or map of arguments.
+     * @param mixed                       $val    Value when `$config` is a key.
+     *
+     * @return static
      */
-    public function args($config, $val = null): PostType
+    public function args(string|array $config, mixed $val = null): static
     {
-        if(!is_array($config)) {
+        if (!is_array($config)) {
             $this->args[$config] = $val;
 
             return $this;
         }
 
-        else {
-            foreach($config as $key => $value) {
-                $this->args[$key] = $value;
-            }
-
-            return $this;
+        foreach ($config as $key => $value) {
+            $this->args[$key] = $value;
         }
+
+        return $this;
     }
 
     /**
-     * -------------------------------------------------------------------------
-     * Add icon
-     * -------------------------------------------------------------------------
+     * Sets the admin menu icon.
      *
-     * @param string $icon
-     * @return CustomPostType
+     * @since 0.2.0
+     *
+     * @param string $icon Dashicon class or icon URL.
+     *
+     * @return static
      *
      * @see https://developer.wordpress.org/resource/dashicons/
      */
-    public function icon(string $icon): CustomPostType
+    public function icon(string $icon): static
     {
         $this->args['menu_icon'] = $icon;
 
@@ -396,16 +494,17 @@ class PostType
     }
 
     /**
-     * -------------------------------------------------------------------------
-     * Edit menu position
-     * -------------------------------------------------------------------------
+     * Sets the admin menu position.
      *
-     * @param string $position
-     * @return CustomPostType
+     * @since 0.2.0
      *
-     * @see https://developer.wordpress.org/resource/dashicons/
+     * @param string $position Menu position.
+     *
+     * @return static
+     *
+     * @see https://developer.wordpress.org/reference/functions/register_post_type/
      */
-    public function position(string $position): CustomPostType
+    public function position(string $position): static
     {
         $this->args['menu_position'] = $position;
 

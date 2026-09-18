@@ -1,10 +1,14 @@
 {
     "name": "juniorenato/wp-builder",
+    "description": "A developer-oriented builder for WordPress custom post types, taxonomies, meta boxes, and admin pages.",
     "type": "library",
     "keywords": [
         "wordpress"
     ],
-    "license": "GPL-3.0+",
+    "license": "GPL-3.0-or-later",
+    "require": {
+        "php": ">=8.4"
+    },
     "autoload": {
         "psr-4": {
             "WPB\\": "lib/"
@@ -15,6 +19,5 @@
             "name": "Renato Rodrigues Jr",
             "email": "juniorenato@msn.com"
         }
-    ],
-    "require": {}
+    ]
 }
