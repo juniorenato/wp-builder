@@ -40,13 +40,15 @@ class Builder
      * @var array{
      *     FORM: string,
      *     LANG: string,
-     *     PAGE: string
+     *     PAGE: string,
+     *     BLOCK: string
      * }
      */
     public const array PATH = [
-        'FORM' => __DIR__ . '/../views/form/',
-        'LANG' => __DIR__ . '/../lang',
-        'PAGE' => __DIR__ . '/../views/',
+        'FORM'  => __DIR__ . '/../views/form/',
+        'LANG'  => __DIR__ . '/../lang',
+        'PAGE'  => __DIR__ . '/../views/',
+        'BLOCK' => __DIR__ . '/../views/blocks/',
     ];
 
     /**
@@ -143,6 +145,106 @@ class Builder
         global $wp_builder;
 
         return self::THEME === $wp_builder;
+    }
+
+    /**
+     * Converts an absolute path inside this install to a URL.
+     *
+     * @since 0.8.0
+     *
+     * @param string $path Absolute filesystem path.
+     *
+     * @return string Public URL, or an empty string when the path is outside the install.
+     *
+     * @see https://developer.wordpress.org/reference/functions/content_url/
+     * @see https://developer.wordpress.org/reference/functions/site_url/
+     */
+    public static function url(string $path): string
+    {
+        $path = wp_normalize_path($path);
+        $resolved = realpath($path);
+        $file = wp_normalize_path($resolved !== false ? $resolved : $path);
+
+        foreach (self::urlBases() as $base) {
+            $baseResolved = realpath($base['dir']);
+            $dir = wp_normalize_path($baseResolved !== false ? $baseResolved : $base['dir']);
+
+            if ($dir !== '' && str_starts_with($file, $dir)) {
+                $relative = ltrim(substr($file, strlen($dir)), '/');
+
+                return rtrim($base['url'], '/') . '/' . $relative;
+            }
+        }
+
+        $contentDir = wp_normalize_path((string) (realpath(WP_CONTENT_DIR) ?: WP_CONTENT_DIR));
+
+        if (str_starts_with($file, $contentDir)) {
+            return content_url(substr($file, strlen($contentDir)));
+        }
+
+        $abspath = wp_normalize_path((string) (realpath(ABSPATH) ?: ABSPATH));
+
+        if (str_starts_with($file, $abspath)) {
+            return site_url(substr($file, strlen($abspath)));
+        }
+
+        return '';
+    }
+
+    /**
+     * Returns theme and plugin directories that can host this library.
+     *
+     * Symlinked themes and plugins keep their public URL while PHP sees the
+     * real path. Comparing those real paths is what makes the asset URL work.
+     *
+     * @since 0.8.0
+     *
+     * @return list<array{dir: string, url: string}> Directory and its public URL.
+     *
+     * @see https://developer.wordpress.org/reference/functions/get_stylesheet_directory/
+     * @see https://developer.wordpress.org/reference/functions/plugins_url/
+     */
+    private static function urlBases(): array
+    {
+        $bases = [];
+
+        if (function_exists('get_stylesheet_directory')) {
+            $bases[] = [
+                'dir' => get_stylesheet_directory(),
+                'url' => get_stylesheet_directory_uri(),
+            ];
+        }
+
+        if (
+            function_exists('get_template_directory')
+            && function_exists('get_stylesheet_directory')
+            && get_template_directory() !== get_stylesheet_directory()
+        ) {
+            $bases[] = [
+                'dir' => get_template_directory(),
+                'url' => get_template_directory_uri(),
+            ];
+        }
+
+        if (defined('WP_PLUGIN_DIR') && function_exists('plugins_url')) {
+            foreach (glob(WP_PLUGIN_DIR . '/*', GLOB_ONLYDIR) ?: [] as $dir) {
+                $bases[] = [
+                    'dir' => $dir,
+                    'url' => plugins_url('', $dir . '/plugin.php'),
+                ];
+            }
+        }
+
+        if (defined('WPMU_PLUGIN_DIR') && function_exists('plugins_url')) {
+            foreach (glob(WPMU_PLUGIN_DIR . '/*', GLOB_ONLYDIR) ?: [] as $dir) {
+                $bases[] = [
+                    'dir' => $dir,
+                    'url' => plugins_url('', $dir . '/plugin.php'),
+                ];
+            }
+        }
+
+        return $bases;
     }
 
     /**

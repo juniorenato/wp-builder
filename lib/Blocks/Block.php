@@ -1,7 +1,7 @@
 <?php
 
 /**
- * PHP-only Gutenberg block factory.
+ * Server-rendered Gutenberg block factory.
  *
  * @author  Renato Rodrigues Jr <juniorenato@msn.com>
  * @license GPL-3.0-or-later
@@ -14,9 +14,11 @@ use InvalidArgumentException;
 use WPB\Builder;
 
 /**
- * Registers a server-rendered Gutenberg block without JavaScript or block.json.
+ * Registers a server-rendered Gutenberg block without block.json.
  *
- * Requires WordPress 7.0+ (`supports.autoRegister`).
+ * Requires WordPress 7.0+ (`supports.autoRegister`). Scalar blocks saved in
+ * post content stay PHP-only. Repeaters and post meta storage load one shared
+ * editor script.
  *
  * @since  0.7.0
  * @author Renato Rodrigues Jr <juniorenato@msn.com>
@@ -197,6 +199,72 @@ class Block
     protected array $args;
 
     /**
+     * Whether field values are stored in the block comment instead of post meta.
+     *
+     * @since 0.8.0
+     */
+    protected bool $saveAsContent = false;
+
+    /**
+     * Root repeaters, keyed by field name.
+     *
+     * @since 0.8.0
+     *
+     * @var array<string, Repeater>
+     */
+    protected array $repeaters = [];
+
+    /**
+     * Top-level field names in declaration order.
+     *
+     * @since 0.8.0
+     *
+     * @var list<string>
+     */
+    protected array $fieldOrder = [];
+
+    /**
+     * Editor schemas keyed by block name.
+     *
+     * @since 0.8.0
+     *
+     * @var array<string, array<string, mixed>>
+     */
+    private static array $editorBlocks = [];
+
+    /**
+     * Meta keys included in post revisions.
+     *
+     * @since 0.8.0
+     *
+     * @var array<string, string>
+     */
+    private static array $revisionKeys = [];
+
+    /**
+     * Meta keys already passed to `register_meta()`.
+     *
+     * @since 0.8.0
+     *
+     * @var array<string, true>
+     */
+    private static array $registeredMeta = [];
+
+    /**
+     * Whether the editor script hook is registered.
+     *
+     * @since 0.8.0
+     */
+    private static bool $editorHooked = false;
+
+    /**
+     * Whether the revision meta filter is registered.
+     *
+     * @since 0.8.0
+     */
+    private static bool $revisionHooked = false;
+
+    /**
      * Optionally registers a block immediately.
      *
      * @since 0.7.0
@@ -237,6 +305,9 @@ class Block
         $this->stylesheets = [];
         $this->styleHandles = [];
         $this->args = [];
+        $this->saveAsContent = false;
+        $this->repeaters = [];
+        $this->fieldOrder = [];
 
         return $this;
     }
@@ -391,8 +462,10 @@ class Block
     {
         $this->assertAttributeName($name);
         $this->assertAttributeSchema($name, $schema);
+        $this->assertFieldAvailable($name);
 
         $this->attributes[$name] = $schema;
+        $this->trackField($name);
 
         return $this;
     }
@@ -633,6 +706,116 @@ class Block
     }
 
     /**
+     * Stores field values in the block comment inside `post_content`.
+     *
+     * Without this call, values are stored in post meta under {@see metaKey()}.
+     *
+     * @since 0.8.0
+     *
+     * @return static
+     */
+    public function saveAsContent(): static
+    {
+        $this->saveAsContent = true;
+
+        return $this;
+    }
+
+    /**
+     * Opens a repeater.
+     *
+     * Nested repeaters use {@see Repeater::repeater()}. Call {@see Repeater::end()}
+     * to return here. The repeater is registered immediately, so `end()` is only
+     * needed to continue this chain.
+     *
+     * @since 0.8.0
+     *
+     * @param string $name  Field name.
+     * @param string $label Inspector label.
+     *
+     * @return Repeater Repeater builder.
+     *
+     * @throws InvalidArgumentException If the name is reserved or already used.
+     */
+    public function repeater(string $name, string $label): Repeater
+    {
+        $this->assertAttributeName($name);
+
+        if (isset($this->attributes[$name]) || isset($this->repeaters[$name])) {
+            throw new InvalidArgumentException(sprintf(
+                'Field name "%s" is already used on this block.',
+                $name
+            ));
+        }
+
+        $repeater = new Repeater($this, null, $name, $label);
+        $this->repeaters[$name] = $repeater;
+        $this->trackField($name);
+
+        return $repeater;
+    }
+
+    /**
+     * Returns the post meta key for this block.
+     *
+     * The block name `namespace/slug` is stored as `namespace_slug`.
+     *
+     * @since 0.8.0
+     *
+     * @return string Meta key.
+     */
+    public function metaKey(): string
+    {
+        return str_replace('/', '_', $this->name);
+    }
+
+    /**
+     * Renders the block with normalized field values.
+     *
+     * A `render()` callback receives those values and owns the HTML. A block
+     * with repeaters and no callback is rendered from `views/blocks`.
+     *
+     * @since 0.8.0
+     *
+     * @param array<string, mixed> $attributes Block attributes.
+     * @param string               $content    Inner block HTML.
+     * @param \WP_Block            $block      Block instance.
+     *
+     * @return string Rendered block.
+     *
+     * @see https://developer.wordpress.org/reference/functions/get_block_wrapper_attributes/
+     */
+    public function renderBlock(array $attributes, string $content, \WP_Block $block): string
+    {
+        $values = $this->valuesForRender($attributes, $block);
+
+        if (is_callable($this->renderCallback)) {
+            return (string) ($this->renderCallback)($values, $content, $block);
+        }
+
+        $html = '';
+
+        foreach ($this->fieldSchemas() as $field) {
+            if (($field['type'] ?? '') !== 'repeater') {
+                continue;
+            }
+
+            $name = (string) $field['name'];
+            $html .= $this->repeaters[$name]->renderItems($values[$name] ?? []);
+        }
+
+        if ($this->isBlockRendererRequest() && trim(wp_strip_all_tags($html)) === '') {
+            $html .= '<p class="wpb-block-placeholder">' . esc_html($this->title) . '</p>';
+        }
+
+        return sprintf(
+            '<div %1$s>%2$s</div>',
+            get_block_wrapper_attributes(),
+            $html
+        );
+    }
+
+    /**
      * Queues the block for registration on `init`.
      *
      * @since 0.7.0
@@ -671,7 +854,11 @@ class Block
             return false;
         }
 
-        if (!$this->name || !$this->title || !is_callable($this->renderCallback)) {
+        if (!$this->name || !$this->title) {
+            return false;
+        }
+
+        if (!is_callable($this->renderCallback) && !$this->repeaters) {
             return false;
         }
 
@@ -690,6 +877,7 @@ class Block
     public function registerBlock(): void
     {
         $this->registerStylesheets();
+        $this->prepareStorage();
         $this->setArgs();
 
         register_block_type($this->name, $this->args);
@@ -753,7 +941,8 @@ class Block
             $this->args['supports'] ?? []
         );
         $this->args['supports']['autoRegister'] = true;
-        $this->args['render_callback'] = $this->renderCallback;
+        $this->applyStorageAttributes();
+        $this->args['render_callback'] = [$this, 'renderBlock'];
 
         if ($this->styleHandles) {
             $this->args['style_handles'] = array_values(array_unique(array_merge(
@@ -819,15 +1008,15 @@ class Block
     }
 
     /**
-     * Rejects reserved or empty attribute names.
+     * Rejects reserved or empty field names.
      *
-     * @since 0.7.0
+     * @since 0.8.0
      *
-     * @param string $name Attribute name.
+     * @param string $name Field name.
      *
      * @throws InvalidArgumentException If the name is reserved or empty.
      */
-    private function assertAttributeName(string $name): void
+    public static function assertFieldName(string $name): void
     {
         if ($name === '') {
             throw new InvalidArgumentException('Block attribute name cannot be empty.');
@@ -840,6 +1029,20 @@ class Block
                 implode(', ', self::RESERVED_ATTRIBUTE_NAMES)
             ));
         }
+    }
+
+    /**
+     * Rejects reserved or empty attribute names.
+     *
+     * @since 0.7.0
+     *
+     * @param string $name Attribute name.
+     *
+     * @throws InvalidArgumentException If the name is reserved or empty.
+     */
+    private function assertAttributeName(string $name): void
+    {
+        self::assertFieldName($name);
     }
 
     /**
@@ -866,7 +1069,7 @@ class Block
 
         if (isset($schema['source'])) {
             throw new InvalidArgumentException(sprintf(
-                'Attribute "%s" cannot use a source. PHP-only blocks store attributes in the block JSON.',
+                'Attribute "%s" cannot use a source. Choose post meta or post content with saveAsContent().',
                 $name
             ));
         }
@@ -891,5 +1094,427 @@ class Block
                 $name
             ));
         }
+    }
+
+    /**
+     * Rejects a scalar name that belongs to a repeater.
+     *
+     * @since 0.8.0
+     *
+     * @param string $name Field name.
+     *
+     * @throws InvalidArgumentException If the name is already a repeater.
+     */
+    private function assertFieldAvailable(string $name): void
+    {
+        if (isset($this->repeaters[$name])) {
+            throw new InvalidArgumentException(sprintf(
+                'Field name "%s" is already used on this block.',
+                $name
+            ));
+        }
+    }
+
+    /**
+     * Records a top-level field in declaration order.
+     *
+     * @since 0.8.0
+     *
+     * @param string $name Field name.
+     */
+    private function trackField(string $name): void
+    {
+        if (!in_array($name, $this->fieldOrder, true)) {
+            $this->fieldOrder[] = $name;
+        }
+    }
+
+    /**
+     * Returns top-level field schemas in declaration order.
+     *
+     * @since 0.8.0
+     *
+     * @return list<array<string, mixed>> Field schemas.
+     */
+    private function fieldSchemas(): array
+    {
+        $fields = [];
+
+        foreach ($this->fieldOrder as $name) {
+            if (isset($this->repeaters[$name])) {
+                $fields[] = $this->repeaters[$name]->schema();
+                continue;
+            }
+
+            if (isset($this->attributes[$name])) {
+                $fields[] = $this->scalarSchema($name);
+            }
+        }
+
+        return $fields;
+    }
+
+    /**
+     * Returns root repeater schemas.
+     *
+     * @since 0.8.0
+     *
+     * @return list<array<string, mixed>> Repeater schemas.
+     */
+    private function repeaterSchemas(): array
+    {
+        $schemas = [];
+
+        foreach ($this->fieldSchemas() as $field) {
+            if (($field['type'] ?? '') === 'repeater') {
+                $schemas[] = $field;
+            }
+        }
+
+        return $schemas;
+    }
+
+    /**
+     * Builds the editor schema for one scalar attribute.
+     *
+     * @since 0.8.0
+     *
+     * @param string $name Attribute name.
+     *
+     * @return array<string, mixed> Field schema.
+     */
+    private function scalarSchema(string $name): array
+    {
+        $schema = $this->attributes[$name];
+        $type = (string) ($schema['type'] ?? 'string');
+
+        if ($type === 'string' && !empty($schema['enum'])) {
+            $type = 'enum';
+        }
+
+        $field = [
+            'name'    => $name,
+            'type'    => $type,
+            'label'   => (string) ($schema['label'] ?? $name),
+            'default' => $schema['default'] ?? $this->scalarDefault($type),
+        ];
+
+        if ($type === 'enum') {
+            $field['enum'] = array_values($schema['enum'] ?? []);
+        }
+
+        return $field;
+    }
+
+    /**
+     * Returns the empty value for a scalar field type.
+     *
+     * @since 0.8.0
+     *
+     * @param string $type Field type.
+     *
+     * @return mixed Empty value.
+     */
+    private function scalarDefault(string $type): mixed
+    {
+        return match ($type) {
+            'integer', 'number', 'image' => 0,
+            'boolean' => false,
+            default => '',
+        };
+    }
+
+    /**
+     * Registers post meta and queues the editor script.
+     *
+     * @since 0.8.0
+     */
+    private function prepareStorage(): void
+    {
+        $fields = $this->fieldSchemas();
+
+        if (!$this->saveAsContent && $fields !== []) {
+            $this->registerMeta($fields);
+        }
+
+        if ($this->needsEditorScript()) {
+            $this->queueEditorConfig();
+        }
+    }
+
+    /**
+     * Determines whether this block needs the shared editor script.
+     *
+     * @since 0.8.0
+     *
+     * @return bool True when the inspector must be drawn by the script.
+     */
+    private function needsEditorScript(): bool
+    {
+        if ($this->repeaters !== []) {
+            return true;
+        }
+
+        return !$this->saveAsContent && $this->attributes !== [];
+    }
+
+    /**
+     * Registers the block meta key for every post type.
+     *
+     * @since 0.8.0
+     *
+     * @param list<array<string, mixed>> $fields Field schemas.
+     *
+     * @see https://developer.wordpress.org/reference/functions/register_meta/
+     * @see https://developer.wordpress.org/reference/hooks/wp_post_revision_meta_keys/
+     */
+    private function registerMeta(array $fields): void
+    {
+        $key = $this->metaKey();
+        self::$revisionKeys[$key] = $key;
+
+        if (!self::$revisionHooked) {
+            self::$revisionHooked = true;
+            add_filter('wp_post_revision_meta_keys', [self::class, 'revisionMetaKeys']);
+        }
+
+        if (isset(self::$registeredMeta[$key])) {
+            return;
+        }
+
+        self::$registeredMeta[$key] = true;
+
+        register_meta('post', $key, [
+            'type'              => 'object',
+            'single'            => true,
+            'sanitize_callback' => static function (mixed $value) use ($fields): array {
+                return FieldValue::normalizeBag($fields, wp_unslash($value));
+            },
+            'auth_callback'     => static function (mixed $allowed, mixed $metaKey, mixed $objectId): bool {
+                return current_user_can('edit_post', (int) $objectId);
+            },
+            'show_in_rest'      => [
+                'schema' => [
+                    'type'                 => 'object',
+                    'properties'           => FieldValue::restProperties($fields),
+                    'additionalProperties' => false,
+                ],
+            ],
+        ]);
+    }
+
+    /**
+     * Adds the block schema to the shared editor script.
+     *
+     * @since 0.8.0
+     *
+     * @see https://developer.wordpress.org/reference/hooks/enqueue_block_editor_assets/
+     */
+    private function queueEditorConfig(): void
+    {
+        self::$editorBlocks[$this->name] = [
+            'storage'   => $this->saveAsContent ? 'content' : 'meta',
+            'attribute' => $this->saveAsContent ? '' : $this->metaKey(),
+            'fields'    => $this->saveAsContent ? $this->repeaterSchemas() : $this->fieldSchemas(),
+        ];
+
+        if (!self::$editorHooked) {
+            self::$editorHooked = true;
+            add_action('enqueue_block_editor_assets', [self::class, 'enqueueEditorScript']);
+        }
+    }
+
+    /**
+     * Enqueues the shared block editor script.
+     *
+     * @since 0.8.0
+     *
+     * @see https://developer.wordpress.org/reference/functions/wp_enqueue_script/
+     * @see https://developer.wordpress.org/reference/functions/wp_add_inline_script/
+     */
+    public static function enqueueEditorScript(): void
+    {
+        if (self::$editorBlocks === []) {
+            return;
+        }
+
+        $path = dirname(__DIR__, 2) . '/assets/js/block-editor.js';
+        $url = Builder::url($path);
+
+        if ($url === '' || !is_readable($path)) {
+            return;
+        }
+
+        wp_register_script(
+            'wpb-block-editor',
+            $url,
+            ['wp-element', 'wp-components', 'wp-block-editor', 'wp-data', 'wp-hooks', 'wp-i18n'],
+            (string) filemtime($path),
+            true
+        );
+
+        wp_add_inline_script(
+            'wpb-block-editor',
+            'window.wpbBlockEditor = ' . wp_json_encode([
+                'i18n'   => [
+                    'add'          => __('Add', 'wpb'),
+                    'remove'       => __('Remove', 'wpb'),
+                    'moveUp'       => __('Move up', 'wpb'),
+                    'moveDown'     => __('Move down', 'wpb'),
+                    'selectImage'  => __('Select image', 'wpb'),
+                    'replaceImage' => __('Replace image', 'wpb'),
+                    'removeImage'  => __('Remove image', 'wpb'),
+                ],
+                'blocks' => self::$editorBlocks,
+            ]) . ';',
+            'before'
+        );
+
+        wp_enqueue_script('wpb-block-editor');
+    }
+
+    /**
+     * Adds block meta keys to post revisions.
+     *
+     * @since 0.8.0
+     *
+     * @param list<string> $keys Revision meta keys.
+     *
+     * @return list<string> Meta keys, including block storage keys.
+     *
+     * @see https://developer.wordpress.org/reference/hooks/wp_post_revision_meta_keys/
+     */
+    public static function revisionMetaKeys(array $keys): array
+    {
+        return array_values(array_unique(array_merge($keys, array_values(self::$revisionKeys))));
+    }
+
+    /**
+     * Points block attributes at post meta or at repeater arrays in the block comment.
+     *
+     * @since 0.8.0
+     */
+    private function applyStorageAttributes(): void
+    {
+        if ($this->saveAsContent) {
+            foreach (array_keys($this->repeaters) as $name) {
+                $this->args['attributes'][$name] = [
+                    'type'    => 'array',
+                    'default' => [],
+                ];
+            }
+
+            return;
+        }
+
+        foreach (array_keys($this->attributes) as $name) {
+            unset($this->args['attributes'][$name]);
+        }
+
+        foreach (array_keys($this->repeaters) as $name) {
+            unset($this->args['attributes'][$name]);
+        }
+
+        $fields = $this->fieldSchemas();
+
+        if ($fields === []) {
+            return;
+        }
+
+        $context = $this->args['uses_context'] ?? [];
+
+        if (!in_array('postId', $context, true)) {
+            $context[] = 'postId';
+        }
+
+        $this->args['uses_context'] = array_values($context);
+        $this->args['attributes'][$this->metaKey()] = [
+            'type'    => 'object',
+            'source'  => 'meta',
+            'meta'    => $this->metaKey(),
+            'default' => FieldValue::defaults($fields),
+        ];
+    }
+
+    /**
+     * Resolves normalized field values for the render callback.
+     *
+     * @since 0.8.0
+     *
+     * @param array<string, mixed> $attributes Block attributes.
+     * @param \WP_Block            $block      Block instance.
+     *
+     * @return array<string, mixed> Values passed to the render callback or the automatic view.
+     *
+     * @see https://developer.wordpress.org/reference/functions/get_post_meta/
+     */
+    private function valuesForRender(array $attributes, \WP_Block $block): array
+    {
+        $fields = $this->fieldSchemas();
+
+        if ($this->saveAsContent) {
+            $normalized = $attributes;
+
+            foreach ($fields as $field) {
+                $name = (string) $field['name'];
+                $normalized[$name] = FieldValue::normalize(
+                    $field,
+                    $attributes[$name] ?? ($field['default'] ?? null)
+                );
+            }
+
+            return $normalized;
+        }
+
+        $key = $this->metaKey();
+        $stored = [];
+
+        if ($this->isBlockRendererRequest() && isset($attributes[$key]) && (is_array($attributes[$key]) || $attributes[$key] instanceof \stdClass)) {
+            $stored = (array) $attributes[$key];
+        } else {
+            $postId = (int) ($block->context['postId'] ?? get_the_ID());
+
+            if ($postId > 0) {
+                $meta = get_post_meta($postId, $key, true);
+
+                if (is_array($meta) || $meta instanceof \stdClass) {
+                    $stored = (array) $meta;
+                }
+            }
+        }
+
+        $normalized = FieldValue::normalizeBag($fields, $stored);
+
+        foreach ($attributes as $name => $value) {
+            if ($name === $key || array_key_exists($name, $normalized)) {
+                continue;
+            }
+
+            $normalized[$name] = $value;
+        }
+
+        return $normalized;
+    }
+
+    /**
+     * Determines whether the current request is the editor's server render preview.
+     *
+     * @since 0.8.0
+     *
+     * @return bool True on the block renderer REST route.
+     */
+    private function isBlockRendererRequest(): bool
+    {
+        if (!defined('REST_REQUEST') || !REST_REQUEST) {
+            return false;
+        }
+
+        $route = '';
+
+        if (isset($GLOBALS['wp']) && is_object($GLOBALS['wp']) && isset($GLOBALS['wp']->query_vars['rest_route'])) {
+            $route = (string) $GLOBALS['wp']->query_vars['rest_route'];
+        }
+
+        return str_contains($route, '/block-renderer/');
     }
 }

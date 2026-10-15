@@ -2,7 +2,7 @@
 
 WordPress Builder is a PHP library **created for developers**. It is not an admin plugin and does not add a graphical interface to WordPress.
 
-Use it in a theme or plugin to register custom post types, taxonomies, meta boxes, admin pages, form fields, and PHP-only Gutenberg blocks with a small fluent API instead of repeating WordPress boilerplate.
+Use it in a theme or plugin to register custom post types, taxonomies, meta boxes, admin pages, form fields, and server-rendered Gutenberg blocks with a small fluent API instead of repeating WordPress boilerplate.
 
 ## Contents
 
@@ -54,6 +54,11 @@ wp-builder/
 ├── composer.lock
 ├── LICENSE
 ├── README.md
+├── tests/
+│   └── field-value.php
+├── assets/
+│   └── js/
+│       └── block-editor.js
 ├── lang/
 │   ├── wpb-en_US.mo
 │   ├── wpb-en_US.po
@@ -62,7 +67,9 @@ wp-builder/
 ├── lib/
 │   ├── Builder.php
 │   ├── Blocks/
-│   │   └── Block.php
+│   │   ├── Block.php
+│   │   ├── FieldValue.php
+│   │   └── Repeater.php
 │   ├── Comments/
 │   │   └── Comment.php
 │   ├── Forms/
@@ -82,6 +89,14 @@ wp-builder/
 │       └── Taxonomy.php
 └── views/
     ├── page.php
+    ├── blocks/
+    │   ├── repeater.php
+    │   └── partials/
+    │       ├── boolean.php
+    │       ├── enum.php
+    │       ├── image.php
+    │       ├── integer.php
+    │       └── string.php
     └── form/
         ├── get-field.php
         └── partials/
@@ -97,7 +112,7 @@ wp-builder/
             └── textarea.php
 ```
 
-`lib/` is the public PHP API (`WPB\`). `views/` holds admin form and settings page templates. `lang/` ships English and Brazilian Portuguese translations.
+`lib/` is the public PHP API (`WPB\`). `views/` holds admin form, block, and settings page templates. `assets/js/block-editor.js` is the shared inspector script for repeaters and post meta fields. `lang/` ships English and Brazilian Portuguese translations.
 
 ## Bootstrap
 
@@ -372,11 +387,13 @@ Storage depends on the parent object:
 
 Submitted values are sanitized (`sanitize_text_field()`, `sanitize_textarea_field()`, `wp_kses_post()`, and related helpers).
 
-## Gutenberg blocks (PHP only)
+## Gutenberg blocks
 
-Requires **WordPress 7.0+**. Registers a block with PHP only (`supports.autoRegister`): no JavaScript, no `block.json`, and no build step.
+Requires **WordPress 7.0+**. Registers a server-rendered block (`supports.autoRegister`): no `block.json` and no build step.
 
 On older WordPress versions, `register()` returns `false` and the rest of the library keeps working.
+
+Field values are stored in post meta. The meta key is the block name with `/` replaced by `_`. `get_post_meta()` returns the attributes as an array. Call `saveAsContent()` to store that same array in the block comment inside `post_content` instead.
 
 ```php
 use WPB\Blocks\Block;
@@ -411,6 +428,13 @@ $cta->name('my-theme/cta')
 $cta->register();
 ```
 
+```php
+get_post_meta($post_id, 'my-theme_cta', true);
+// ['heading' => 'Get started', 'featured' => false, 'max_items' => 3, 'size' => 'Medium']
+```
+
+Two insertions of `my-theme/cta` on the same page share that meta. A second set of values needs its own `name()`.
+
 Constructor shortcut when name, title, and render callback are already known:
 
 ```php
@@ -419,9 +443,60 @@ new Block('my-theme/cta', 'Call to Action', $renderCallback);
 
 Use [`get_block_wrapper_attributes()`](https://developer.wordpress.org/reference/functions/get_block_wrapper_attributes/) in the render callback so color, spacing, and border supports print on the wrapper. `stylesheet()` loads CSS on the front end and in the editor.
 
+### Repeaters
+
+A repeater is a list of fields. It can contain another repeater. With no `render()` callback, the block prints `views/blocks/repeater.php` and one partial per field type. The editor always shows an Add button.
+
+```php
+$team = new Block();
+$team->name('my-theme/team')
+    ->title('Team')
+    ->repeater('sections', 'Sections')
+        ->min(1)
+        ->addStringAttribute('title', 'Title')
+        ->repeater('members', 'Members')
+            ->addImageAttribute('photo', 'Photo')
+            ->addStringAttribute('name', 'Name')
+            ->end()
+        ->end()
+    ->register();
+```
+
+```php
+get_post_meta($post_id, 'my-theme_team', true);
+// [
+//     'sections' => [
+//         [
+//             'title' => 'Leadership',
+//             'members' => [
+//                 ['photo' => 123, 'name' => 'Ada'],
+//             ],
+//         ],
+//     ],
+// ]
+```
+
+`photo` is an attachment ID. `0` means no image. `min()` and `max()` limit the list in the editor. `max(0)` has no ceiling. On the front, a shorter list still renders.
+
+Item fields: `addStringAttribute`, `addIntegerAttribute`, `addBooleanAttribute`, `addEnumAttribute`, `addImageAttribute`. A true boolean adds `wpb-repeater__item--{name}` to the item. Field names must be unique among siblings.
+
+`saveAsContent()` keeps the same array in the block comment:
+
+```php
+$team->saveAsContent();
+```
+
+```html
+<!-- wp:my-theme/team {"sections":[{"title":"Leadership","members":[{"photo":123,"name":"Ada"}]}]} /-->
+```
+
+A block that also defines `render()` receives the normalized array and prints its own HTML. The automatic views are skipped.
+
+Blocks saved in post meta, and any block with a repeater, load `assets/js/block-editor.js` in the editor. Scalar blocks that call `saveAsContent()` and have no repeater stay PHP-only.
+
 ### Block limits
 
-Inspector controls are generated only for `string`, `integer`, `number`, `boolean`, and `string` plus `enum`. There are no inner blocks, no static `save`, and no media, textarea, or rich-text fields.
+Content-mode inspector controls are generated for `string`, `integer`, `number`, `boolean`, and `string` plus `enum`. Meta-mode controls, repeaters, and image fields are drawn by the shared editor script. There are no inner blocks, no static `save`, and no textarea or rich-text fields.
 
 Attribute names reserved by block supports are rejected: `style`, `className`, `align`, `anchor`, `textColor`, `backgroundColor`, `fontSize`, `fontFamily`.
 
