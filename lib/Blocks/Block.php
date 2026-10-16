@@ -258,6 +258,13 @@ class Block
     private static bool $editorHooked = false;
 
     /**
+     * Whether the editor script was attached to the page.
+     *
+     * @since 0.8.0
+     */
+    private static bool $editorScriptAdded = false;
+
+    /**
      * Whether the revision meta filter is registered.
      *
      * @since 0.8.0
@@ -944,6 +951,27 @@ class Block
         $this->applyStorageAttributes();
         $this->args['render_callback'] = [$this, 'renderBlock'];
 
+        if ($this->needsEditorScript()) {
+            self::registerSharedEditorScript();
+            $handles = $this->args['editor_script'] ?? [];
+
+            if (is_string($handles)) {
+                $handles = [$handles];
+            }
+
+            $handles[] = 'wpb-block-editor';
+            $this->args['editor_script'] = array_values(array_unique($handles));
+            self::registerSharedEditorStyle();
+            $styles = $this->args['editor_style'] ?? [];
+
+            if (is_string($styles)) {
+                $styles = [$styles];
+            }
+
+            $styles[] = 'wpb-block-editor';
+            $this->args['editor_style'] = array_values(array_unique($styles));
+        }
+
         if ($this->styleHandles) {
             $this->args['style_handles'] = array_values(array_unique(array_merge(
                 $this->styleHandles,
@@ -1321,11 +1349,46 @@ class Block
         if (!self::$editorHooked) {
             self::$editorHooked = true;
             add_action('enqueue_block_editor_assets', [self::class, 'enqueueEditorScript']);
+            add_action('enqueue_block_assets', [self::class, 'enqueueEditorScript']);
         }
     }
 
     /**
+     * Registers the shared editor script handle.
+     *
+     * The handle depends on the block editor packages and is deferred with
+     * them, so the field UI runs only after `wp.blockEditor` exists.
+     *
+     * @since 0.8.0
+     *
+     * @see https://developer.wordpress.org/reference/functions/wp_register_script/
+     */
+    private static function registerSharedEditorScript(): void
+    {
+        if (wp_script_is('wpb-block-editor', 'registered')) {
+            return;
+        }
+
+        $path = dirname(__DIR__, 2) . '/assets/js/block-editor.js';
+        $url = Builder::url($path);
+
+        wp_register_script(
+            'wpb-block-editor',
+            $url !== '' ? $url : false,
+            ['wp-hooks', 'wp-i18n', 'wp-element', 'wp-components', 'wp-blocks', 'wp-block-editor', 'wp-data'],
+            is_readable($path) ? (string) filemtime($path) : false,
+            [
+                'in_footer' => true,
+                'strategy'  => 'defer',
+            ]
+        );
+    }
+
+    /**
      * Enqueues the shared block editor script.
+     *
+     * When the library lives outside the content directory, the file URL is
+     * empty and the script is printed inline on the same handle.
      *
      * @since 0.8.0
      *
@@ -1334,43 +1397,89 @@ class Block
      */
     public static function enqueueEditorScript(): void
     {
-        if (self::$editorBlocks === []) {
+        if (self::$editorBlocks === [] || !is_admin()) {
             return;
         }
 
-        $path = dirname(__DIR__, 2) . '/assets/js/block-editor.js';
-        $url = Builder::url($path);
+        self::registerSharedEditorStyle();
+        wp_enqueue_style('wpb-block-editor');
 
-        if ($url === '' || !is_readable($path)) {
+        if (self::$editorScriptAdded) {
             return;
         }
 
-        wp_register_script(
-            'wpb-block-editor',
-            $url,
-            ['wp-element', 'wp-components', 'wp-block-editor', 'wp-data', 'wp-hooks', 'wp-i18n'],
-            (string) filemtime($path),
-            true
-        );
+        self::registerSharedEditorScript();
 
-        wp_add_inline_script(
-            'wpb-block-editor',
-            'window.wpbBlockEditor = ' . wp_json_encode([
-                'i18n'   => [
-                    'add'          => __('Add', 'wpb'),
-                    'remove'       => __('Remove', 'wpb'),
-                    'moveUp'       => __('Move up', 'wpb'),
-                    'moveDown'     => __('Move down', 'wpb'),
-                    'selectImage'  => __('Select image', 'wpb'),
-                    'replaceImage' => __('Replace image', 'wpb'),
-                    'removeImage'  => __('Remove image', 'wpb'),
-                ],
-                'blocks' => self::$editorBlocks,
-            ]) . ';',
-            'before'
-        );
+        $config = wp_json_encode([
+            'i18n'   => [
+                'add'          => __('Add', 'wpb'),
+                'remove'       => __('Remove', 'wpb'),
+                'moveUp'       => __('Move up', 'wpb'),
+                'moveDown'     => __('Move down', 'wpb'),
+                'selectImage'  => __('Select image', 'wpb'),
+                'replaceImage' => __('Replace image', 'wpb'),
+                'removeImage'  => __('Remove image', 'wpb'),
+            ],
+            'blocks' => self::$editorBlocks,
+        ]);
 
+        if (!is_string($config)) {
+            return;
+        }
+
+        global $wp_scripts;
+
+        $src = $wp_scripts->registered['wpb-block-editor']->src ?? false;
+        $inline = 'window.wpbBlockEditor = ' . $config . ';';
+
+        if ($src === false || $src === '') {
+            $path = dirname(__DIR__, 2) . '/assets/js/block-editor.js';
+            $script = is_readable($path) ? file_get_contents($path) : false;
+
+            if (!is_string($script)) {
+                return;
+            }
+
+            $inline .= $script;
+        }
+
+        wp_add_inline_script('wpb-block-editor', $inline, ($src === false || $src === '') ? 'after' : 'before');
         wp_enqueue_script('wpb-block-editor');
+        self::$editorScriptAdded = true;
+    }
+
+    /**
+     * Registers the canvas styles for inline field editing.
+     *
+     * @since 0.8.0
+     *
+     * @see https://developer.wordpress.org/reference/functions/wp_register_style/
+     */
+    private static function registerSharedEditorStyle(): void
+    {
+        if (wp_style_is('wpb-block-editor', 'registered')) {
+            return;
+        }
+
+        $path = dirname(__DIR__, 2) . '/assets/css/block-editor.css';
+        $url = is_readable($path) ? Builder::url($path) : '';
+
+        wp_register_style(
+            'wpb-block-editor',
+            $url !== '' ? $url : false,
+            [],
+            is_readable($path) ? (string) filemtime($path) : false
+        );
+
+        if ($url !== '' || !is_readable($path)) {
+            return;
+        }
+
+        $css = file_get_contents($path);
+
+        if (is_string($css)) {
+            wp_add_inline_style('wpb-block-editor', $css);
+        }
     }
 
     /**
