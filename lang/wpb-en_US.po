@@ -199,3 +199,31 @@ msgstr "%s most %s"
 #: lib/Taxonomies/Taxonomy.php:95
 msgid "back to %s"
 msgstr "back to %s"
+
+#: lib/Blocks/Block.php
+msgid "Add"
+msgstr "Add"
+
+#: lib/Blocks/Block.php
+msgid "Remove"
+msgstr "Remove"
+
+#: lib/Blocks/Block.php
+msgid "Move up"
+msgstr "Move up"
+
+#: lib/Blocks/Block.php
+msgid "Move down"
+msgstr "Move down"
+
+#: lib/Blocks/Block.php
+msgid "Select image"
+msgstr "Select image"
+
+#: lib/Blocks/Block.php
+msgid "Replace image"
+msgstr "Replace image"
+
+#: lib/Blocks/Block.php
+msgid "Remove image"
+msgstr "Remove image"
