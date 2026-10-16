@@ -11,10 +11,10 @@ use WPB\Builder;
 $blockPath = Builder::PATH['BLOCK'];
 
 ?>
-<div class="wpb-repeater wpb-repeater--<?php echo esc_attr(sanitize_html_class($this->name())); ?>">
+<div class="is-layout-flow wpb-repeater wpb-repeater--<?php echo esc_attr(sanitize_html_class($this->name())); ?>">
 <?php foreach ($this->items as $item) : ?>
     <?php
-    $classes = ['wpb-repeater__item'];
+    $classes = ['is-layout-flow', 'wpb-repeater__item'];
 
     foreach ($this->fieldSchemas() as $schema) {
         if (($schema['type'] ?? '') !== 'boolean' || empty($item[$schema['name']])) {

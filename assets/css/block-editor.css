@@ -1,100 +1,44 @@
+/*
+ * WordPress layout and component classes cover stacking, gap, buttons,
+ * plain text, selects, and images. These rules are only the frames
+ * core does not provide: a black border on the block, a lighter border
+ * and sibling spacing on each repeater item, and a centered dashed
+ * image upload box.
+ */
+
+.wpb-block {
+	box-sizing: border-box;
+	padding: 1em;
+	border: 1px solid #000;
+}
+
 .wpb-repeater__item {
-    position: relative;
+	box-sizing: border-box;
+	width: 100%;
+	padding: 1em;
+	border: 1px solid var(--wp-components-color-gray-300, #ddd);
+	border-radius: 2px;
 }
 
-.wpb-repeater .wpb-repeater {
-    margin-left: 1.5rem;
+.wpb-repeater__item > * + * {
+    margin-top: 1em;
 }
 
-textarea.block-editor-plain-text.wpb-field,
-select.wpb-field {
-    display: block;
-    width: 100%;
-    margin: 0;
-    padding: 0;
-    border: 0;
-    border-radius: 0;
-    background: transparent;
-    box-shadow: none;
-    color: inherit;
-    font: inherit;
-    line-height: inherit;
-    resize: none;
-    overflow: hidden;
-    min-height: 0;
+.wpb-repeater > * + * {
+	margin-top: 1em;
 }
 
-select.wpb-field {
-    cursor: pointer;
-    width: auto;
+.wpb-field--image > .components-placeholder {
+	width: 100%;
+	align-items: center;
+	justify-content: center;
+	text-align: center;
+	cursor: pointer;
 }
 
-.wpb-field--image {
-    margin: 0;
-    cursor: pointer;
-}
-
-.wpb-field--image img {
-    display: block;
-    max-width: 100%;
-    height: auto;
-}
-
-.wpb-field__placeholder {
-    opacity: 0.45;
-}
-
-.wpb-repeater__toolbar,
-.wpb-field__clear {
-    position: absolute;
-    z-index: 1;
-    display: none;
-    gap: 2px;
-    margin: 0;
-    padding: 2px;
-    background: #fff;
-}
-
-.wpb-repeater__toolbar {
-    top: 0;
-    right: 0;
-}
-
-.wpb-field--image {
-    position: relative;
-}
-
-.wpb-field__clear {
-    top: 0;
-    right: 0;
-}
-
-.wpb-repeater__item:hover > .wpb-repeater__toolbar,
-.wpb-repeater__item:focus-within > .wpb-repeater__toolbar,
-.wpb-field--image:hover > .wpb-field__clear,
-.wpb-field--image:focus-within > .wpb-field__clear {
-    display: flex;
-}
-
-.wpb-repeater__toolbar button,
-.wpb-field__clear,
-.wpb-repeater__add {
-    margin: 0;
-    padding: 2px 6px;
-    border: 0;
-    background: transparent;
-    color: inherit;
-    font: inherit;
-    line-height: inherit;
-    cursor: pointer;
-}
-
-.wpb-repeater__add {
-    opacity: 0.62;
-    padding-left: 0;
-}
-
-.wpb-repeater__add:disabled {
-    opacity: 0.35;
-    cursor: default;
+.wpb-field--image > .components-placeholder .components-placeholder__label {
+	width: 100%;
+	margin: 0;
+	justify-content: center;
+	text-align: center;
 }

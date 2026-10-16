@@ -817,7 +817,9 @@ class Block
 
         return sprintf(
             '<div %1$s>%2$s</div>',
-            get_block_wrapper_attributes(),
+            get_block_wrapper_attributes([
+                'class' => 'wpb-block',
+            ]),
             $html
         );
     }
@@ -961,16 +963,17 @@ class Block
 
             $handles[] = 'wpb-block-editor';
             $this->args['editor_script'] = array_values(array_unique($handles));
-            self::registerSharedEditorStyle();
-            $styles = $this->args['editor_style'] ?? [];
-
-            if (is_string($styles)) {
-                $styles = [$styles];
-            }
-
-            $styles[] = 'wpb-block-editor';
-            $this->args['editor_style'] = array_values(array_unique($styles));
         }
+
+        self::registerSharedEditorStyle();
+        $frameStyles = $this->args['style_handles'] ?? [];
+
+        if (is_string($frameStyles)) {
+            $frameStyles = [$frameStyles];
+        }
+
+        $frameStyles[] = 'wpb-block-editor';
+        $this->args['style_handles'] = array_values(array_unique($frameStyles));
 
         if ($this->styleHandles) {
             $this->args['style_handles'] = array_values(array_unique(array_merge(
@@ -1402,6 +1405,7 @@ class Block
         }
 
         self::registerSharedEditorStyle();
+        wp_enqueue_style('wp-components');
         wp_enqueue_style('wpb-block-editor');
 
         if (self::$editorScriptAdded) {
@@ -1449,7 +1453,7 @@ class Block
     }
 
     /**
-     * Registers the canvas styles for inline field editing.
+     * Registers the frame styles shared by the editor and the front end.
      *
      * @since 0.8.0
      *

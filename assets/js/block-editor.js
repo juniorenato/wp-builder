@@ -11,7 +11,7 @@
             return true;
         }
 
-        if (!window.wp || !wp.hooks || !wp.element || !wp.blockEditor || !wp.data) {
+        if (!window.wp || !wp.hooks || !wp.element || !wp.components || !wp.blockEditor || !wp.data) {
             return false;
         }
 
@@ -31,6 +31,7 @@
         var MediaUploadCheck = wp.blockEditor.MediaUploadCheck;
         var useBlockProps = wp.blockEditor.useBlockProps;
         var useSelect = wp.data.useSelect;
+        var Button = wp.components.Button;
         var i18n = config.i18n || {};
 
         function fieldClass(name) {
@@ -60,7 +61,7 @@
 
                 return select('core').getMedia(props.value);
             }, [props.value]);
-            var className = 'wpb-field wpb-field--' + fieldClass(field.name) + ' wpb-field--image';
+            var className = 'wp-block-image is-layout-flow wpb-field wpb-field--' + fieldClass(field.name) + ' wpb-field--image components-placeholder__fieldset';
 
             return el(MediaUploadCheck, null,
                 el(MediaUpload, {
@@ -73,15 +74,14 @@
                         return el('figure', { className: className },
                             media && media.source_url
                                 ? el('img', { src: media.source_url, alt: '', onClick: mediaProps.open })
-                                : el('span', {
-                                    className: 'wpb-field__placeholder',
+                                : el('div', {
+                                    className: 'components-placeholder',
                                     onClick: mediaProps.open
-                                }, field.label),
+                                }, el('div', { className: 'components-placeholder__label' }, field.label)),
                             props.value
-                                ? el('button', {
-                                    type: 'button',
-                                    className: 'wpb-field__clear',
-                                    'aria-label': i18n.removeImage,
+                                ? el(Button, {
+                                    variant: 'secondary',
+                                    __next40pxDefaultSize: true,
                                     onMouseDown: stop,
                                     onClick: function (event) {
                                         stop(event);
@@ -106,7 +106,7 @@
 
             if (field.type === 'enum') {
                 return el('select', {
-                    className: className,
+                    className: 'components-select-control__input ' + className,
                     value: value || field.default || '',
                     'aria-label': field.label,
                     onMouseDown: stop,
@@ -188,7 +188,7 @@
             }
 
             var rows = items.map(function (item, index) {
-                var classes = ['wpb-repeater__item'];
+                var classes = ['is-layout-flow', 'wpb-repeater__item'];
 
                 field.fields.forEach(function (child) {
                     if (child.type === 'boolean' && item[child.name]) {
@@ -199,10 +199,11 @@
                 var toggles = field.fields.filter(function (child) {
                     return child.type === 'boolean';
                 }).map(function (child) {
-                    return el('button', {
+                    return el(Button, {
                         key: child.name,
-                        type: 'button',
-                        'aria-pressed': item[child.name] ? 'true' : 'false',
+                        variant: 'secondary',
+                        isPressed: !!item[child.name],
+                        __next40pxDefaultSize: true,
                         onMouseDown: stop,
                         onClick: function (event) {
                             stop(event);
@@ -234,21 +235,22 @@
                 });
 
                 return el('div', { key: index, className: classes.join(' ') },
-                    el('div', { className: 'wpb-repeater__toolbar' },
-                        el('button', {
-                            type: 'button',
+                    fields,
+                    el('div', { className: 'components-placeholder__fieldset' },
+                        el(Button, {
+                            variant: 'secondary',
+                            __next40pxDefaultSize: true,
                             disabled: index === 0,
-                            'aria-label': i18n.moveUp,
                             onMouseDown: stop,
                             onClick: function (event) {
                                 stop(event);
                                 move(index, -1);
                             }
                         }, i18n.moveUp),
-                        el('button', {
-                            type: 'button',
+                        el(Button, {
+                            variant: 'secondary',
+                            __next40pxDefaultSize: true,
                             disabled: index === items.length - 1,
-                            'aria-label': i18n.moveDown,
                             onMouseDown: stop,
                             onClick: function (event) {
                                 stop(event);
@@ -256,10 +258,10 @@
                             }
                         }, i18n.moveDown),
                         toggles,
-                        el('button', {
-                            type: 'button',
+                        el(Button, {
+                            variant: 'secondary',
+                            __next40pxDefaultSize: true,
                             disabled: atMin,
-                            'aria-label': i18n.remove,
                             onMouseDown: stop,
                             onClick: function (event) {
                                 stop(event);
@@ -268,17 +270,18 @@
                                 }));
                             }
                         }, i18n.remove)
-                    ),
-                    fields
+                    )
                 );
             });
 
-            return el('div', { className: 'wpb-repeater wpb-repeater--' + fieldClass(field.name) },
+            return el('div', { className: 'is-layout-flow wpb-repeater wpb-repeater--' + fieldClass(field.name) },
                 rows,
-                el('button', {
-                    type: 'button',
+                el('div', { className: 'components-placeholder__fieldset' },
+                el(Button, {
+                    variant: 'primary',
                     className: 'wpb-repeater__add',
                     disabled: atMax,
+                    __next40pxDefaultSize: true,
                     onMouseDown: stop,
                     onClick: function (event) {
                         stop(event);
@@ -290,7 +293,7 @@
                         change(items.concat([defaultItem(field.fields)]));
                     }
                 }, i18n.add + ' ' + field.label)
-            );
+            ));
         }
 
         function BlockCanvas(props) {
@@ -349,7 +352,7 @@
                 props.setAttributes({ [name]: value });
             }
 
-            blockProps.className = (blockProps.className ? blockProps.className + ' ' : '') + 'wpb-block-canvas';
+            blockProps.className = (blockProps.className ? blockProps.className + ' ' : '') + 'wpb-block';
 
             return el('div', blockProps, blockConfig.fields.map(function (field) {
                 if (field.type === 'repeater') {

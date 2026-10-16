@@ -21,4 +21,4 @@ if ($html === '') {
 $name = sanitize_html_class((string) $this->field['name']);
 
 ?>
-<figure class="wpb-field wpb-field--<?php echo esc_attr($name); ?> wpb-field--image"><?php echo $html; ?></figure>
+<figure class="wp-block-image wpb-field wpb-field--<?php echo esc_attr($name); ?> wpb-field--image"><?php echo $html; ?></figure>
