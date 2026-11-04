@@ -101,6 +101,13 @@ class Block
     ];
 
     /**
+     * Block attribute that identifies one insertion when values live in post meta.
+     *
+     * @since 0.9.0
+     */
+    public const string INSTANCE_ATTRIBUTE = 'wpbId';
+
+    /**
      * Block type name (`namespace/slug`).
      *
      * @since 0.7.0
@@ -715,7 +722,8 @@ class Block
     /**
      * Stores field values in the block comment inside `post_content`.
      *
-     * Without this call, values are stored in post meta under {@see metaKey()}.
+     * Without this call, each insertion is stored in post meta under {@see metaKey()},
+     * keyed by the `wpbId` saved in that block comment.
      *
      * @since 0.8.0
      *
@@ -766,6 +774,7 @@ class Block
      * Returns the post meta key for this block.
      *
      * The block name `namespace/slug` is stored as `namespace_slug`.
+     * Each insertion has its own entry in that value, keyed by `wpbId`.
      *
      * @since 0.8.0
      *
@@ -1053,6 +1062,12 @@ class Block
             throw new InvalidArgumentException('Block attribute name cannot be empty.');
         }
 
+        if ($name === self::INSTANCE_ATTRIBUTE) {
+            throw new InvalidArgumentException(
+                'Field name "wpbId" is reserved. It identifies each insertion of a block stored in post meta.'
+            );
+        }
+
         if (in_array($name, self::RESERVED_ATTRIBUTE_NAMES, true)) {
             throw new InvalidArgumentException(sprintf(
                 'Attribute name "%s" is reserved by block supports. Reserved names: %s.',
@@ -1319,7 +1334,7 @@ class Block
             'type'              => 'object',
             'single'            => true,
             'sanitize_callback' => static function (mixed $value) use ($fields): array {
-                return FieldValue::normalizeBag($fields, wp_unslash($value));
+                return FieldValue::normalizeStoredMeta($fields, $value);
             },
             'auth_callback'     => static function (mixed $allowed, mixed $metaKey, mixed $objectId): bool {
                 return current_user_can('edit_post', (int) $objectId);
@@ -1327,8 +1342,7 @@ class Block
             'show_in_rest'      => [
                 'schema' => [
                     'type'                 => 'object',
-                    'properties'           => FieldValue::restProperties($fields),
-                    'additionalProperties' => false,
+                    'additionalProperties' => true,
                 ],
             ],
         ]);
@@ -1346,6 +1360,7 @@ class Block
         self::$editorBlocks[$this->name] = [
             'storage'   => $this->saveAsContent ? 'content' : 'meta',
             'attribute' => $this->saveAsContent ? '' : $this->metaKey(),
+            'instance'  => $this->saveAsContent ? '' : self::INSTANCE_ATTRIBUTE,
             'fields'    => $this->saveAsContent ? $this->repeaterSchemas() : $this->fieldSchemas(),
         ];
 
@@ -1503,7 +1518,7 @@ class Block
     }
 
     /**
-     * Points block attributes at post meta or at repeater arrays in the block comment.
+     * Stores repeater arrays in the block comment, or the insertion id when values live in post meta.
      *
      * @since 0.8.0
      */
@@ -1541,16 +1556,17 @@ class Block
         }
 
         $this->args['uses_context'] = array_values($context);
-        $this->args['attributes'][$this->metaKey()] = [
-            'type'    => 'object',
-            'source'  => 'meta',
-            'meta'    => $this->metaKey(),
-            'default' => FieldValue::defaults($fields),
+        $this->args['attributes'][self::INSTANCE_ATTRIBUTE] = [
+            'type'    => 'string',
+            'default' => '',
         ];
     }
 
     /**
-     * Resolves normalized field values for the render callback.
+     * Resolves normalized field values for one insertion.
+     *
+     * Post meta stores every insertion under {@see metaKey()}. The block comment
+     * contributes `wpbId`, and the render callback receives that insertion's fields.
      *
      * @since 0.8.0
      *
@@ -1580,26 +1596,20 @@ class Block
         }
 
         $key = $this->metaKey();
+        $instanceId = isset($attributes[self::INSTANCE_ATTRIBUTE])
+            ? (string) $attributes[self::INSTANCE_ATTRIBUTE]
+            : '';
         $stored = [];
+        $postId = (int) ($block->context['postId'] ?? get_the_ID());
 
-        if ($this->isBlockRendererRequest() && isset($attributes[$key]) && (is_array($attributes[$key]) || $attributes[$key] instanceof \stdClass)) {
-            $stored = (array) $attributes[$key];
-        } else {
-            $postId = (int) ($block->context['postId'] ?? get_the_ID());
-
-            if ($postId > 0) {
-                $meta = get_post_meta($postId, $key, true);
-
-                if (is_array($meta) || $meta instanceof \stdClass) {
-                    $stored = (array) $meta;
-                }
-            }
+        if ($postId > 0) {
+            $stored = FieldValue::bagForInstance(get_post_meta($postId, $key, true), $instanceId);
         }
 
         $normalized = FieldValue::normalizeBag($fields, $stored);
 
         foreach ($attributes as $name => $value) {
-            if ($name === $key || array_key_exists($name, $normalized)) {
+            if ($name === $key || $name === self::INSTANCE_ATTRIBUTE || array_key_exists($name, $normalized)) {
                 continue;
             }
 

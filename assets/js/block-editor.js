@@ -24,8 +24,6 @@
     function bindFields() {
         var config = window.wpbBlockEditor || { i18n: {}, blocks: {} };
         var el = wp.element.createElement;
-        var useEffect = wp.element.useEffect;
-        var useRef = wp.element.useRef;
         var PlainText = wp.blockEditor.PlainText;
         var MediaUpload = wp.blockEditor.MediaUpload;
         var MediaUploadCheck = wp.blockEditor.MediaUploadCheck;
@@ -296,8 +294,210 @@
             ));
         }
 
+        function instanceAttribute(blockConfig) {
+            return blockConfig.instance || 'wpbId';
+        }
+
+        function isInstanceId(value) {
+            return /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(String(value || ''));
+        }
+
+        function isPlainObject(value) {
+            return !!value && typeof value === 'object' && !Array.isArray(value);
+        }
+
+        function isInstanceMap(value) {
+            if (!isPlainObject(value)) {
+                return false;
+            }
+
+            return Object.keys(value).every(function (key) {
+                var bag = value[key];
+
+                return isInstanceId(key) && (isPlainObject(bag) || (Array.isArray(bag) && bag.length === 0));
+            });
+        }
+
+        function cloneValue(value) {
+            return JSON.parse(JSON.stringify(value));
+        }
+
+        function withDefaults(fields, source) {
+            var bag = Object.assign({}, source || {});
+
+            (fields || []).forEach(function (field) {
+                if (!Object.prototype.hasOwnProperty.call(bag, field.name)) {
+                    bag[field.name] = field.type === 'repeater' ? [] : field.default;
+                }
+            });
+
+            return bag;
+        }
+
+        function createId() {
+            if (window.crypto && typeof crypto.randomUUID === 'function') {
+                return crypto.randomUUID();
+            }
+
+            return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function (symbol) {
+                var random = Math.random() * 16 | 0;
+                var next = symbol === 'x' ? random : (random & 0x3 | 0x8);
+
+                return next.toString(16);
+            });
+        }
+
+        function idIsShared(name, attribute, id, clientId) {
+            if (!isInstanceId(id)) {
+                return false;
+            }
+
+            var select = wp.data.select('core/block-editor');
+
+            if (!select || !select.getBlocks) {
+                return false;
+            }
+
+            return collectBlocks(select.getBlocks(), name, []).some(function (block) {
+                if (block.clientId === clientId || !block.attributes) {
+                    return false;
+                }
+
+                return block.attributes[attribute] === id;
+            });
+        }
+
+        function collectBlocks(blocks, name, found) {
+            (blocks || []).forEach(function (block) {
+                if (block.name === name) {
+                    found.push(block);
+                }
+
+                if (block.innerBlocks && block.innerBlocks.length) {
+                    collectBlocks(block.innerBlocks, name, found);
+                }
+            });
+
+            return found;
+        }
+
+        var lastSignature = null;
+        var reconciling = false;
+
+        function reconcileMetaBlocks() {
+            if (reconciling) {
+                return;
+            }
+
+            var blockSelect = wp.data.select('core/block-editor');
+            var editorSelect = wp.data.select('core/editor');
+
+            if (!blockSelect || !blockSelect.getBlocks || !editorSelect || !editorSelect.getEditedPostAttribute) {
+                return;
+            }
+
+            var tree = blockSelect.getBlocks();
+            var parts = [];
+
+            Object.keys(config.blocks || {}).forEach(function (name) {
+                var blockConfig = config.blocks[name];
+
+                if (!blockConfig || blockConfig.storage !== 'meta') {
+                    return;
+                }
+
+                collectBlocks(tree, name, []).forEach(function (block) {
+                    var id = block.attributes && block.attributes[instanceAttribute(blockConfig)];
+                    parts.push(block.clientId + ':' + (id || ''));
+                });
+            });
+
+            var signature = parts.join('|');
+
+            if (signature === lastSignature) {
+                return;
+            }
+
+            lastSignature = signature;
+            reconciling = true;
+
+            try {
+                Object.keys(config.blocks || {}).forEach(function (name) {
+                    var blockConfig = config.blocks[name];
+
+                    if (!blockConfig || blockConfig.storage !== 'meta') {
+                        return;
+                    }
+
+                    reconcileBlock(name, blockConfig);
+                });
+            } finally {
+                reconciling = false;
+            }
+        }
+
+        function reconcileBlock(name, blockConfig) {
+            var attribute = instanceAttribute(blockConfig);
+            var blocks = collectBlocks(wp.data.select('core/block-editor').getBlocks(), name, []);
+
+            if (!blocks.length) {
+                return;
+            }
+
+            var meta = wp.data.select('core/editor').getEditedPostAttribute('meta') || {};
+            var stored = meta[blockConfig.attribute];
+            var legacy = isPlainObject(stored) && !isInstanceMap(stored);
+            var map = isInstanceMap(stored) ? Object.assign({}, stored) : {};
+            var seen = {};
+            var dirtyMeta = legacy;
+
+            blocks.forEach(function (block) {
+                var id = block.attributes && block.attributes[attribute] || '';
+
+                if (isInstanceId(id) && !seen[id]) {
+                    seen[id] = true;
+
+                    if (legacy) {
+                        map[id] = cloneValue(stored);
+                    }
+
+                    return;
+                }
+
+                var newId = createId();
+                var source = isInstanceId(id) && isPlainObject(map[id]) ? map[id] : (legacy ? stored : null);
+
+                wp.data.dispatch('core/block-editor').updateBlockAttributes(block.clientId, {
+                    [attribute]: newId
+                });
+
+                if (source) {
+                    map[newId] = cloneValue(source);
+                    dirtyMeta = true;
+                }
+
+                seen[newId] = true;
+            });
+
+            if (!dirtyMeta) {
+                return;
+            }
+
+            var editor = wp.data.dispatch('core/editor');
+
+            if (!editor || !editor.editPost) {
+                return;
+            }
+
+            editor.editPost({
+                meta: { [blockConfig.attribute]: map }
+            });
+        }
+
         function BlockCanvas(props) {
             var blockConfig = props.config;
+            var attributeName = instanceAttribute(blockConfig);
+            var instanceId = props.attributes[attributeName] || '';
             var blockProps = useBlockProps();
             var metaBag = useSelect(function (select) {
                 if (blockConfig.storage !== 'meta') {
@@ -313,30 +513,51 @@
                 var meta = editor.getEditedPostAttribute('meta') || {};
                 var stored = meta[blockConfig.attribute];
 
-                return stored && typeof stored === 'object' ? stored : null;
-            }, [blockConfig.storage, blockConfig.attribute]);
-            var bag = blockConfig.storage === 'meta'
-                ? (metaBag || props.attributes[blockConfig.attribute] || {})
-                : props.attributes;
-            var hydrated = useRef(false);
+                if (!stored || typeof stored !== 'object') {
+                    return null;
+                }
 
-            useEffect(function () {
-                if (hydrated.current || blockConfig.storage !== 'meta' || !metaBag) {
+                if (!isInstanceMap(stored)) {
+                    return stored;
+                }
+
+                return instanceId && stored[instanceId] ? stored[instanceId] : null;
+            }, [blockConfig.storage, blockConfig.attribute, instanceId]);
+            var bag = blockConfig.storage === 'meta'
+                ? withDefaults(blockConfig.fields, metaBag)
+                : props.attributes;
+
+            function commitBag(next) {
+                var id = instanceId;
+                var editorSelect = wp.data.select('core/editor');
+                var edited = editorSelect && editorSelect.getEditedPostAttribute
+                    ? (editorSelect.getEditedPostAttribute('meta') || {})
+                    : {};
+                var storedNow = edited[blockConfig.attribute];
+
+                if (!isInstanceId(id) || idIsShared(props.name, attributeName, id, props.clientId) || (isPlainObject(storedNow) && !isInstanceMap(storedNow))) {
+                    reconcileMetaBlocks();
+                    var current = wp.data.select('core/block-editor').getBlock(props.clientId);
+                    id = current && current.attributes ? current.attributes[attributeName] : '';
+                }
+
+                if (!isInstanceId(id)) {
                     return;
                 }
 
-                hydrated.current = true;
-                props.setAttributes({ [blockConfig.attribute]: metaBag });
-            }, [metaBag]);
-
-            function commitBag(next) {
-                props.setAttributes({ [blockConfig.attribute]: next });
+                var metaSelect = wp.data.select('core/editor');
+                var meta = metaSelect && metaSelect.getEditedPostAttribute
+                    ? (metaSelect.getEditedPostAttribute('meta') || {})
+                    : {};
+                var stored = meta[blockConfig.attribute];
+                var map = isInstanceMap(stored) ? Object.assign({}, stored) : {};
+                map[id] = next;
 
                 var editor = wp.data.dispatch('core/editor');
 
                 if (editor && editor.editPost) {
                     editor.editPost({
-                        meta: { [blockConfig.attribute]: next }
+                        meta: { [blockConfig.attribute]: map }
                     });
                 }
             }
@@ -387,6 +608,8 @@
 
                 return el(BlockCanvas, {
                     config: blockConfig,
+                    name: props.name,
+                    clientId: props.clientId,
                     attributes: props.attributes,
                     setAttributes: props.setAttributes
                 });
@@ -394,6 +617,11 @@
         }
 
         wp.hooks.addFilter('editor.BlockEdit', 'wpb/fields', withBlockFields);
+
+        if (wp.data.subscribe) {
+            wp.data.subscribe(reconcileMetaBlocks);
+            reconcileMetaBlocks();
+        }
     }
 
     if (!boot()) {

@@ -435,7 +435,9 @@ Requires **WordPress 7.0+**. Registers a server-rendered block (`supports.autoRe
 
 On older WordPress versions, `register()` returns `false` and the rest of the library keeps working.
 
-Field values are stored in post meta. The meta key is the block name with `/` replaced by `_`. `get_post_meta()` returns the attributes as an array. Call `saveAsContent()` to store that same array in the block comment inside `post_content` instead.
+Field values are stored in post meta. The meta key is the block name with `/` replaced by `_`. Each insertion has its own entry in that value, keyed by `wpbId`. The id is saved in the block comment, so the same block can be placed twice on one page with different data. `get_post_meta()` returns that map. The render callback receives the fields for that insertion only.
+
+Call `saveAsContent()` to store each insertion's array in its own block comment instead, with no post meta.
 
 ```php
 use WPB\Blocks\Block;
@@ -472,10 +474,21 @@ $cta->register();
 
 ```php
 get_post_meta($post_id, 'my-theme_cta', true);
-// ['heading' => 'Get started', 'featured' => false, 'max_items' => 3, 'size' => 'Medium']
+// [
+//     '6f1c1b2a-3d4e-4f5a-8b6c-7d8e9f0a1b2c' => [
+//         'heading' => 'Get started',
+//         'featured' => false,
+//         'max_items' => 3,
+//         'size' => 'Medium',
+//     ],
+// ]
 ```
 
-Two insertions of `my-theme/cta` on the same page share that meta. A second set of values needs its own `name()`.
+```html
+<!-- wp:my-theme/cta {"wpbId":"6f1c1b2a-3d4e-4f5a-8b6c-7d8e9f0a1b2c"} /-->
+```
+
+A post saved before this split stores one flat field array. The next edit in the block editor copies those values onto each insertion already on the page. A later insertion starts empty. Duplicating a block on the same page copies its values into a new id. Pasting it into another post starts from the field defaults, because the values live in the original post's meta.
 
 Constructor shortcut when name, title, and render callback are already known:
 
@@ -507,11 +520,13 @@ $team->name('my-theme/team')
 ```php
 get_post_meta($post_id, 'my-theme_team', true);
 // [
-//     'sections' => [
-//         [
-//             'title' => 'Leadership',
-//             'members' => [
-//                 ['photo' => 123, 'name' => 'Ada'],
+//     '6f1c1b2a-3d4e-4f5a-8b6c-7d8e9f0a1b2c' => [
+//         'sections' => [
+//             [
+//                 'title' => 'Leadership',
+//                 'members' => [
+//                     ['photo' => 123, 'name' => 'Ada'],
+//                 ],
 //             ],
 //         ],
 //     ],

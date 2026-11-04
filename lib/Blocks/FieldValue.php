@@ -135,6 +135,119 @@ class FieldValue
     }
 
     /**
+     * Normalizes post meta that holds one field bag or one bag per insertion.
+     *
+     * A legacy value is the field bag itself. Current values are objects keyed
+     * by the insertion id stored in the block comment.
+     *
+     * @since 0.9.0
+     *
+     * @param list<array<string, mixed>> $fields Field schemas.
+     * @param mixed                      $value  Submitted meta value.
+     *
+     * @return array<string, mixed> Normalized bag, or a map of insertion ids to bags.
+     */
+    public static function normalizeStoredMeta(array $fields, mixed $value): array
+    {
+        $value = self::asArray(wp_unslash($value));
+
+        if ($value === [] || array_is_list($value)) {
+            return [];
+        }
+
+        if (!self::isInstanceMap($value)) {
+            return self::normalizeBag($fields, $value);
+        }
+
+        $normalized = [];
+
+        foreach ($value as $id => $bag) {
+            $normalized[(string) $id] = self::normalizeBag($fields, $bag);
+        }
+
+        return $normalized;
+    }
+
+    /**
+     * Returns the field bag for one insertion.
+     *
+     * Legacy meta is one bag shared by every insertion. A map returns only the
+     * entry for `$instanceId`.
+     *
+     * @since 0.9.0
+     *
+     * @param mixed  $meta       Stored post meta.
+     * @param string $instanceId Insertion id from the block comment.
+     *
+     * @return array<string, mixed> Field bag, or an empty array when the insertion has no entry.
+     */
+    public static function bagForInstance(mixed $meta, string $instanceId): array
+    {
+        $meta = self::asArray($meta);
+
+        if ($meta === [] || array_is_list($meta)) {
+            return [];
+        }
+
+        if (!self::isInstanceMap($meta)) {
+            return $meta;
+        }
+
+        if ($instanceId === '' || !array_key_exists($instanceId, $meta)) {
+            return [];
+        }
+
+        return self::asArray($meta[$instanceId]);
+    }
+
+    /**
+     * Checks whether a string is an insertion id.
+     *
+     * @since 0.9.0
+     *
+     * @param string $id Candidate id.
+     */
+    public static function isInstanceId(string $id): bool
+    {
+        return preg_match(
+            '/^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i',
+            $id
+        ) === 1;
+    }
+
+    /**
+     * Checks whether meta is a map of insertion ids to field bags.
+     *
+     * @since 0.9.0
+     *
+     * @param mixed $value Stored meta.
+     */
+    public static function isInstanceMap(mixed $value): bool
+    {
+        $value = self::asArray($value);
+
+        if ($value === [] || array_is_list($value)) {
+            return false;
+        }
+
+        foreach ($value as $id => $bag) {
+            if (!is_string($id) || !self::isInstanceId($id)) {
+                return false;
+            }
+
+            if (is_array($bag) && array_is_list($bag) && $bag !== []) {
+                return false;
+            }
+
+            if (!is_array($bag) && !$bag instanceof \stdClass) {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    /**
      * Normalizes a repeater into a list of known fields.
      *
      * @since 0.8.0
