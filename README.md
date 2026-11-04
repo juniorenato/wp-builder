@@ -57,7 +57,11 @@ wp-builder/
 ├── tests/
 │   └── field-value.php
 ├── assets/
+│   ├── css/
+│   │   ├── admin-repeater.css
+│   │   └── block-editor.css
 │   └── js/
+│       ├── admin-repeater.js
 │       └── block-editor.js
 ├── lang/
 │   ├── wpb-en_US.mo
@@ -75,6 +79,7 @@ wp-builder/
 │   ├── Forms/
 │   │   ├── AdminForm.php
 │   │   ├── PostTypeMetaBox.php
+│   │   ├── Repeater.php
 │   │   └── TaxonomyCustomField.php
 │   ├── MetaBoxes/
 │   │   └── MetaBox.php
@@ -101,12 +106,15 @@ wp-builder/
         ├── get-field.php
         └── partials/
             ├── checkbox.php
+            ├── control.php
             ├── description.php
             ├── hidden.php
             ├── label.php
             ├── number.php
             ├── radio.php
             ├── rich-text.php
+            ├── repeater-item.php
+            ├── repeater.php
             ├── select.php
             ├── text.php
             └── textarea.php
@@ -377,7 +385,8 @@ Values are stored as options. Read them with `get_option('company_name')`.
 | `addRadioField($name, $label, $options, ...)` | Radio |
 | `addCheckboxField($name, $label, $options = [], $multiple = true, ...)` | Checkbox |
 | `addRichTextField($name, $label, $editorSettings = [], ...)` | `wp_editor()` |
-| `formField($type, $name, $label, $attributes, $options, $description)` | Any allowed type |
+| `formField($type, $name, $label, $attributes, $options, $description)` | Any allowed scalar type |
+| `repeater($name, $label, $description = '')` | Repeater |
 
 Storage depends on the parent object:
 
@@ -386,6 +395,39 @@ Storage depends on the parent object:
 - admin page: options
 
 Submitted values are sanitized (`sanitize_text_field()`, `sanitize_textarea_field()`, `wp_kses_post()`, and related helpers).
+
+### Repeaters
+
+`repeater()` stores a list under one meta key or option. It works on a post type, a meta box, a taxonomy, and an admin page. Subfields use the same scalar methods as the form. `end()` returns to the parent repeater, or to the form at the root.
+
+```php
+$details->repeater('authors', 'Authors')
+    ->min(1)
+    ->max(12)
+    ->addTextField('name', 'Name')
+    ->addSelectField('role', 'Role', [
+        'author' => 'Author',
+        'editor' => 'Editor',
+    ])
+    ->end();
+```
+
+```php
+get_post_meta($post_id, 'authors', true);
+// [
+//     ['name' => 'Ada', 'role' => 'author'],
+// ]
+```
+
+A taxonomy reads that list with `get_term_meta()`. An admin page reads it with `get_option()`.
+
+Nested repeaters use the same call. Inside a repeater, the scalar types are text, textarea, number, select, radio, and checkbox. Rich text stays on the parent form, because `wp_editor()` cannot be cloned into a new row.
+
+`min()` shows empty rows until the form reaches that count. Saving fewer rows is allowed; the next edit screen fills the gap. `max()` disables Add and discards extra submitted rows. `max(0)` has no ceiling.
+
+The screen shows Add, Remove, Move up, and Move down. Clearing every row still saves an empty list.
+
+Names at one level must be unique. A name may contain only letters, numbers, hyphens, and underscores.
 
 ## Gutenberg blocks
 

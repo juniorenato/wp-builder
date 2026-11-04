@@ -431,11 +431,17 @@ class AdminPage
     public function registerSettings(): void
     {
         foreach ($this->fields as $field) {
-            register_setting($this->menuSlug . '-group', $field['name'], [
+            $args = [
                 'sanitize_callback' => function ($value) use ($field) {
                     return $this->sanitizeFieldValue($field, $value);
                 },
-            ]);
+            ];
+
+            if (($field['type'] ?? '') === 'repeater') {
+                $args['type'] = 'array';
+            }
+
+            register_setting($this->menuSlug . '-group', $field['name'], $args);
         }
     }
 

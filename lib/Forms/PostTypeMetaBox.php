@@ -87,6 +87,7 @@ trait PostTypeMetaBox
                 $this->args['register_meta_box_cb'] = [$metaBox, 'addMetaBoxes'];
             }
 
+            $this->fields = array_merge($this->fields, $metaBox->fields);
             $this->metaFields = array_merge(
                 $this->metaFields,
                 $metaBox->metaFields

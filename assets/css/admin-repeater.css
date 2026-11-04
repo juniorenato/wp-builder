@@ -1,0 +1,41 @@
+/*
+ * Frames for repeater rows on meta boxes, term screens, and settings pages.
+ * WordPress supplies the inputs and buttons.
+ */
+
+.wpb-repeater__items {
+	display: grid;
+	gap: 12px;
+}
+
+.wpb-repeater__items:empty {
+	display: none;
+}
+
+.wpb-repeater__item {
+	box-sizing: border-box;
+	padding: 12px;
+	border: 1px solid #c3c4c7;
+	background: #fff;
+}
+
+.wpb-repeater__fields > * + * {
+	margin-top: 12px;
+}
+
+.wpb-repeater__label {
+	margin: 0 0 8px;
+}
+
+.wpb-repeater__toolbar,
+.wpb-repeater__footer {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 8px;
+	margin: 12px 0 0;
+}
+
+.wpb-repeater__toolbar .button,
+.wpb-repeater__footer .button {
+	margin: 0;
+}
