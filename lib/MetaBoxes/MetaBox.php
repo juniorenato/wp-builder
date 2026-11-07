@@ -72,6 +72,13 @@ class MetaBox
     private array $args;
 
     /**
+     * Whether the meta box hooks have been added.
+     *
+     * @since 0.9.0
+     */
+    private bool $hooked = false;
+
+    /**
      * Initializes a new meta box.
      *
      * @since 0.3.0
@@ -79,6 +86,7 @@ class MetaBox
     public function __construct()
     {
         $this->init();
+        $this->valueType = 'post';
     }
 
     /**
@@ -253,7 +261,58 @@ class MetaBox
             $this->metaBox = sanitize_title($this->title);
         }
 
+        if ($this->hooked) {
+            return;
+        }
+
+        $this->hooked = true;
+
         add_action('add_meta_boxes', [$this, 'addMetaBoxes']);
+        add_action('save_post', [$this, 'saveMetaBox'], 10, 2);
+    }
+
+    /**
+     * Saves this meta box when the submitted post uses one of its screens.
+     *
+     * @since 0.9.0
+     *
+     * @param int      $post_id Post ID.
+     * @param \WP_Post $post    Post object being saved.
+     *
+     * @see https://developer.wordpress.org/reference/hooks/save_post/
+     */
+    public function saveMetaBox($post_id, $post): void
+    {
+        if (!$post instanceof \WP_Post || !$this->servesPostType($post->post_type)) {
+            return;
+        }
+
+        $this->id = (int) $post_id;
+        $this->savePost($post_id, $post);
+    }
+
+    /**
+     * Determines whether the meta box is registered for a post type.
+     *
+     * @since 0.9.0
+     *
+     * @param string $postType Post type key.
+     *
+     * @return bool True when the screen list includes the post type.
+     */
+    private function servesPostType(string $postType): bool
+    {
+        foreach ($this->screen as $screen) {
+            if (is_string($screen) && $screen === $postType) {
+                return true;
+            }
+
+            if (is_object($screen) && isset($screen->post_type) && $screen->post_type === $postType) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     /**
@@ -292,6 +351,7 @@ class MetaBox
         $this->id = $post->ID ?? 0;
         $this->fieldsType = 'box';
 
+        $this->addNonceName();
         $this->field();
     }
 }

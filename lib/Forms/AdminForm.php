@@ -37,6 +37,7 @@ trait AdminForm
         'select',
         'radio',
         'checkbox',
+        'repeater',
     ];
 
     /**
@@ -206,6 +207,40 @@ trait AdminForm
         array $options = [],
         string $description = ''
     ): void {
+        $this->registerDefinedField($this->defineFormField(
+            $type,
+            $name,
+            $label,
+            $attributes,
+            $options,
+            $description
+        ));
+    }
+
+    /**
+     * Builds a field configuration without registering it.
+     *
+     * @since 0.9.0
+     *
+     * @param string               $type        Field type.
+     * @param string               $name        Field name.
+     * @param string               $label       Field label.
+     * @param array<string, mixed> $attributes  HTML attributes.
+     * @param array<mixed, mixed>  $options     Field options or editor settings.
+     * @param string               $description Field description.
+     *
+     * @return array<string, mixed> Field configuration.
+     *
+     * @throws InvalidArgumentException If the field type is not allowed.
+     */
+    public function defineFormField(
+        string $type,
+        string $name,
+        string $label = '',
+        array $attributes = [],
+        array $options = [],
+        string $description = ''
+    ): array {
         $type = $this->assertFieldType($type);
 
         if ($type === '') {
@@ -221,7 +256,7 @@ trait AdminForm
             unset($attributes['multiple']);
         }
 
-        $this->fields[$name] = [
+        return [
             'type'        => $type,
             'name'        => $name,
             'val'         => '',
@@ -231,7 +266,19 @@ trait AdminForm
             'label'       => $label,
             'description' => $description,
         ];
+    }
 
+    /**
+     * Stores a field configuration.
+     *
+     * @since 0.9.0
+     *
+     * @param array<string, mixed> $field Field configuration.
+     */
+    protected function registerDefinedField(array $field): void
+    {
+        $name = (string) ($field['name'] ?? '');
+        $this->fields[$name] = $field;
         $this->metaFields[] = $name;
     }
 
@@ -248,10 +295,28 @@ trait AdminForm
      */
     public function addTextField(string $name, string $label, string $description = '', string $class = '', array $attrs = []): void
     {
+        $this->registerDefinedField($this->defineTextField($name, $label, $description, $class, $attrs));
+    }
+
+    /**
+     * Builds a text field configuration.
+     *
+     * @since 0.9.0
+     *
+     * @param string               $name        Field name.
+     * @param string               $label       Field label.
+     * @param string               $description Field description.
+     * @param string               $class       Extra CSS classes.
+     * @param array<string, mixed> $attrs       Extra HTML attributes.
+     *
+     * @return array<string, mixed> Field configuration.
+     */
+    public function defineTextField(string $name, string $label, string $description = '', string $class = '', array $attrs = []): array
+    {
         $attributes['class'] = $this->adminFieldClass('regular-text', $class);
         $attributes = array_merge($attributes, $attrs);
 
-        $this->formField('text', $name, $label, $attributes, [], $description);
+        return $this->defineFormField('text', $name, $label, $attributes, [], $description);
     }
 
     /**
@@ -259,13 +324,13 @@ trait AdminForm
      *
      * @since 0.2.0
      *
-     * @param string                $name        Field name.
-     * @param string                $label       Field label.
-     * @param array<string|int, mixed> $options  Select options.
-     * @param bool                  $multiple    Whether multiple values are allowed.
-     * @param string                $description Field description.
-     * @param string                $class       Extra CSS classes.
-     * @param array<string, mixed>  $attrs       Extra HTML attributes.
+     * @param string                   $name        Field name.
+     * @param string                   $label       Field label.
+     * @param array<string|int, mixed> $options     Select options.
+     * @param bool                     $multiple    Whether multiple values are allowed.
+     * @param string                   $description Field description.
+     * @param string                   $class       Extra CSS classes.
+     * @param array<string, mixed>     $attrs       Extra HTML attributes.
      */
     public function addSelectField(
         string $name,
@@ -276,13 +341,48 @@ trait AdminForm
         string $class = '',
         array $attrs = []
     ): void {
+        $this->registerDefinedField($this->defineSelectField(
+            $name,
+            $label,
+            $options,
+            $multiple,
+            $description,
+            $class,
+            $attrs
+        ));
+    }
+
+    /**
+     * Builds a select field configuration.
+     *
+     * @since 0.9.0
+     *
+     * @param string                   $name        Field name.
+     * @param string                   $label       Field label.
+     * @param array<string|int, mixed> $options     Select options.
+     * @param bool                     $multiple    Whether multiple values are allowed.
+     * @param string                   $description Field description.
+     * @param string                   $class       Extra CSS classes.
+     * @param array<string, mixed>     $attrs       Extra HTML attributes.
+     *
+     * @return array<string, mixed> Field configuration.
+     */
+    public function defineSelectField(
+        string $name,
+        string $label,
+        array $options,
+        bool $multiple = false,
+        string $description = '',
+        string $class = '',
+        array $attrs = []
+    ): array {
         $attributes['class'] = $this->adminFieldClass('regular-text', $class);
         if ($multiple) {
             $attributes['multiple'] = $multiple;
         }
         $attrs = array_merge($attrs, $attributes);
 
-        $this->formField('select', $name, $label, $attrs, $options, $description);
+        return $this->defineFormField('select', $name, $label, $attrs, $options, $description);
     }
 
     /**
@@ -298,11 +398,29 @@ trait AdminForm
      */
     public function addTextareaField(string $name, string $label, string $description = '', string $class = '', array $attrs = []): void
     {
+        $this->registerDefinedField($this->defineTextareaField($name, $label, $description, $class, $attrs));
+    }
+
+    /**
+     * Builds a textarea field configuration.
+     *
+     * @since 0.9.0
+     *
+     * @param string               $name        Field name.
+     * @param string               $label       Field label.
+     * @param string               $description Field description.
+     * @param string               $class       Extra CSS classes.
+     * @param array<string, mixed> $attrs       Extra HTML attributes.
+     *
+     * @return array<string, mixed> Field configuration.
+     */
+    public function defineTextareaField(string $name, string $label, string $description = '', string $class = '', array $attrs = []): array
+    {
         $class = $this->adminFieldClass('large-text', $class);
         $attributes['class'] = trim($class);
         $attributes = array_merge($attributes, $attrs);
 
-        $this->formField('textarea', $name, $label, $attributes, [], $description);
+        return $this->defineFormField('textarea', $name, $label, $attributes, [], $description);
     }
 
     /**
@@ -318,11 +436,29 @@ trait AdminForm
      */
     public function addNumberField(string $name, string $label, string $description = '', string $class = '', array $attrs = []): void
     {
+        $this->registerDefinedField($this->defineNumberField($name, $label, $description, $class, $attrs));
+    }
+
+    /**
+     * Builds a number field configuration.
+     *
+     * @since 0.9.0
+     *
+     * @param string               $name        Field name.
+     * @param string               $label       Field label.
+     * @param string               $description Field description.
+     * @param string               $class       Extra CSS classes.
+     * @param array<string, mixed> $attrs       Extra HTML attributes.
+     *
+     * @return array<string, mixed> Field configuration.
+     */
+    public function defineNumberField(string $name, string $label, string $description = '', string $class = '', array $attrs = []): array
+    {
         $class = $this->adminFieldClass('small-text', $class, false);
         $attributes['class'] = trim($class);
         $attributes = array_merge($attributes, $attrs);
 
-        $this->formField('number', $name, $label, $attributes, [], $description);
+        return $this->defineFormField('number', $name, $label, $attributes, [], $description);
     }
 
     /**
@@ -339,6 +475,31 @@ trait AdminForm
      */
     public function addRadioField(string $name, string $label, array $options, string $description = '', string $class = '', array $attrs = []): void
     {
+        $this->registerDefinedField($this->defineRadioField($name, $label, $options, $description, $class, $attrs));
+    }
+
+    /**
+     * Builds a radio field configuration.
+     *
+     * @since 0.9.0
+     *
+     * @param string                   $name        Field name.
+     * @param string                   $label       Field label.
+     * @param array<string|int, mixed> $options     Radio options.
+     * @param string                   $description Field description.
+     * @param string                   $class       Extra CSS classes.
+     * @param array<string, mixed>     $attrs       Extra HTML attributes.
+     *
+     * @return array<string, mixed> Field configuration.
+     */
+    public function defineRadioField(
+        string $name,
+        string $label,
+        array $options,
+        string $description = '',
+        string $class = '',
+        array $attrs = []
+    ): array {
         $attributes = [];
 
         if ($class !== '') {
@@ -347,7 +508,7 @@ trait AdminForm
 
         $attributes = array_merge($attributes, $attrs);
 
-        $this->formField('radio', $name, $label, $attributes, $options, $description);
+        return $this->defineFormField('radio', $name, $label, $attributes, $options, $description);
     }
 
     /**
@@ -372,6 +533,41 @@ trait AdminForm
         string $class = '',
         array $attrs = []
     ): void {
+        $this->registerDefinedField($this->defineCheckboxField(
+            $name,
+            $label,
+            $options,
+            $multiple,
+            $description,
+            $class,
+            $attrs
+        ));
+    }
+
+    /**
+     * Builds a checkbox field configuration.
+     *
+     * @since 0.9.0
+     *
+     * @param string                   $name        Field name.
+     * @param string                   $label       Field label.
+     * @param array<string|int, mixed> $options     Checkbox options.
+     * @param bool                     $multiple    Whether multiple values are allowed.
+     * @param string                   $description Field description.
+     * @param string                   $class       Extra CSS classes.
+     * @param array<string, mixed>     $attrs       Extra HTML attributes.
+     *
+     * @return array<string, mixed> Field configuration.
+     */
+    public function defineCheckboxField(
+        string $name,
+        string $label,
+        array $options = [],
+        bool $multiple = true,
+        string $description = '',
+        string $class = '',
+        array $attrs = []
+    ): array {
         $attributes = [];
 
         if ($class !== '') {
@@ -384,7 +580,7 @@ trait AdminForm
 
         $attributes = array_merge($attributes, $attrs);
 
-        $this->formField('checkbox', $name, $label, $attributes, $options, $description);
+        return $this->defineFormField('checkbox', $name, $label, $attributes, $options, $description);
     }
 
     /**
@@ -407,11 +603,84 @@ trait AdminForm
         string $description = '',
         array $attrs = []
     ): void {
+        $this->registerDefinedField($this->defineRichTextField(
+            $name,
+            $label,
+            $editorSettings,
+            $description,
+            $attrs
+        ));
+    }
+
+    /**
+     * Builds a rich text field configuration.
+     *
+     * @since 0.9.0
+     *
+     * @param string               $name           Field name.
+     * @param string               $label          Field label.
+     * @param array<string, mixed> $editorSettings `wp_editor()` settings.
+     * @param string               $description    Field description.
+     * @param array<string, mixed> $attrs          Extra HTML attributes.
+     *
+     * @return array<string, mixed> Field configuration.
+     *
+     * @see https://developer.wordpress.org/reference/functions/wp_editor/
+     */
+    public function defineRichTextField(
+        string $name,
+        string $label,
+        array $editorSettings = [],
+        string $description = '',
+        array $attrs = []
+    ): array {
         $attributes = array_merge($attrs, [
             'class' => 'wp-editor-wrap widefat',
         ]);
 
-        $this->formField('rich-text', $name, $label, $attributes, $editorSettings, $description);
+        return $this->defineFormField('rich-text', $name, $label, $attributes, $editorSettings, $description);
+    }
+
+    /**
+     * Adds a repeater stored in one meta key or option.
+     *
+     * @since 0.9.0
+     *
+     * @param string $name        Field name.
+     * @param string $label       Field label.
+     * @param string $description Field description.
+     *
+     * @return Repeater Repeater builder.
+     *
+     * @throws InvalidArgumentException If the name is invalid or already used.
+     */
+    public function repeater(string $name, string $label, string $description = ''): Repeater
+    {
+        Repeater::assertName($name);
+
+        if (isset($this->fields[$name])) {
+            throw new InvalidArgumentException(sprintf(
+                'Field name "%s" is already used.',
+                $name
+            ));
+        }
+
+        $repeater = new Repeater($this, null, $name, $label, $description);
+
+        $this->fields[$name] = [
+            'type'        => 'repeater',
+            'name'        => $name,
+            'val'         => '',
+            'attributes'  => '',
+            'multiple'    => false,
+            'options'     => [],
+            'label'       => $label,
+            'description' => $description,
+            'repeater'    => $repeater,
+        ];
+        $this->metaFields[] = $name;
+
+        return $repeater;
     }
 
     /**
@@ -665,7 +934,7 @@ trait AdminForm
      * @param array<string, mixed> $field Field configuration.
      * @param mixed                $value Submitted value.
      *
-     * @return string|list<string> Sanitized value.
+     * @return string|array Sanitized value. Repeaters return a list of rows.
      *
      * @see https://developer.wordpress.org/reference/functions/sanitize_text_field/
      * @see https://developer.wordpress.org/reference/functions/sanitize_textarea_field/
@@ -705,11 +974,108 @@ trait AdminForm
 
                 return (string) (int) rest_sanitize_boolean($value);
 
+            case 'repeater':
+                return $this->sanitizeRepeater($this->repeaterSchema($field), $value);
+
             case 'hidden':
             case 'text':
             default:
                 return sanitize_text_field((string) $value);
         }
+    }
+
+    /**
+     * Sanitizes a repeater into a list of known fields.
+     *
+     * @since 0.9.0
+     *
+     * @param array<string, mixed> $field Repeater schema.
+     * @param mixed                $value Submitted rows.
+     *
+     * @return list<array<string, mixed>> Sanitized rows.
+     */
+    private function sanitizeRepeater(array $field, mixed $value): array
+    {
+        if (!is_array($value)) {
+            return [];
+        }
+
+        $items = [];
+
+        foreach ($value as $index => $row) {
+            if ($index === '__present' || $index === '__i__' || !is_array($row)) {
+                continue;
+            }
+
+            $clean = [];
+
+            foreach ($field['fields'] ?? [] as $child) {
+                if (!is_array($child) || !isset($child['name'])) {
+                    continue;
+                }
+
+                $childName = (string) $child['name'];
+                $submitted = $row[$childName] ?? $this->emptySubmittedValue($child);
+                $clean[$childName] = $this->sanitizeFieldValue($child, $submitted);
+            }
+
+            $items[] = $clean;
+        }
+
+        $max = (int) ($field['max'] ?? 0);
+
+        if ($max > 0) {
+            $items = array_slice($items, 0, $max);
+        }
+
+        return array_values($items);
+    }
+
+    /**
+     * Returns the live repeater schema when the builder is still attached.
+     *
+     * @since 0.9.0
+     *
+     * @param array<string, mixed> $field Field configuration.
+     *
+     * @return array<string, mixed> Repeater schema.
+     */
+    private function repeaterSchema(array $field): array
+    {
+        $repeater = $field['repeater'] ?? null;
+
+        if ($repeater instanceof Repeater) {
+            return $repeater->schema();
+        }
+
+        return $field;
+    }
+
+    /**
+     * Returns the value used when a repeater subfield was not submitted.
+     *
+     * @since 0.9.0
+     *
+     * @param array<string, mixed> $field Field configuration.
+     *
+     * @return mixed Empty value for the field type.
+     */
+    private function emptySubmittedValue(array $field): mixed
+    {
+        $type = $field['type'] ?? 'text';
+
+        if ($type === 'repeater') {
+            return [];
+        }
+
+        if (
+            ($type === 'checkbox' && !empty($field['options']))
+            || ($type === 'select' && !empty($field['multiple']))
+        ) {
+            return [];
+        }
+
+        return '';
     }
 
     /**
@@ -729,6 +1095,12 @@ trait AdminForm
         $type = $field['type'] ?? 'text';
         $multiple = !empty($field['multiple']);
         $hasOptions = !empty($field['options']);
+
+        if ($type === 'repeater') {
+            $value = wp_unslash($_POST[$name] ?? []);
+
+            return is_array($value) ? $value : [];
+        }
 
         if ($type === 'checkbox' && !$hasOptions) {
             $value = isset($_POST[$name]) ? wp_unslash($_POST[$name]) : '';
@@ -822,6 +1194,102 @@ trait AdminForm
         }
 
         require $view;
+    }
+
+    /**
+     * Renders one repeater subfield.
+     *
+     * @since 0.9.0
+     *
+     * @param array<string, mixed> $field Field configuration.
+     */
+    protected function renderControl(array $field): void
+    {
+        $previous = $this->field;
+        $this->field = $field;
+        $partialPath = ($field['type'] ?? '') === 'repeater'
+            ? ''
+            : $this->fieldPartialPath((string) ($field['type'] ?? 'text'));
+
+        require Builder::PATH['FORM'] . 'partials/control.php';
+
+        $this->field = $previous;
+    }
+
+    /**
+     * Renders one repeater row.
+     *
+     * @since 0.9.0
+     *
+     * @param Repeater                 $repeater Repeater level that owns the row.
+     * @param array<string, mixed>     $schema   Repeater schema.
+     * @param array<string, mixed>     $item     Saved row.
+     * @param string                   $rowName  Request name for this row.
+     */
+    protected function renderRepeaterItem(Repeater $repeater, array $schema, array $item, string $rowName): void
+    {
+        require Builder::PATH['FORM'] . 'partials/repeater-item.php';
+    }
+
+    /**
+     * Prints the repeater script and styles.
+     *
+     * Styles are printed inline when the admin header has already rendered.
+     *
+     * @since 0.9.0
+     *
+     * @see https://developer.wordpress.org/reference/functions/wp_enqueue_script/
+     */
+    protected function enqueueAdminRepeater(): void
+    {
+        static $done = false;
+
+        if ($done || !function_exists('did_action') || !function_exists('wp_enqueue_script')) {
+            return;
+        }
+
+        $done = true;
+
+        $root = dirname(__DIR__, 2);
+        $cssPath = $root . '/assets/css/admin-repeater.css';
+        $jsPath = $root . '/assets/js/admin-repeater.js';
+        $cssUrl = is_readable($cssPath) ? Builder::url($cssPath) : '';
+        $jsUrl = is_readable($jsPath) ? Builder::url($jsPath) : '';
+
+        if ($cssUrl !== '' && !did_action('admin_print_styles')) {
+            wp_enqueue_style(
+                'wpb-admin-repeater',
+                $cssUrl,
+                [],
+                (string) filemtime($cssPath)
+            );
+        } elseif (is_readable($cssPath)) {
+            $css = file_get_contents($cssPath);
+
+            if (is_string($css)) {
+                echo '<style id="wpb-admin-repeater-css">' . $css . '</style>';
+            }
+        }
+
+        if (!wp_script_is('wpb-admin-repeater', 'registered')) {
+            wp_register_script(
+                'wpb-admin-repeater',
+                $jsUrl !== '' ? $jsUrl : false,
+                [],
+                is_readable($jsPath) ? (string) filemtime($jsPath) : false,
+                true
+            );
+        }
+
+        if ($jsUrl === '' && is_readable($jsPath)) {
+            $script = file_get_contents($jsPath);
+
+            if (is_string($script)) {
+                wp_add_inline_script('wpb-admin-repeater', $script);
+            }
+        }
+
+        wp_enqueue_script('wpb-admin-repeater');
     }
 
     /**
