@@ -233,7 +233,7 @@ class Block
     /**
      * Theme template slug passed to `get_template_part()`.
      *
-     * An empty string means the convention `blocks/{block name}`.
+     * An empty string means the convention `template-parts/blocks/{block name}`.
      *
      * @since 0.10.0
      */
@@ -670,9 +670,9 @@ class Block
     /**
      * Sets the theme template that replaces the React mount point.
      *
-     * `blocks/hero` loads `blocks/hero.php` from the child theme, then the parent.
+     * `template-parts/blocks/hero` loads `template-parts/blocks/hero.php` from the child theme, then the parent.
      * A trailing `.php` is removed. An empty slug clears any previous slug and
-     * the block uses `blocks/{block name}`.
+     * the block uses `template-parts/blocks/{block name}`.
      *
      * @since 0.10.0
      *
@@ -889,7 +889,7 @@ class Block
             return (string) ($this->renderCallback)($values, $content, $block);
         }
 
-        $slug = $this->templateSlug !== '' ? $this->templateSlug : 'blocks/' . $this->name;
+        $slug = $this->templateSlug !== '' ? $this->templateSlug : 'template-parts/blocks/' . $this->name;
         $rendered = self::captureTemplate($slug, [
             'attributes' => $this->propsForReact($values),
             'content'    => $content,
@@ -985,7 +985,7 @@ class Block
             return $content;
         }
 
-        $rendered = self::captureTemplate('blocks/' . $name, [
+        $rendered = self::captureTemplate('template-parts/blocks/' . $name, [
             'attributes' => is_array($block['attrs'] ?? null) ? $block['attrs'] : [],
             'content'    => $content,
             'block'      => $instance,

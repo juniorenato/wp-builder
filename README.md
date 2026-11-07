@@ -507,9 +507,9 @@ Use [`get_block_wrapper_attributes()`](https://developer.wordpress.org/reference
 
 Otherwise the theme template is the block HTML:
 
-- `template('blocks/hero')` loads `blocks/hero.php` from the child theme, then the parent. A trailing `.php` is removed. `template('')` is ignored, reported in the admin, and the block falls back to the convention below.
+- `template('template-parts/blocks/hero')` loads `template-parts/blocks/hero.php` from the child theme, then the parent. A trailing `.php` is removed. `template('')` is ignored, reported in the admin, and the block falls back to the convention below.
 - A `template()` slug that does not exist is reported in the admin. The block then prints the mount point.
-- With no `template()` call, `my-theme/team` loads `blocks/my-theme/team.php` when that file exists. A missing convention file is silent.
+- With no `template()` call, `my-theme/team` loads `template-parts/blocks/my-theme/team.php` when that file exists. A missing convention file is silent.
 
 `get_template_part()` receives `$args` with `attributes`, `content`, `block`, and `name`. `attributes` matches `data-wpb-props`. Call `get_block_wrapper_attributes()` inside the template when the markup needs alignment, color, or spacing.
 
@@ -582,7 +582,7 @@ Blocks saved in post meta, and any block with a repeater, load `assets/js/block-
 
 ### Core blocks
 
-`Builder` attaches a `render_block` filter. A theme file replaces the public HTML of a core block when the file exists. `core/paragraph` uses `blocks/core/paragraph.php`. `core/image`, `core/group`, and `core/navigation` follow the same path: `blocks/core/{slug}.php`.
+`Builder` attaches a `render_block` filter. A theme file replaces the public HTML of a core block when the file exists. `core/paragraph` uses `template-parts/blocks/core/paragraph.php`. `core/image`, `core/group`, and `core/navigation` follow the same path: `template-parts/blocks/core/{slug}.php`.
 
 No file means the WordPress HTML is unchanged, and the admin shows no notice. The template output replaces the block. A template that prints nothing leaves the block empty.
 
