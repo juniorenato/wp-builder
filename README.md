@@ -58,9 +58,11 @@ wp-builder/
 │   └── field-value.php
 ├── assets/
 │   ├── css/
+│   │   ├── admin-image.css
 │   │   ├── admin-repeater.css
 │   │   └── block-editor.css
 │   └── js/
+│       ├── admin-image.js
 │       ├── admin-repeater.js
 │       └── block-editor.js
 ├── lang/
@@ -110,6 +112,7 @@ wp-builder/
             ├── control.php
             ├── description.php
             ├── hidden.php
+            ├── image.php
             ├── label.php
             ├── number.php
             ├── radio.php
@@ -387,6 +390,7 @@ Values are stored as options. Read them with `get_option('company_name')`.
 | `addSelectField($name, $label, $options, $multiple = false, ...)` | Select |
 | `addRadioField($name, $label, $options, ...)` | Radio |
 | `addCheckboxField($name, $label, $options = [], $multiple = true, ...)` | Checkbox |
+| `addImageField($name, $label, $description = '', $class = '', $attrs = [])` | Media library image |
 | `addRichTextField($name, $label, $editorSettings = [], ...)` | `wp_editor()` |
 | `formField($type, $name, $label, $attributes, $options, $description)` | Any allowed scalar type |
 | `repeater($name, $label, $description = '')` | Repeater |
@@ -397,7 +401,9 @@ Storage depends on the parent object:
 - taxonomy: term meta
 - admin page: options
 
-Submitted values are sanitized (`sanitize_text_field()`, `sanitize_textarea_field()`, `wp_kses_post()`, and related helpers).
+Submitted values are sanitized (`sanitize_text_field()`, `sanitize_textarea_field()`, `wp_kses_post()`, and related helpers). An image is stored as the attachment ID. An empty image is an empty string. A value that is not an image attachment is discarded.
+
+`addImageField()` opens the WordPress media modal (`wp.media`), limited to images. The same method works on a post type, a meta box, a taxonomy, an admin page, and inside a repeater.
 
 ### Repeaters
 
@@ -424,7 +430,7 @@ get_post_meta($post_id, 'authors', true);
 
 A taxonomy reads that list with `get_term_meta()`. An admin page reads it with `get_option()`.
 
-Nested repeaters use the same call. Inside a repeater, the scalar types are text, textarea, number, select, radio, and checkbox. Rich text stays on the parent form, because `wp_editor()` cannot be cloned into a new row.
+Nested repeaters use the same call. Inside a repeater, the scalar types are text, textarea, number, select, radio, checkbox, and image. Rich text stays on the parent form, because `wp_editor()` cannot be cloned into a new row.
 
 `min()` shows empty rows until the form reaches that count. Saving fewer rows is allowed; the next edit screen fills the gap. `max()` disables Add and discards extra submitted rows. `max(0)` has no ceiling.
 

@@ -393,6 +393,31 @@ class Repeater
     }
 
     /**
+     * Adds an image field stored as a media library attachment ID.
+     *
+     * @since 0.9.0
+     *
+     * @param string               $name        Field name.
+     * @param string               $label       Field label.
+     * @param string               $description Field description.
+     * @param string               $class       Extra CSS classes.
+     * @param array<string, mixed> $attrs       Extra HTML attributes.
+     *
+     * @return static
+     *
+     * @throws InvalidArgumentException If the name is already used at this level.
+     */
+    public function addImageField(
+        string $name,
+        string $label,
+        string $description = '',
+        string $class = '',
+        array $attrs = []
+    ): static {
+        return $this->addScalar($this->owner->defineImageField($name, $label, $description, $class, $attrs));
+    }
+
+    /**
      * Rejects a rich text field.
      *
      * `wp_editor()` cannot be cloned into a new row.

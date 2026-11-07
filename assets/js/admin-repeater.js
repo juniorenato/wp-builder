@@ -131,6 +131,14 @@
                 if (description) {
                     description.id = name + '-description';
                 }
+
+                Array.prototype.forEach.call(field.querySelectorAll('[aria-describedby]'), function (element) {
+                    if (!belongsTo(element, repeater)) {
+                        return;
+                    }
+
+                    element.setAttribute('aria-describedby', name + '-description');
+                });
             });
 
             Array.prototype.forEach.call(nested, function (child) {

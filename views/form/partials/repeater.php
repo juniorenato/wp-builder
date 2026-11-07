@@ -13,6 +13,8 @@ if (!$wpbRepeater instanceof Repeater) {
     return;
 }
 
+$this->enqueueAdminRepeater();
+
 $wpbRepeaterSchema = $wpbRepeater->schema();
 $wpbRepeaterName = (string) ($this->field['name'] ?? $wpbRepeaterSchema['name']);
 $wpbRepeaterRows = $wpbRepeater->rowsForForm($this->field['val'] ?? []);

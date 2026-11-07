@@ -1,0 +1,27 @@
+/*
+ * Image field on meta boxes, term screens, and settings pages.
+ * The button opens the WordPress media modal.
+ */
+
+.wpb-image-field__preview img {
+	display: block;
+	box-sizing: border-box;
+	max-width: 266px;
+	height: auto;
+	margin: 0 0 8px;
+	border: 1px solid #c3c4c7;
+	background: #f0f0f1;
+}
+
+.wpb-image-field__actions {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 8px;
+	align-items: center;
+	margin: 0;
+}
+
+.wpb-image-field__actions .button,
+.wpb-image-field__actions .button-link {
+	margin: 0;
+}

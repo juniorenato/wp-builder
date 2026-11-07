@@ -10,6 +10,7 @@
 
 namespace WPB\Forms;
 
+use InvalidArgumentException;
 use WPB\Builder;
 use WPB\Notices;
 
@@ -37,6 +38,7 @@ trait AdminForm
         'select',
         'radio',
         'checkbox',
+        'image',
         'repeater',
     ];
 
@@ -244,7 +246,20 @@ trait AdminForm
         $type = $this->assertFieldType($type);
 
         if ($type === '') {
-            return;
+            return [
+                'type'        => '',
+                'name'        => '',
+                'val'         => '',
+                'attributes'  => '',
+                'multiple'    => false,
+                'options'     => [],
+                'label'       => '',
+                'description' => '',
+            ];
+        }
+
+        if ($type === 'repeater') {
+            throw new InvalidArgumentException('Use repeater() to add a repeater field.');
         }
 
         if ($description) {
@@ -278,6 +293,11 @@ trait AdminForm
     protected function registerDefinedField(array $field): void
     {
         $name = (string) ($field['name'] ?? '');
+
+        if ($name === '' || ($field['type'] ?? '') === '') {
+            return;
+        }
+
         $this->fields[$name] = $field;
         $this->metaFields[] = $name;
     }
@@ -459,6 +479,49 @@ trait AdminForm
         $attributes = array_merge($attributes, $attrs);
 
         return $this->defineFormField('number', $name, $label, $attributes, [], $description);
+    }
+
+    /**
+     * Adds an image field stored as a media library attachment ID.
+     *
+     * The control opens the WordPress media modal. An empty image is stored
+     * as an empty string.
+     *
+     * @since 0.9.0
+     *
+     * @param string               $name        Field name.
+     * @param string               $label       Field label.
+     * @param string               $description Field description.
+     * @param string               $class       Extra CSS classes.
+     * @param array<string, mixed> $attrs       Extra HTML attributes.
+     */
+    public function addImageField(string $name, string $label, string $description = '', string $class = '', array $attrs = []): void
+    {
+        $this->registerDefinedField($this->defineImageField($name, $label, $description, $class, $attrs));
+    }
+
+    /**
+     * Builds an image field configuration.
+     *
+     * @since 0.9.0
+     *
+     * @param string               $name        Field name.
+     * @param string               $label       Field label.
+     * @param string               $description Field description.
+     * @param string               $class       Extra CSS classes.
+     * @param array<string, mixed> $attrs       Extra HTML attributes.
+     *
+     * @return array<string, mixed> Field configuration.
+     */
+    public function defineImageField(string $name, string $label, string $description = '', string $class = '', array $attrs = []): array
+    {
+        $extraClass = trim($class . ' ' . (string) ($attrs['class'] ?? ''));
+        unset($attrs['class']);
+        $attributes = array_merge($attrs, [
+            'class' => trim('wpb-image-field ' . $extraClass),
+        ]);
+
+        return $this->defineFormField('image', $name, $label, $attributes, [], $description);
     }
 
     /**
@@ -974,6 +1037,9 @@ trait AdminForm
 
                 return (string) (int) rest_sanitize_boolean($value);
 
+            case 'image':
+                return $this->sanitizeImageValue($value);
+
             case 'repeater':
                 return $this->sanitizeRepeater($this->repeaterSchema($field), $value);
 
@@ -1290,6 +1356,95 @@ trait AdminForm
         }
 
         wp_enqueue_script('wpb-admin-repeater');
+    }
+
+    /**
+     * Prints the media modal script and the image field styles.
+     *
+     * Styles are printed inline when the admin header has already rendered.
+     *
+     * @since 0.9.0
+     *
+     * @see https://developer.wordpress.org/reference/functions/wp_enqueue_media/
+     */
+    protected function enqueueAdminImage(): void
+    {
+        static $done = false;
+
+        if ($done || !function_exists('did_action') || !function_exists('wp_enqueue_script')) {
+            return;
+        }
+
+        $done = true;
+
+        if (function_exists('wp_enqueue_media')) {
+            wp_enqueue_media();
+        }
+
+        $root = dirname(__DIR__, 2);
+        $cssPath = $root . '/assets/css/admin-image.css';
+        $jsPath = $root . '/assets/js/admin-image.js';
+        $cssUrl = is_readable($cssPath) ? Builder::url($cssPath) : '';
+        $jsUrl = is_readable($jsPath) ? Builder::url($jsPath) : '';
+
+        if ($cssUrl !== '' && !did_action('admin_print_styles')) {
+            wp_enqueue_style(
+                'wpb-admin-image',
+                $cssUrl,
+                [],
+                (string) filemtime($cssPath)
+            );
+        } elseif (is_readable($cssPath)) {
+            $css = file_get_contents($cssPath);
+
+            if (is_string($css)) {
+                echo '<style id="wpb-admin-image-css">' . $css . '</style>';
+            }
+        }
+
+        if (!wp_script_is('wpb-admin-image', 'registered')) {
+            wp_register_script(
+                'wpb-admin-image',
+                $jsUrl !== '' ? $jsUrl : false,
+                ['media-editor'],
+                is_readable($jsPath) ? (string) filemtime($jsPath) : false,
+                true
+            );
+        }
+
+        if ($jsUrl === '' && is_readable($jsPath)) {
+            $script = file_get_contents($jsPath);
+
+            if (is_string($script)) {
+                wp_add_inline_script('wpb-admin-image', $script);
+            }
+        }
+
+        wp_enqueue_script('wpb-admin-image');
+    }
+
+    /**
+     * Keeps a positive image attachment ID and clears every other value.
+     *
+     * @since 0.9.0
+     *
+     * @param mixed $value Submitted value.
+     *
+     * @return string Attachment ID, or an empty string.
+     */
+    private function sanitizeImageValue(mixed $value): string
+    {
+        $id = absint(is_array($value) ? 0 : $value);
+
+        if ($id < 1) {
+            return '';
+        }
+
+        if (function_exists('wp_attachment_is_image') && !wp_attachment_is_image($id)) {
+            return '';
+        }
+
+        return (string) $id;
     }
 
     /**
