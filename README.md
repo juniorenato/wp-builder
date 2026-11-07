@@ -151,7 +151,7 @@ require_once __DIR__ . '/vendor/autoload.php';
 new Builder(Builder::PLUGIN);
 ```
 
-Constructors in this library are safe to call from a bootstrap file. Registration that needs translations or WordPress APIs is deferred until `init`.
+Constructors in this library are safe to call from a bootstrap file. Blocks, post types, taxonomies, and meta boxes are created on `init`. A call made while `init` is running still creates them inside that hook. A call made after `init` has finished waits for the next request.
 
 Invalid arguments do not throw and do not stop PHP. The library ignores that change and shows the message in the WordPress admin, as an error notice, to users who can `manage_options`.
 

@@ -76,10 +76,11 @@ class Builder
     }
 
     /**
-     * Runs a callback on `init`, or immediately when `init` has already started.
+     * Runs a callback on `init`.
      *
-     * WordPress 6.7+ forbids loading translations before `after_setup_theme`.
-     * This keeps constructors safe to call from a plugin or theme bootstrap file.
+     * The callback is not executed after `init` has finished. A call made while
+     * `init` is running executes immediately, because that call is still inside
+     * the hook. Constructors stay safe to call from a plugin or theme file.
      *
      * @since 0.1.0
      *
@@ -87,12 +88,16 @@ class Builder
      * @param int      $priority Hook priority.
      *
      * @see https://developer.wordpress.org/reference/functions/add_action/
-     * @see https://developer.wordpress.org/reference/functions/did_action/
+     * @see https://developer.wordpress.org/reference/functions/doing_action/
      * @see https://developer.wordpress.org/reference/hooks/init/
      */
     public static function onInit(callable $callback, int $priority = 10): void
     {
-        if (did_action('init')) {
+        if (!function_exists('add_action')) {
+            return;
+        }
+
+        if (function_exists('doing_action') && doing_action('init')) {
             $callback();
 
             return;
