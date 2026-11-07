@@ -231,6 +231,35 @@ class Block
     protected array $fieldOrder = [];
 
     /**
+     * Theme template slug passed to `get_template_part()`.
+     *
+     * An empty string means the convention `template-parts/blocks/{block name}`.
+     *
+     * @since 0.10.0
+     */
+    private string $templateSlug;
+
+    /**
+     * Block names registered by this library.
+     *
+     * @since 0.10.0
+     *
+     * @var array<string, true>
+     */
+    private static array $libraryBlocks = [];
+
+    /**
+     * Theme template paths found during this request.
+     *
+     * An empty string means the slug was looked up and the file is absent.
+     *
+     * @since 0.10.0
+     *
+     * @var array<string, string>
+     */
+    private static array $locatedTemplates = [];
+
+    /**
      * Editor schemas keyed by block name.
      *
      * @since 0.8.0
@@ -322,6 +351,7 @@ class Block
         $this->saveAsContent = false;
         $this->repeaters = [];
         $this->fieldOrder = [];
+        $this->templateSlug = '';
 
         return $this;
     }
@@ -638,6 +668,39 @@ class Block
     }
 
     /**
+     * Sets the theme template that replaces the React mount point.
+     *
+     * `template-parts/blocks/hero` loads `template-parts/blocks/hero.php` from the child theme, then the parent.
+     * A trailing `.php` is removed. An empty slug clears any previous slug and
+     * the block uses `template-parts/blocks/{block name}`.
+     *
+     * @since 0.10.0
+     *
+     * @param string $slug Template slug, without `.php`.
+     *
+     * @return static
+     */
+    public function template(string $slug): static
+    {
+        $slug = trim($slug);
+
+        if (str_ends_with($slug, '.php')) {
+            $slug = substr($slug, 0, -4);
+        }
+
+        if ($slug === '') {
+            Notices::error('Block template slug cannot be empty.');
+            $this->templateSlug = '';
+
+            return $this;
+        }
+
+        $this->templateSlug = $slug;
+
+        return $this;
+    }
+
+    /**
      * Registers a stylesheet for the block on the front end and in the editor.
      *
      * PHP-only blocks do not load `wp_enqueue_block_style()` in the editor, so
@@ -804,8 +867,9 @@ class Block
     /**
      * Renders the block with normalized field values.
      *
-     * A `render()` callback receives those values and owns the HTML. A block
-     * with repeaters and no callback is rendered from `views/blocks`.
+     * A `render()` callback receives those values and owns the HTML. Image
+     * fields in that array stay attachment IDs. Otherwise a theme template
+     * owns the HTML. With no template, the block prints a React mount point.
      *
      * @since 0.8.0
      *
@@ -825,27 +889,246 @@ class Block
             return (string) ($this->renderCallback)($values, $content, $block);
         }
 
-        $html = '';
+        $slug = $this->templateSlug !== '' ? $this->templateSlug : 'template-parts/blocks/' . $this->name;
+        $rendered = self::captureTemplate($slug, [
+            'attributes' => $this->propsForReact($values),
+            'content'    => $content,
+            'block'      => $block,
+            'name'       => $this->name,
+        ]);
 
-        foreach ($this->fieldSchemas() as $field) {
-            if (($field['type'] ?? '') !== 'repeater') {
+        if (is_string($rendered)) {
+            return $rendered;
+        }
+
+        if ($this->templateSlug !== '') {
+            Notices::error(sprintf(
+                'Block template "%s" was not found.',
+                $slug
+            ));
+        }
+
+        return $this->renderMount($this->propsForReact($values));
+    }
+
+    /**
+     * Includes a theme template and returns its output.
+     *
+     * @since 0.10.0
+     *
+     * @param string               $slug Template slug, without `.php`.
+     * @param array<string, mixed> $args Variables extracted into the template and available as `$args`.
+     *
+     * @return string|null Captured output when the file exists, or null when it does not.
+     */
+    private static function captureTemplate(string $slug, array $args): ?string
+    {
+        if ($slug === '') {
+            return null;
+        }
+
+        if (!array_key_exists($slug, self::$locatedTemplates)) {
+            $found = locate_template($slug . '.php', false, false);
+            self::$locatedTemplates[$slug] = is_string($found) ? $found : '';
+        }
+
+        if (self::$locatedTemplates[$slug] === '') {
+            return null;
+        }
+
+        ob_start();
+        get_template_part($slug, null, $args);
+
+        return (string) ob_get_clean();
+    }
+
+    /**
+     * Registers the public render filter for core blocks.
+     *
+     * @since 0.10.0
+     *
+     * @see https://developer.wordpress.org/reference/hooks/render_block/
+     */
+    public static function hookCoreTemplates(): void
+    {
+        static $hooked = false;
+
+        if ($hooked) {
+            return;
+        }
+
+        $hooked = true;
+        add_filter('render_block', [self::class, 'filterCoreBlock'], 10, 3);
+    }
+
+    /**
+     * Replaces a core block with a theme template when that file exists.
+     *
+     * Names registered by this library keep the HTML returned by `renderBlock()`.
+     * Any other non-core name keeps the HTML WordPress passed in.
+     *
+     * @since 0.10.0
+     *
+     * @param string               $content  HTML WordPress rendered, including inner blocks.
+     * @param array<string, mixed> $block    Parsed block.
+     * @param \WP_Block            $instance Block instance.
+     *
+     * @return string Template output, or the original HTML.
+     */
+    public static function filterCoreBlock(string $content, array $block, \WP_Block $instance): string
+    {
+        $name = isset($block['blockName']) && is_string($block['blockName'])
+            ? $block['blockName']
+            : '';
+
+        if (!str_starts_with($name, 'core/') || isset(self::$libraryBlocks[$name])) {
+            return $content;
+        }
+
+        $rendered = self::captureTemplate('template-parts/blocks/' . $name, [
+            'attributes' => is_array($block['attrs'] ?? null) ? $block['attrs'] : [],
+            'content'    => $content,
+            'block'      => $instance,
+            'name'       => $name,
+        ]);
+
+        return is_string($rendered) ? $rendered : $content;
+    }
+
+    /**
+     * Copies field values and replaces image IDs with media objects.
+     *
+     * @since 0.10.0
+     *
+     * @param array<string, mixed> $values Normalized field values.
+     *
+     * @return array<string, mixed> Props shared by the theme template and `data-wpb-props`.
+     */
+    private function propsForReact(array $values): array
+    {
+        return $this->resolveImages($this->fieldSchemas(), $values);
+    }
+
+    /**
+     * Replaces image fields in one level of values.
+     *
+     * @since 0.10.0
+     *
+     * @param list<array<string, mixed>> $fields Field schemas for this level.
+     * @param array<string, mixed>       $values Values for this level.
+     *
+     * @return array<string, mixed> Values with image fields resolved.
+     */
+    private function resolveImages(array $fields, array $values): array
+    {
+        foreach ($fields as $field) {
+            $name = (string) ($field['name'] ?? '');
+
+            if ($name === '' || !array_key_exists($name, $values)) {
                 continue;
             }
 
-            $name = (string) $field['name'];
-            $html .= $this->repeaters[$name]->renderItems($values[$name] ?? []);
+            $type = (string) ($field['type'] ?? '');
+
+            if ($type === 'image') {
+                $values[$name] = $this->imageProps($values[$name]);
+                continue;
+            }
+
+            if ($type !== 'repeater' || !is_array($values[$name])) {
+                continue;
+            }
+
+            $children = is_array($field['fields'] ?? null) ? $field['fields'] : [];
+            $items = [];
+
+            foreach ($values[$name] as $item) {
+                $items[] = is_array($item)
+                    ? $this->resolveImages($children, $item)
+                    : $item;
+            }
+
+            $values[$name] = $items;
         }
 
-        if ($this->isBlockRendererRequest() && trim(wp_strip_all_tags($html)) === '') {
-            $html .= '<p class="wpb-block-placeholder">' . esc_html($this->title) . '</p>';
+        return $values;
+    }
+
+    /**
+     * Builds the React image object for one attachment.
+     *
+     * @since 0.10.0
+     *
+     * @param mixed $value Stored attachment ID.
+     *
+     * @return array{id: int, url: string, alt: string, width: int, height: int, srcset: string}|null Null when the attachment has no URL.
+     */
+    private function imageProps(mixed $value): ?array
+    {
+        $id = (int) $value;
+
+        if ($id <= 0) {
+            return null;
+        }
+
+        $url = wp_get_attachment_image_url($id, 'large');
+
+        if (!is_string($url) || $url === '') {
+            return null;
+        }
+
+        $src = wp_get_attachment_image_src($id, 'large');
+        $alt = get_post_meta($id, '_wp_attachment_image_alt', true);
+        $srcset = wp_get_attachment_image_srcset($id, 'large');
+
+        return [
+            'id'     => $id,
+            'url'    => $url,
+            'alt'    => is_string($alt) ? $alt : '',
+            'width'  => is_array($src) ? (int) $src[1] : 0,
+            'height' => is_array($src) ? (int) $src[2] : 0,
+            'srcset' => is_string($srcset) ? $srcset : '',
+        ];
+    }
+
+    /**
+     * Prints the React mount point.
+     *
+     * An empty props array is encoded as `{}` so repeater lists inside a
+     * non-empty payload stay JSON arrays. `JSON_FORCE_OBJECT` is not used.
+     *
+     * @since 0.10.0
+     *
+     * @param array<string, mixed> $props Props for `data-wpb-props`.
+     *
+     * @return string Mount element.
+     */
+    private function renderMount(array $props): string
+    {
+        if ($props === []) {
+            $props = new \stdClass();
+        }
+
+        $json = wp_json_encode($props);
+
+        if (!is_string($json)) {
+            $json = '{}';
+        }
+
+        $inner = '';
+
+        if ($this->isBlockRendererRequest()) {
+            $inner = '<p class="wpb-block-placeholder">' . esc_html($this->title) . '</p>';
         }
 
         return sprintf(
-            '<div %1$s>%2$s</div>',
+            '<div %1$s data-wpb-block="%2$s" data-wpb-props="%3$s">%4$s</div>',
             get_block_wrapper_attributes([
                 'class' => 'wpb-block',
             ]),
-            $html
+            esc_attr($this->name),
+            esc_attr($json),
+            $inner
         );
     }
 
@@ -892,11 +1175,8 @@ class Block
             return false;
         }
 
-        if (!is_callable($this->renderCallback) && !$this->repeaters) {
-            return false;
-        }
-
         Builder::onInit([$this, 'registerBlock']);
+
 
         return true;
     }
@@ -913,6 +1193,8 @@ class Block
         $this->registerStylesheets();
         $this->prepareStorage();
         $this->setArgs();
+
+        self::$libraryBlocks[$this->name] = true;
 
         register_block_type($this->name, $this->args);
     }
