@@ -233,3 +233,18 @@ msgstr "Select images"
 
 msgid "Add images"
 msgstr "Add images"
+
+msgid "Select file"
+msgstr "Select file"
+
+msgid "Replace file"
+msgstr "Replace file"
+
+msgid "Remove file"
+msgstr "Remove file"
+
+msgid "Select files"
+msgstr "Select files"
+
+msgid "Add files"
+msgstr "Add files"

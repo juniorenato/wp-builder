@@ -65,6 +65,7 @@ $buttonLabel = $multiple
 ?>
 <div
     <?php echo $this->field['attributes'] ?? ''; ?>
+    data-library="image"
     data-multiple="<?php echo $multiple ? '1' : '0'; ?>"
     data-name="<?php echo esc_attr($requestName); ?>"
     data-select="<?php echo esc_attr($selectLabel); ?>"

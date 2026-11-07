@@ -1,7 +1,8 @@
 /**
- * Opens the WordPress media modal for an image field and stores attachment IDs.
+ * Opens the WordPress media modal for an image or file field and stores attachment IDs.
  *
- * One image replaces the current attachment. Several images are added to the list.
+ * One attachment replaces the current value. Several attachments are added to the list.
+ * An image field limits the library to images. A file field accepts any library item.
  */
 (function () {
     if (window.wpbAdminImageBound) {
@@ -10,8 +11,18 @@
 
     window.wpbAdminImageBound = true;
 
+    function isFile(field) {
+        return field.classList.contains('wpb-file-field');
+    }
+
     function isMultiple(field) {
         return field.getAttribute('data-multiple') === '1';
+    }
+
+    function part(field, name) {
+        var root = isFile(field) ? 'wpb-file-field' : 'wpb-image-field';
+
+        return '.' + root + '__' + name;
     }
 
     function attachmentUrl(attachment) {
@@ -28,10 +39,14 @@
         return attachment.url || '';
     }
 
+    function fileLabel(attachment) {
+        return attachment.filename || attachment.title || attachment.url || String(attachment.id);
+    }
+
     function selectedIds(field) {
         var ids = [];
 
-        Array.prototype.forEach.call(field.querySelectorAll('.wpb-image-field__id'), function (input) {
+        Array.prototype.forEach.call(field.querySelectorAll(part(field, 'id')), function (input) {
             if (input.value) {
                 ids.push(input.value);
             }
@@ -41,7 +56,7 @@
     }
 
     function updateButton(field) {
-        var select = field.querySelector('.wpb-image-field__select');
+        var select = field.querySelector(part(field, 'select'));
         var count = selectedIds(field).length;
 
         if (!select || !isMultiple(field)) {
@@ -49,18 +64,48 @@
         }
 
         select.textContent = count
-            ? (field.getAttribute('data-add') || 'Add images')
-            : (field.getAttribute('data-select') || 'Select images');
+            ? (field.getAttribute('data-add') || 'Add')
+            : (field.getAttribute('data-select') || 'Select');
+    }
+
+    function imageNode(attachment) {
+        var url = attachmentUrl(attachment);
+        var image;
+
+        if (!url) {
+            return null;
+        }
+
+        image = document.createElement('img');
+        image.src = url;
+        image.alt = attachment.alt || '';
+
+        return image;
+    }
+
+    function fileNode(attachment) {
+        var link = document.createElement('a');
+        var url = attachment.url || '';
+
+        link.className = 'wpb-file-field__name';
+        link.textContent = fileLabel(attachment);
+
+        if (url) {
+            link.href = url;
+            link.target = '_blank';
+            link.rel = 'noopener noreferrer';
+        }
+
+        return link;
     }
 
     function paint(field, attachment) {
-        var input = field.querySelector('.wpb-image-field__id');
-        var preview = field.querySelector('.wpb-image-field__preview');
-        var select = field.querySelector('.wpb-image-field__select');
-        var remove = field.querySelector('.wpb-image-field__actions .wpb-image-field__remove');
+        var input = field.querySelector(part(field, 'id'));
+        var preview = field.querySelector(part(field, 'preview'));
+        var select = field.querySelector(part(field, 'select'));
+        var remove = field.querySelector(part(field, 'actions') + ' ' + part(field, 'remove'));
         var id = attachment && attachment.id ? String(attachment.id) : '';
-        var url = id ? attachmentUrl(attachment) : '';
-        var image;
+        var node = null;
 
         if (input) {
             input.value = id;
@@ -69,18 +114,19 @@
         if (preview) {
             preview.replaceChildren();
 
-            if (url) {
-                image = document.createElement('img');
-                image.src = url;
-                image.alt = attachment.alt || '';
-                preview.appendChild(image);
+            if (id) {
+                node = isFile(field) ? fileNode(attachment) : imageNode(attachment);
+            }
+
+            if (node) {
+                preview.appendChild(node);
             }
         }
 
         if (select) {
             select.textContent = id
-                ? (field.getAttribute('data-replace') || 'Replace image')
-                : (field.getAttribute('data-select') || 'Select image');
+                ? (field.getAttribute('data-replace') || 'Replace')
+                : (field.getAttribute('data-select') || 'Select');
         }
 
         if (remove) {
@@ -89,24 +135,26 @@
     }
 
     function itemElement(field, attachment) {
-        var item = document.createElement('figure');
-        var image = document.createElement('img');
+        var item = document.createElement(isFile(field) ? 'div' : 'figure');
         var input = document.createElement('input');
         var remove = document.createElement('button');
-        var removeLabel = field.getAttribute('data-remove') || 'Remove image';
+        var removeLabel = field.getAttribute('data-remove') || 'Remove';
+        var node = isFile(field) ? fileNode(attachment) : imageNode(attachment);
 
-        item.className = 'wpb-image-field__item';
-        image.src = attachmentUrl(attachment);
-        image.alt = attachment.alt || '';
+        item.className = (isFile(field) ? 'wpb-file-field' : 'wpb-image-field') + '__item';
+
+        if (node) {
+            item.appendChild(node);
+        }
+
         input.type = 'hidden';
-        input.className = 'wpb-image-field__id';
+        input.className = (isFile(field) ? 'wpb-file-field' : 'wpb-image-field') + '__id';
         input.name = field.getAttribute('data-name') || '';
         input.value = String(attachment.id);
         remove.type = 'button';
-        remove.className = 'button-link wpb-image-field__remove';
+        remove.className = 'button-link ' + (isFile(field) ? 'wpb-file-field' : 'wpb-image-field') + '__remove';
         remove.setAttribute('aria-label', removeLabel);
         remove.textContent = removeLabel;
-        item.appendChild(image);
         item.appendChild(input);
         item.appendChild(remove);
 
@@ -114,7 +162,7 @@
     }
 
     function appendAttachments(field, attachments) {
-        var preview = field.querySelector('.wpb-image-field__preview');
+        var preview = field.querySelector(part(field, 'preview'));
         var seen = {};
 
         if (!preview) {
@@ -142,30 +190,33 @@
     function openFrame(field) {
         var multiple = isMultiple(field);
         var current = selectedIds(field);
-        var hasImage = current.length > 0;
-        var frame = wp.media({
+        var hasValue = current.length > 0;
+        var libraryType = field.getAttribute('data-library');
+        var settings = {
             title: multiple
-                ? (hasImage
-                    ? (field.getAttribute('data-add') || 'Add images')
-                    : (field.getAttribute('data-select') || 'Select images'))
-                : (hasImage
-                    ? (field.getAttribute('data-replace') || 'Replace image')
-                    : (field.getAttribute('data-select') || 'Select image')),
+                ? (hasValue
+                    ? (field.getAttribute('data-add') || 'Add')
+                    : (field.getAttribute('data-select') || 'Select'))
+                : (hasValue
+                    ? (field.getAttribute('data-replace') || 'Replace')
+                    : (field.getAttribute('data-select') || 'Select')),
             button: {
-                text: multiple
-                    ? (field.getAttribute('data-select') || 'Select images')
-                    : (field.getAttribute('data-select') || 'Select image')
-            },
-            library: {
-                type: 'image'
+                text: field.getAttribute('data-select') || 'Select'
             },
             multiple: multiple
-        });
+        };
+        var frame;
+
+        if (libraryType) {
+            settings.library = { type: libraryType };
+        }
+
+        frame = wp.media(settings);
 
         frame.on('open', function () {
             var selection;
 
-            if (multiple || !hasImage) {
+            if (multiple || !hasValue) {
                 return;
             }
 
@@ -204,7 +255,7 @@
             return;
         }
 
-        field = target.closest('.wpb-image-field');
+        field = target.closest('.wpb-image-field, .wpb-file-field');
 
         if (!field) {
             return;
@@ -212,11 +263,11 @@
 
         button = target.closest('button');
 
-        if (button && field.contains(button) && button.classList.contains('wpb-image-field__remove')) {
+        if (button && field.contains(button) && button.classList.contains(isFile(field) ? 'wpb-file-field__remove' : 'wpb-image-field__remove')) {
             event.preventDefault();
 
             if (isMultiple(field)) {
-                item = button.closest('.wpb-image-field__item');
+                item = button.closest(part(field, 'item'));
 
                 if (item) {
                     item.remove();
@@ -230,7 +281,7 @@
             return;
         }
 
-        if (button && button.classList.contains('wpb-image-field__select')) {
+        if (button && button.classList.contains(isFile(field) ? 'wpb-file-field__select' : 'wpb-image-field__select')) {
             event.preventDefault();
 
             if (window.wp && wp.media) {
@@ -240,7 +291,7 @@
             return;
         }
 
-        if (target.closest('.wpb-image-field__preview img') && window.wp && wp.media) {
+        if (!isFile(field) && target.closest('.wpb-image-field__preview img') && window.wp && wp.media) {
             event.preventDefault();
             openFrame(field);
         }

@@ -39,6 +39,7 @@ trait AdminForm
         'radio',
         'checkbox',
         'image',
+        'file',
         'repeater',
     ];
 
@@ -557,6 +558,81 @@ trait AdminForm
     }
 
     /**
+     * Adds a file field stored as a media library attachment ID.
+     *
+     * The control opens the WordPress media modal for any file. One file is
+     * stored as an attachment ID, or as an empty string when none is chosen.
+     * Several files are stored as a list of attachment IDs.
+     *
+     * @since 0.9.0
+     *
+     * @param string               $name        Field name.
+     * @param string               $label       Field label.
+     * @param string               $description Field description.
+     * @param string               $class       Extra CSS classes.
+     * @param array<string, mixed> $attrs       Extra HTML attributes.
+     * @param bool                 $multiple    Whether several files are allowed.
+     */
+    public function addFileField(
+        string $name,
+        string $label,
+        string $description = '',
+        string $class = '',
+        array $attrs = [],
+        bool $multiple = false
+    ): void {
+        $this->registerDefinedField($this->defineFileField(
+            $name,
+            $label,
+            $description,
+            $class,
+            $attrs,
+            $multiple
+        ));
+    }
+
+    /**
+     * Builds a file field configuration.
+     *
+     * @since 0.9.0
+     *
+     * @param string               $name        Field name.
+     * @param string               $label       Field label.
+     * @param string               $description Field description.
+     * @param string               $class       Extra CSS classes.
+     * @param array<string, mixed> $attrs       Extra HTML attributes.
+     * @param bool                 $multiple    Whether several files are allowed.
+     *
+     * @return array<string, mixed> Field configuration.
+     */
+    public function defineFileField(
+        string $name,
+        string $label,
+        string $description = '',
+        string $class = '',
+        array $attrs = [],
+        bool $multiple = false
+    ): array {
+        $extraClass = trim($class . ' ' . (string) ($attrs['class'] ?? ''));
+        unset($attrs['class']);
+
+        if (array_key_exists('multiple', $attrs)) {
+            $multiple = (bool) $attrs['multiple'];
+            unset($attrs['multiple']);
+        }
+
+        $attributes = array_merge($attrs, [
+            'class' => trim('wpb-file-field' . ($multiple ? ' wpb-file-field--multiple' : '') . ' ' . $extraClass),
+        ]);
+
+        if ($multiple) {
+            $attributes['multiple'] = true;
+        }
+
+        return $this->defineFormField('file', $name, $label, $attributes, [], $description);
+    }
+
+    /**
      * Adds a radio field.
      *
      * @since 0.2.0
@@ -1070,11 +1146,10 @@ trait AdminForm
                 return (string) (int) rest_sanitize_boolean($value);
 
             case 'image':
-                if (!empty($field['multiple'])) {
-                    return $this->sanitizeImageList($value);
-                }
+                return $this->sanitizeAttachment($value, !empty($field['multiple']), true);
 
-                return $this->sanitizeImageValue($value);
+            case 'file':
+                return $this->sanitizeAttachment($value, !empty($field['multiple']), false);
 
             case 'repeater':
                 return $this->sanitizeRepeater($this->repeaterSchema($field), $value);
@@ -1173,7 +1248,7 @@ trait AdminForm
         if (
             ($type === 'checkbox' && !empty($field['options']))
             || ($type === 'select' && !empty($field['multiple']))
-            || ($type === 'image' && !empty($field['multiple']))
+            || (($type === 'image' || $type === 'file') && !empty($field['multiple']))
         ) {
             return [];
         }
@@ -1207,7 +1282,7 @@ trait AdminForm
 
         if ($type === 'checkbox' && !$hasOptions) {
             $value = isset($_POST[$name]) ? wp_unslash($_POST[$name]) : '';
-        } elseif (($type === 'checkbox' && $hasOptions) || ($type === 'select' && $multiple) || ($type === 'image' && $multiple)) {
+        } elseif (($type === 'checkbox' && $hasOptions) || ($type === 'select' && $multiple) || (($type === 'image' || $type === 'file') && $multiple)) {
             $value = wp_unslash($_POST[$name] ?? []);
         } else {
             $value = wp_unslash($_POST[$name] ?? '');
@@ -1461,40 +1536,22 @@ trait AdminForm
     }
 
     /**
-     * Keeps a positive image attachment ID and clears every other value.
+     * Keeps one attachment ID, or a list of IDs when several are allowed.
      *
      * @since 0.9.0
      *
-     * @param mixed $value Submitted value.
+     * @param mixed $value      Submitted value.
+     * @param bool  $multiple   Whether several attachments are allowed.
+     * @param bool  $imagesOnly Whether only image attachments are kept.
      *
-     * @return string Attachment ID, or an empty string.
+     * @return string|list<string> Attachment ID, an empty string, or a list of IDs.
      */
-    private function sanitizeImageValue(mixed $value): string
+    private function sanitizeAttachment(mixed $value, bool $multiple, bool $imagesOnly): string|array
     {
-        $id = absint(is_array($value) ? 0 : $value);
-
-        if ($id < 1) {
-            return '';
+        if (!$multiple) {
+            return $this->sanitizeAttachmentValue($value, $imagesOnly);
         }
 
-        if (function_exists('wp_attachment_is_image') && !wp_attachment_is_image($id)) {
-            return '';
-        }
-
-        return (string) $id;
-    }
-
-    /**
-     * Keeps unique image attachment IDs in the submitted order.
-     *
-     * @since 0.9.0
-     *
-     * @param mixed $value Submitted value.
-     *
-     * @return list<string> Attachment IDs.
-     */
-    private function sanitizeImageList(mixed $value): array
-    {
         if ($value === '' || $value === null || $value === false) {
             return [];
         }
@@ -1503,7 +1560,7 @@ trait AdminForm
         $ids = [];
 
         foreach ($items as $item) {
-            $id = $this->sanitizeImageValue($item);
+            $id = $this->sanitizeAttachmentValue($item, $imagesOnly);
 
             if ($id === '' || in_array($id, $ids, true)) {
                 continue;
@@ -1513,6 +1570,35 @@ trait AdminForm
         }
 
         return $ids;
+    }
+
+    /**
+     * Keeps a positive attachment ID and clears every other value.
+     *
+     * @since 0.9.0
+     *
+     * @param mixed $value      Submitted value.
+     * @param bool  $imagesOnly Whether a non-image attachment is cleared.
+     *
+     * @return string Attachment ID, or an empty string.
+     */
+    private function sanitizeAttachmentValue(mixed $value, bool $imagesOnly): string
+    {
+        $id = absint(is_array($value) ? 0 : $value);
+
+        if ($id < 1) {
+            return '';
+        }
+
+        if ($imagesOnly && function_exists('wp_attachment_is_image') && !wp_attachment_is_image($id)) {
+            return '';
+        }
+
+        if (!$imagesOnly && function_exists('get_post_type') && get_post_type($id) !== 'attachment') {
+            return '';
+        }
+
+        return (string) $id;
     }
 
     /**

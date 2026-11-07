@@ -133,7 +133,7 @@
                     description.id = name + '-description';
                 }
 
-                imageField = Array.prototype.find.call(field.querySelectorAll('.wpb-image-field'), function (element) {
+                imageField = Array.prototype.find.call(field.querySelectorAll('.wpb-image-field, .wpb-file-field'), function (element) {
                     return belongsTo(element, repeater);
                 });
 

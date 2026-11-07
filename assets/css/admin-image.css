@@ -53,6 +53,28 @@
 }
 
 .wpb-image-field__actions .button,
-.wpb-image-field__actions .button-link {
+.wpb-image-field__actions .button-link,
+.wpb-file-field__actions .button,
+.wpb-file-field__actions .button-link {
+	margin: 0;
+}
+
+.wpb-file-field__name {
+	display: inline-block;
+	margin: 0 8px 8px 0;
+	word-break: break-word;
+}
+
+.wpb-file-field__actions,
+.wpb-file-field--multiple .wpb-file-field__item {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 8px;
+	align-items: center;
+	margin: 0 0 8px;
+}
+
+.wpb-file-field--multiple .wpb-file-field__name,
+.wpb-file-field--multiple .wpb-file-field__remove {
 	margin: 0;
 }
