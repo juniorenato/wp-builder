@@ -393,6 +393,74 @@ class Repeater
     }
 
     /**
+     * Adds an image field stored as one attachment ID or a list of IDs.
+     *
+     * @since 0.9.0
+     *
+     * @param string               $name        Field name.
+     * @param string               $label       Field label.
+     * @param string               $description Field description.
+     * @param string               $class       Extra CSS classes.
+     * @param array<string, mixed> $attrs       Extra HTML attributes.
+     * @param bool                 $multiple    Whether several images are allowed.
+     *
+     * @return static
+     *
+     * @throws InvalidArgumentException If the name is already used at this level.
+     */
+    public function addImageField(
+        string $name,
+        string $label,
+        string $description = '',
+        string $class = '',
+        array $attrs = [],
+        bool $multiple = false
+    ): static {
+        return $this->addScalar($this->owner->defineImageField(
+            $name,
+            $label,
+            $description,
+            $class,
+            $attrs,
+            $multiple
+        ));
+    }
+
+    /**
+     * Adds a file field stored as one attachment ID or a list of IDs.
+     *
+     * @since 0.9.0
+     *
+     * @param string               $name        Field name.
+     * @param string               $label       Field label.
+     * @param string               $description Field description.
+     * @param string               $class       Extra CSS classes.
+     * @param array<string, mixed> $attrs       Extra HTML attributes.
+     * @param bool                 $multiple    Whether several files are allowed.
+     *
+     * @return static
+     *
+     * @throws InvalidArgumentException If the name is already used at this level.
+     */
+    public function addFileField(
+        string $name,
+        string $label,
+        string $description = '',
+        string $class = '',
+        array $attrs = [],
+        bool $multiple = false
+    ): static {
+        return $this->addScalar($this->owner->defineFileField(
+            $name,
+            $label,
+            $description,
+            $class,
+            $attrs,
+            $multiple
+        ));
+    }
+
+    /**
      * Rejects a rich text field.
      *
      * `wp_editor()` cannot be cloned into a new row.

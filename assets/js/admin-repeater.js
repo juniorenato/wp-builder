@@ -81,6 +81,7 @@
                 var labelled;
                 var label;
                 var description;
+                var imageField;
                 var key;
                 var multiple;
                 var name;
@@ -131,6 +132,22 @@
                 if (description) {
                     description.id = name + '-description';
                 }
+
+                imageField = Array.prototype.find.call(field.querySelectorAll('.wpb-image-field, .wpb-file-field'), function (element) {
+                    return belongsTo(element, repeater);
+                });
+
+                if (imageField) {
+                    imageField.setAttribute('data-name', name);
+                }
+
+                Array.prototype.forEach.call(field.querySelectorAll('[aria-describedby]'), function (element) {
+                    if (!belongsTo(element, repeater)) {
+                        return;
+                    }
+
+                    element.setAttribute('aria-describedby', name + '-description');
+                });
             });
 
             Array.prototype.forEach.call(nested, function (child) {

@@ -10,6 +10,7 @@
 
 namespace WPB\Forms;
 
+use InvalidArgumentException;
 use WPB\Builder;
 use WPB\Notices;
 
@@ -37,6 +38,8 @@ trait AdminForm
         'select',
         'radio',
         'checkbox',
+        'image',
+        'file',
         'repeater',
     ];
 
@@ -244,7 +247,20 @@ trait AdminForm
         $type = $this->assertFieldType($type);
 
         if ($type === '') {
-            return;
+            return [
+                'type'        => '',
+                'name'        => '',
+                'val'         => '',
+                'attributes'  => '',
+                'multiple'    => false,
+                'options'     => [],
+                'label'       => '',
+                'description' => '',
+            ];
+        }
+
+        if ($type === 'repeater') {
+            throw new InvalidArgumentException('Use repeater() to add a repeater field.');
         }
 
         if ($description) {
@@ -278,6 +294,11 @@ trait AdminForm
     protected function registerDefinedField(array $field): void
     {
         $name = (string) ($field['name'] ?? '');
+
+        if ($name === '' || ($field['type'] ?? '') === '') {
+            return;
+        }
+
         $this->fields[$name] = $field;
         $this->metaFields[] = $name;
     }
@@ -459,6 +480,156 @@ trait AdminForm
         $attributes = array_merge($attributes, $attrs);
 
         return $this->defineFormField('number', $name, $label, $attributes, [], $description);
+    }
+
+    /**
+     * Adds an image field stored as a media library attachment ID.
+     *
+     * The control opens the WordPress media modal. One image is stored as an
+     * attachment ID, or as an empty string when none is chosen. Several images
+     * are stored as a list of attachment IDs.
+     *
+     * @since 0.9.0
+     *
+     * @param string               $name        Field name.
+     * @param string               $label       Field label.
+     * @param string               $description Field description.
+     * @param string               $class       Extra CSS classes.
+     * @param array<string, mixed> $attrs       Extra HTML attributes.
+     * @param bool                 $multiple    Whether several images are allowed.
+     */
+    public function addImageField(
+        string $name,
+        string $label,
+        string $description = '',
+        string $class = '',
+        array $attrs = [],
+        bool $multiple = false
+    ): void {
+        $this->registerDefinedField($this->defineImageField(
+            $name,
+            $label,
+            $description,
+            $class,
+            $attrs,
+            $multiple
+        ));
+    }
+
+    /**
+     * Builds an image field configuration.
+     *
+     * @since 0.9.0
+     *
+     * @param string               $name        Field name.
+     * @param string               $label       Field label.
+     * @param string               $description Field description.
+     * @param string               $class       Extra CSS classes.
+     * @param array<string, mixed> $attrs       Extra HTML attributes.
+     * @param bool                 $multiple    Whether several images are allowed.
+     *
+     * @return array<string, mixed> Field configuration.
+     */
+    public function defineImageField(
+        string $name,
+        string $label,
+        string $description = '',
+        string $class = '',
+        array $attrs = [],
+        bool $multiple = false
+    ): array {
+        $extraClass = trim($class . ' ' . (string) ($attrs['class'] ?? ''));
+        unset($attrs['class']);
+
+        if (array_key_exists('multiple', $attrs)) {
+            $multiple = (bool) $attrs['multiple'];
+            unset($attrs['multiple']);
+        }
+
+        $attributes = array_merge($attrs, [
+            'class' => trim('wpb-image-field' . ($multiple ? ' wpb-image-field--multiple' : '') . ' ' . $extraClass),
+        ]);
+
+        if ($multiple) {
+            $attributes['multiple'] = true;
+        }
+
+        return $this->defineFormField('image', $name, $label, $attributes, [], $description);
+    }
+
+    /**
+     * Adds a file field stored as a media library attachment ID.
+     *
+     * The control opens the WordPress media modal for any file. One file is
+     * stored as an attachment ID, or as an empty string when none is chosen.
+     * Several files are stored as a list of attachment IDs.
+     *
+     * @since 0.9.0
+     *
+     * @param string               $name        Field name.
+     * @param string               $label       Field label.
+     * @param string               $description Field description.
+     * @param string               $class       Extra CSS classes.
+     * @param array<string, mixed> $attrs       Extra HTML attributes.
+     * @param bool                 $multiple    Whether several files are allowed.
+     */
+    public function addFileField(
+        string $name,
+        string $label,
+        string $description = '',
+        string $class = '',
+        array $attrs = [],
+        bool $multiple = false
+    ): void {
+        $this->registerDefinedField($this->defineFileField(
+            $name,
+            $label,
+            $description,
+            $class,
+            $attrs,
+            $multiple
+        ));
+    }
+
+    /**
+     * Builds a file field configuration.
+     *
+     * @since 0.9.0
+     *
+     * @param string               $name        Field name.
+     * @param string               $label       Field label.
+     * @param string               $description Field description.
+     * @param string               $class       Extra CSS classes.
+     * @param array<string, mixed> $attrs       Extra HTML attributes.
+     * @param bool                 $multiple    Whether several files are allowed.
+     *
+     * @return array<string, mixed> Field configuration.
+     */
+    public function defineFileField(
+        string $name,
+        string $label,
+        string $description = '',
+        string $class = '',
+        array $attrs = [],
+        bool $multiple = false
+    ): array {
+        $extraClass = trim($class . ' ' . (string) ($attrs['class'] ?? ''));
+        unset($attrs['class']);
+
+        if (array_key_exists('multiple', $attrs)) {
+            $multiple = (bool) $attrs['multiple'];
+            unset($attrs['multiple']);
+        }
+
+        $attributes = array_merge($attrs, [
+            'class' => trim('wpb-file-field' . ($multiple ? ' wpb-file-field--multiple' : '') . ' ' . $extraClass),
+        ]);
+
+        if ($multiple) {
+            $attributes['multiple'] = true;
+        }
+
+        return $this->defineFormField('file', $name, $label, $attributes, [], $description);
     }
 
     /**
@@ -974,6 +1145,12 @@ trait AdminForm
 
                 return (string) (int) rest_sanitize_boolean($value);
 
+            case 'image':
+                return $this->sanitizeAttachment($value, !empty($field['multiple']), true);
+
+            case 'file':
+                return $this->sanitizeAttachment($value, !empty($field['multiple']), false);
+
             case 'repeater':
                 return $this->sanitizeRepeater($this->repeaterSchema($field), $value);
 
@@ -1071,6 +1248,7 @@ trait AdminForm
         if (
             ($type === 'checkbox' && !empty($field['options']))
             || ($type === 'select' && !empty($field['multiple']))
+            || (($type === 'image' || $type === 'file') && !empty($field['multiple']))
         ) {
             return [];
         }
@@ -1104,7 +1282,7 @@ trait AdminForm
 
         if ($type === 'checkbox' && !$hasOptions) {
             $value = isset($_POST[$name]) ? wp_unslash($_POST[$name]) : '';
-        } elseif (($type === 'checkbox' && $hasOptions) || ($type === 'select' && $multiple)) {
+        } elseif (($type === 'checkbox' && $hasOptions) || ($type === 'select' && $multiple) || (($type === 'image' || $type === 'file') && $multiple)) {
             $value = wp_unslash($_POST[$name] ?? []);
         } else {
             $value = wp_unslash($_POST[$name] ?? '');
@@ -1290,6 +1468,137 @@ trait AdminForm
         }
 
         wp_enqueue_script('wpb-admin-repeater');
+    }
+
+    /**
+     * Prints the media modal script and the image field styles.
+     *
+     * Styles are printed inline when the admin header has already rendered.
+     *
+     * @since 0.9.0
+     *
+     * @see https://developer.wordpress.org/reference/functions/wp_enqueue_media/
+     */
+    protected function enqueueAdminImage(): void
+    {
+        static $done = false;
+
+        if ($done || !function_exists('did_action') || !function_exists('wp_enqueue_script')) {
+            return;
+        }
+
+        $done = true;
+
+        if (function_exists('wp_enqueue_media')) {
+            wp_enqueue_media();
+        }
+
+        $root = dirname(__DIR__, 2);
+        $cssPath = $root . '/assets/css/admin-image.css';
+        $jsPath = $root . '/assets/js/admin-image.js';
+        $cssUrl = is_readable($cssPath) ? Builder::url($cssPath) : '';
+        $jsUrl = is_readable($jsPath) ? Builder::url($jsPath) : '';
+
+        if ($cssUrl !== '' && !did_action('admin_print_styles')) {
+            wp_enqueue_style(
+                'wpb-admin-image',
+                $cssUrl,
+                [],
+                (string) filemtime($cssPath)
+            );
+        } elseif (is_readable($cssPath)) {
+            $css = file_get_contents($cssPath);
+
+            if (is_string($css)) {
+                echo '<style id="wpb-admin-image-css">' . $css . '</style>';
+            }
+        }
+
+        if (!wp_script_is('wpb-admin-image', 'registered')) {
+            wp_register_script(
+                'wpb-admin-image',
+                $jsUrl !== '' ? $jsUrl : false,
+                ['media-editor'],
+                is_readable($jsPath) ? (string) filemtime($jsPath) : false,
+                true
+            );
+        }
+
+        if ($jsUrl === '' && is_readable($jsPath)) {
+            $script = file_get_contents($jsPath);
+
+            if (is_string($script)) {
+                wp_add_inline_script('wpb-admin-image', $script);
+            }
+        }
+
+        wp_enqueue_script('wpb-admin-image');
+    }
+
+    /**
+     * Keeps one attachment ID, or a list of IDs when several are allowed.
+     *
+     * @since 0.9.0
+     *
+     * @param mixed $value      Submitted value.
+     * @param bool  $multiple   Whether several attachments are allowed.
+     * @param bool  $imagesOnly Whether only image attachments are kept.
+     *
+     * @return string|list<string> Attachment ID, an empty string, or a list of IDs.
+     */
+    private function sanitizeAttachment(mixed $value, bool $multiple, bool $imagesOnly): string|array
+    {
+        if (!$multiple) {
+            return $this->sanitizeAttachmentValue($value, $imagesOnly);
+        }
+
+        if ($value === '' || $value === null || $value === false) {
+            return [];
+        }
+
+        $items = is_array($value) ? $value : [$value];
+        $ids = [];
+
+        foreach ($items as $item) {
+            $id = $this->sanitizeAttachmentValue($item, $imagesOnly);
+
+            if ($id === '' || in_array($id, $ids, true)) {
+                continue;
+            }
+
+            $ids[] = $id;
+        }
+
+        return $ids;
+    }
+
+    /**
+     * Keeps a positive attachment ID and clears every other value.
+     *
+     * @since 0.9.0
+     *
+     * @param mixed $value      Submitted value.
+     * @param bool  $imagesOnly Whether a non-image attachment is cleared.
+     *
+     * @return string Attachment ID, or an empty string.
+     */
+    private function sanitizeAttachmentValue(mixed $value, bool $imagesOnly): string
+    {
+        $id = absint(is_array($value) ? 0 : $value);
+
+        if ($id < 1) {
+            return '';
+        }
+
+        if ($imagesOnly && function_exists('wp_attachment_is_image') && !wp_attachment_is_image($id)) {
+            return '';
+        }
+
+        if (!$imagesOnly && function_exists('get_post_type') && get_post_type($id) !== 'attachment') {
+            return '';
+        }
+
+        return (string) $id;
     }
 
     /**

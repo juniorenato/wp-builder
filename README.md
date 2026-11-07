@@ -58,9 +58,11 @@ wp-builder/
 │   └── field-value.php
 ├── assets/
 │   ├── css/
+│   │   ├── admin-image.css
 │   │   ├── admin-repeater.css
 │   │   └── block-editor.css
 │   └── js/
+│       ├── admin-image.js
 │       ├── admin-repeater.js
 │       └── block-editor.js
 ├── lang/
@@ -109,7 +111,9 @@ wp-builder/
             ├── checkbox.php
             ├── control.php
             ├── description.php
+            ├── file.php
             ├── hidden.php
+            ├── image.php
             ├── label.php
             ├── number.php
             ├── radio.php
@@ -147,7 +151,7 @@ require_once __DIR__ . '/vendor/autoload.php';
 new Builder(Builder::PLUGIN);
 ```
 
-Constructors in this library are safe to call from a bootstrap file. Registration that needs translations or WordPress APIs is deferred until `init`.
+Constructors in this library are safe to call from a bootstrap file. Blocks, post types, taxonomies, and meta boxes are created on `init`. A call made while `init` is running still creates them inside that hook. A call made after `init` has finished waits for the next request.
 
 Invalid arguments do not throw and do not stop PHP. The library ignores that change and shows the message in the WordPress admin, as an error notice, to users who can `manage_options`.
 
@@ -387,6 +391,8 @@ Values are stored as options. Read them with `get_option('company_name')`.
 | `addSelectField($name, $label, $options, $multiple = false, ...)` | Select |
 | `addRadioField($name, $label, $options, ...)` | Radio |
 | `addCheckboxField($name, $label, $options = [], $multiple = true, ...)` | Checkbox |
+| `addImageField($name, $label, $description = '', $class = '', $attrs = [], $multiple = false)` | Media library image |
+| `addFileField($name, $label, $description = '', $class = '', $attrs = [], $multiple = false)` | Media library file |
 | `addRichTextField($name, $label, $editorSettings = [], ...)` | `wp_editor()` |
 | `formField($type, $name, $label, $attributes, $options, $description)` | Any allowed scalar type |
 | `repeater($name, $label, $description = '')` | Repeater |
@@ -397,7 +403,16 @@ Storage depends on the parent object:
 - taxonomy: term meta
 - admin page: options
 
-Submitted values are sanitized (`sanitize_text_field()`, `sanitize_textarea_field()`, `wp_kses_post()`, and related helpers).
+Submitted values are sanitized (`sanitize_text_field()`, `sanitize_textarea_field()`, `wp_kses_post()`, and related helpers). One image or file is stored as the attachment ID, and an empty value is an empty string. `multiple: true` stores a list of attachment IDs. An empty list is saved when every item is removed. An image field discards a value that is not an image. A file field discards a value that is not an attachment. Duplicate IDs are stored once, in the order they were chosen.
+
+`addImageField()` opens the WordPress media modal (`wp.media`), limited to images. `addFileField()` opens the same modal for any file. With `multiple: true`, the modal accepts several items and each later choice is added to the list. Both methods work on a post type, a meta box, a taxonomy, an admin page, and inside a repeater.
+
+```php
+->addImageField('photo', 'Photo')
+->addImageField('gallery', 'Gallery', multiple: true)
+->addFileField('download', 'Download')
+->addFileField('documents', 'Documents', multiple: true)
+```
 
 ### Repeaters
 
@@ -424,7 +439,7 @@ get_post_meta($post_id, 'authors', true);
 
 A taxonomy reads that list with `get_term_meta()`. An admin page reads it with `get_option()`.
 
-Nested repeaters use the same call. Inside a repeater, the scalar types are text, textarea, number, select, radio, and checkbox. Rich text stays on the parent form, because `wp_editor()` cannot be cloned into a new row.
+Nested repeaters use the same call. Inside a repeater, the scalar types are text, textarea, number, select, radio, checkbox, image, and file. Rich text stays on the parent form, because `wp_editor()` cannot be cloned into a new row.
 
 `min()` shows empty rows until the form reaches that count. Saving fewer rows is allowed; the next edit screen fills the gap. `max()` disables Add and discards extra submitted rows. `max(0)` has no ceiling.
 
