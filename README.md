@@ -501,9 +501,31 @@ new Block('my-theme/cta', 'Call to Action', $renderCallback);
 
 Use [`get_block_wrapper_attributes()`](https://developer.wordpress.org/reference/functions/get_block_wrapper_attributes/) in the render callback so color, spacing, and border supports print on the wrapper. `stylesheet()` loads CSS on the front end and in the editor.
 
+### Public HTML
+
+`render()` runs when it was set. The callback receives normalized fields, and an image is the attachment ID. Its return value is the block HTML.
+
+Otherwise the theme template is the block HTML:
+
+- `template('blocks/hero')` loads `blocks/hero.php` from the child theme, then the parent. A trailing `.php` is removed. `template('')` is ignored, reported in the admin, and the block falls back to the convention below.
+- A `template()` slug that does not exist is reported in the admin. The block then prints the mount point.
+- With no `template()` call, `my-theme/team` loads `blocks/my-theme/team.php` when that file exists. A missing convention file is silent.
+
+`get_template_part()` receives `$args` with `attributes`, `content`, `block`, and `name`. `attributes` matches `data-wpb-props`. Call `get_block_wrapper_attributes()` inside the template when the markup needs alignment, color, or spacing.
+
+The mount point is a single element:
+
+```html
+<div class="wpb-block" data-wpb-block="my-theme/team" data-wpb-props="{...}"></div>
+```
+
+`get_block_wrapper_attributes()` supplies the wrapper attributes, including `wpb-block`. `data-wpb-props` is the field JSON. Image fields are objects `{id, url, alt, width, height, srcset}` using the `large` size. There is no `data-wpb-media` attribute. On the block renderer REST route the mount also contains `<p class="wpb-block-placeholder">Title</p>`. That paragraph is absent on the public page.
+
+A block with a name and a title registers even when it has no `render()` callback and no repeater.
+
 ### Repeaters
 
-A repeater is a list of fields. It can contain another repeater. With no `render()` callback, the block prints `views/blocks/repeater.php` and one partial per field type. The editor always shows an Add button.
+A repeater is a list of fields. It can contain another repeater. The editor always shows an Add button.
 
 ```php
 $team = new Block();
@@ -538,6 +560,8 @@ get_post_meta($post_id, 'my-theme_team', true);
 
 `photo` is an attachment ID. `0` means no image. `min()` and `max()` limit the list in the editor. `max(0)` has no ceiling. On the front, a shorter list still renders.
 
+The stored value and the `render()` callback keep that ID. The theme template and `data-wpb-props` replace the field in place with `{id, url, alt, width, height, srcset}` at size `large`. `0`, or an attachment with no URL, becomes `null`.
+
 Item fields: `addStringAttribute`, `addIntegerAttribute`, `addBooleanAttribute`, `addEnumAttribute`, `addImageAttribute`. A true boolean adds `wpb-repeater__item--{name}` to the item. Field names must be unique among siblings.
 
 `saveAsContent()` keeps the same array in the block comment:
@@ -550,9 +574,26 @@ $team->saveAsContent();
 <!-- wp:my-theme/team {"sections":[{"title":"Leadership","members":[{"photo":123,"name":"Ada"}]}]} /-->
 ```
 
-A block that also defines `render()` receives the normalized array and prints its own HTML. The automatic views are skipped.
+A block that defines `render()` receives the normalized array and prints its own HTML. An image in that array is still the attachment ID.
+
+Without `render()`, the block loads a theme template when one exists and otherwise prints a React mount point. `views/blocks/repeater.php` is not the public render. `Repeater::renderItems()` still includes that file.
 
 Blocks saved in post meta, and any block with a repeater, load `assets/js/block-editor.js` in the editor. Scalar blocks that call `saveAsContent()` and have no repeater stay PHP-only.
+
+### Core blocks
+
+`Builder` attaches a `render_block` filter. A theme file replaces the public HTML of a core block when the file exists. `core/paragraph` uses `blocks/core/paragraph.php`. `core/image`, `core/group`, and `core/navigation` follow the same path: `blocks/core/{slug}.php`.
+
+No file means the WordPress HTML is unchanged, and the admin shows no notice. The template output replaces the block. A template that prints nothing leaves the block empty.
+
+`$args` contains:
+
+- `attributes`: the attributes WordPress stored, without rewriting images
+- `content`: the HTML WordPress rendered, including inner blocks
+- `block`: the `WP_Block` instance
+- `name`: the block name, such as `core/paragraph`
+
+Blocks registered through `WPB\Blocks\Block` are not passed through this replacement. Core blocks do not get a React mount point. Their editor remains the Gutenberg editor. The template applies wherever WordPress runs `render_block`, including the server preview of a dynamic block.
 
 ### Block limits
 
