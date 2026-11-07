@@ -11,6 +11,10 @@ $formPath = Builder::PATH['FORM'];
 $fieldType = $this->field['type'] ?? 'text';
 $partialPath = $this->fieldPartialPath($fieldType);
 
+if ($partialPath === '' || !is_readable($partialPath)) {
+    return;
+}
+
 if ($fieldType === 'hidden') {
     require $partialPath;
 

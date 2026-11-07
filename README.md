@@ -66,6 +66,7 @@ wp-builder/
 │   └── wpb-pt_BR.po
 ├── lib/
 │   ├── Builder.php
+│   ├── Notices.php
 │   ├── Blocks/
 │   │   ├── Block.php
 │   │   ├── FieldValue.php
@@ -139,6 +140,8 @@ new Builder(Builder::PLUGIN);
 ```
 
 Constructors in this library are safe to call from a bootstrap file. Registration that needs translations or WordPress APIs is deferred until `init`.
+
+Invalid arguments do not throw and do not stop PHP. The library ignores that change and shows the message in the WordPress admin, as an error notice, to users who can `manage_options`.
 
 ## Custom post types
 
