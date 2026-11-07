@@ -10,8 +10,8 @@
 
 namespace WPB\Blocks;
 
-use InvalidArgumentException;
 use WPB\Builder;
+use WPB\Notices;
 
 /**
  * Collects the fields of one repeater level and renders its items.
@@ -154,19 +154,25 @@ class Repeater
      *
      * @return static
      *
-     * @throws InvalidArgumentException If the minimum is negative or greater than the maximum.
+     * A negative minimum, or a minimum above the maximum, is ignored and reported in the WordPress admin.
      */
     public function min(int $min): static
     {
         if ($min < 0) {
-            throw new InvalidArgumentException(sprintf(
+            Notices::error(sprintf(
                 'Repeater "%s" minimum cannot be negative.',
                 $this->name
             ));
+
+            return $this;
         }
 
+        $previous = $this->min;
         $this->min = $min;
-        $this->assertBounds();
+
+        if (!$this->assertBounds()) {
+            $this->min = $previous;
+        }
 
         return $this;
     }
@@ -182,19 +188,25 @@ class Repeater
      *
      * @return static
      *
-     * @throws InvalidArgumentException If the maximum is negative or lower than the minimum.
+     * A negative maximum, or a maximum below the minimum, is ignored and reported in the WordPress admin.
      */
     public function max(int $max): static
     {
         if ($max < 0) {
-            throw new InvalidArgumentException(sprintf(
+            Notices::error(sprintf(
                 'Repeater "%s" maximum cannot be negative.',
                 $this->name
             ));
+
+            return $this;
         }
 
+        $previous = $this->max;
         $this->max = $max;
-        $this->assertBounds();
+
+        if (!$this->assertBounds()) {
+            $this->max = $previous;
+        }
 
         return $this;
     }
@@ -210,7 +222,7 @@ class Repeater
      *
      * @return static
      *
-     * @throws InvalidArgumentException If the name is reserved or already used at this level.
+     * An unusable name is ignored and reported in the WordPress admin.
      */
     public function addStringAttribute(string $name, string $label, string $default = ''): static
     {
@@ -233,7 +245,7 @@ class Repeater
      *
      * @return static
      *
-     * @throws InvalidArgumentException If the name is reserved or already used at this level.
+     * An unusable name is ignored and reported in the WordPress admin.
      */
     public function addIntegerAttribute(string $name, string $label, int $default = 0): static
     {
@@ -258,7 +270,7 @@ class Repeater
      *
      * @return static
      *
-     * @throws InvalidArgumentException If the name is reserved or already used at this level.
+     * An unusable name is ignored and reported in the WordPress admin.
      */
     public function addBooleanAttribute(string $name, string $label, bool $default = false): static
     {
@@ -282,17 +294,19 @@ class Repeater
      *
      * @return static
      *
-     * @throws InvalidArgumentException If the enum is empty or the name is already used.
+     * An empty enum or an unusable name is ignored and reported in the WordPress admin.
      */
     public function addEnumAttribute(string $name, string $label, array $enum, ?string $default = null): static
     {
         $enum = array_values($enum);
 
         if ($enum === []) {
-            throw new InvalidArgumentException(sprintf(
+            Notices::error(sprintf(
                 'Enum attribute "%s" requires at least one value.',
                 $name
             ));
+
+            return $this;
         }
 
         return $this->addScalar($name, [
@@ -316,7 +330,7 @@ class Repeater
      *
      * @return static
      *
-     * @throws InvalidArgumentException If the name is reserved or already used at this level.
+     * An unusable name is ignored and reported in the WordPress admin.
      */
     public function addImageAttribute(string $name, string $label): static
     {
@@ -338,11 +352,14 @@ class Repeater
      *
      * @return Repeater Nested repeater.
      *
-     * @throws InvalidArgumentException If the name is reserved or already used at this level.
+     * An invalid name returns a repeater that is not registered at this level.
+     * The message is reported in the WordPress admin.
      */
     public function repeater(string $name, string $label): Repeater
     {
-        $this->assertSiblingName($name);
+        if (!$this->assertSiblingName($name)) {
+            return new Repeater($this->block, $this, $name, $label);
+        }
 
         $child = new Repeater($this->block, $this, $name, $label);
         $this->children[$name] = $child;
@@ -410,16 +427,18 @@ class Repeater
      *
      * @return Repeater Nested repeater.
      *
-     * @throws InvalidArgumentException If the child does not exist.
+     * A missing child returns an unregistered repeater. The message is reported in the WordPress admin.
      */
     public function child(string $name): Repeater
     {
         if (!isset($this->children[$name])) {
-            throw new InvalidArgumentException(sprintf(
+            Notices::error(sprintf(
                 'Repeater "%s" has no nested repeater "%s".',
                 $this->name,
                 $name
             ));
+
+            return new Repeater($this->block, $this, $name, '');
         }
 
         return $this->children[$name];
@@ -458,11 +477,14 @@ class Repeater
      *
      * @return static
      *
-     * @throws InvalidArgumentException If the name is reserved or already used at this level.
+     * An unusable name is ignored and reported in the WordPress admin.
      */
     private function addScalar(string $name, array $schema): static
     {
-        $this->assertSiblingName($name);
+        if (!$this->assertSiblingName($name)) {
+            return $this;
+        }
+
         $this->scalars[$name] = $schema;
         $this->order[] = $name;
 
@@ -476,19 +498,22 @@ class Repeater
      *
      * @param string $name Field name.
      *
-     * @throws InvalidArgumentException If the name cannot be used.
+     * @return bool False when the name cannot be used. The message is reported in the WordPress admin.
      */
-    private function assertSiblingName(string $name): void
+    private function assertSiblingName(string $name): bool
     {
-        Block::assertFieldName($name);
+        $valid = Block::assertFieldName($name);
 
         if (isset($this->scalars[$name]) || isset($this->children[$name])) {
-            throw new InvalidArgumentException(sprintf(
+            Notices::error(sprintf(
                 'Field name "%s" is already used on repeater "%s".',
                 $name,
                 $this->name
             ));
+            $valid = false;
         }
+
+        return $valid;
     }
 
     /**
@@ -496,17 +521,21 @@ class Repeater
      *
      * @since 0.8.0
      *
-     * @throws InvalidArgumentException If the bounds are impossible.
+     * @return bool False when the bounds are impossible. The message is reported in the WordPress admin.
      */
-    private function assertBounds(): void
+    private function assertBounds(): bool
     {
         if ($this->max > 0 && $this->min > $this->max) {
-            throw new InvalidArgumentException(sprintf(
+            Notices::error(sprintf(
                 'Repeater "%s" minimum (%d) cannot be greater than maximum (%d).',
                 $this->name,
                 $this->min,
                 $this->max
             ));
+
+            return false;
         }
+
+        return true;
     }
 }

@@ -10,8 +10,8 @@
 
 namespace WPB\Blocks;
 
-use InvalidArgumentException;
 use WPB\Builder;
+use WPB\Notices;
 
 /**
  * Registers a server-rendered Gutenberg block without block.json.
@@ -328,17 +328,19 @@ class Block
      *
      * @return static
      *
-     * @throws InvalidArgumentException If the name is not `namespace/slug`.
+     * An invalid name is ignored and reported in the WordPress admin.
      *
      * @see https://developer.wordpress.org/block-editor/reference-guides/block-api/block-metadata/#name
      */
     public function name(string $name): static
     {
         if (!preg_match('/^[a-z][a-z0-9-]*\/[a-z][a-z0-9-]*$/', $name)) {
-            throw new InvalidArgumentException(sprintf(
+            Notices::error(sprintf(
                 'Invalid block name "%s". Use lowercase "namespace/slug".',
                 $name
             ));
+
+            return $this;
         }
 
         $this->name = $name;
@@ -460,16 +462,20 @@ class Block
      *
      * @return static
      *
-     * @throws InvalidArgumentException If the attribute cannot generate a control.
+     * An invalid attribute is ignored and reported in the WordPress admin.
      *
      * @see https://developer.wordpress.org/block-editor/reference-guides/block-api/block-attributes/
      * @see https://make.wordpress.org/core/2026/03/03/php-only-block-registration/
      */
     public function attribute(string $name, array $schema): static
     {
-        $this->assertAttributeName($name);
-        $this->assertAttributeSchema($name, $schema);
-        $this->assertFieldAvailable($name);
+        $nameOk = $this->assertAttributeName($name);
+        $schemaOk = $this->assertAttributeSchema($name, $schema);
+        $available = $this->assertFieldAvailable($name);
+
+        if (!$nameOk || !$schemaOk || !$available) {
+            return $this;
+        }
 
         $this->attributes[$name] = $schema;
         $this->trackField($name);
@@ -555,7 +561,7 @@ class Block
      *
      * @return static
      *
-     * @throws InvalidArgumentException If `$enum` is empty.
+     * An empty enum is ignored and reported in the WordPress admin.
      *
      * @see https://developer.wordpress.org/block-editor/reference-guides/block-api/block-attributes/
      * @see https://make.wordpress.org/core/2026/03/03/php-only-block-registration/
@@ -565,10 +571,12 @@ class Block
         $enum = array_values($enum);
 
         if ($enum === []) {
-            throw new InvalidArgumentException(sprintf(
+            Notices::error(sprintf(
                 'Enum attribute "%s" requires at least one value.',
                 $name
             ));
+
+            return $this;
         }
 
         return $this->attribute($name, [
@@ -635,7 +643,7 @@ class Block
      *
      * @return static
      *
-     * @throws InvalidArgumentException If `$src` is empty.
+     * An empty URL is ignored and reported in the WordPress admin.
      *
      * @see https://developer.wordpress.org/reference/functions/wp_register_style/
      * @see https://developer.wordpress.org/reference/hooks/enqueue_block_editor_assets/
@@ -643,7 +651,9 @@ class Block
     public function stylesheet(string $src, string $handle = ''): static
     {
         if ($src === '') {
-            throw new InvalidArgumentException('Block stylesheet URL cannot be empty.');
+            Notices::error('Block stylesheet URL cannot be empty.');
+
+            return $this;
         }
 
         $this->stylesheets[] = [
@@ -742,17 +752,23 @@ class Block
      *
      * @return Repeater Repeater builder.
      *
-     * @throws InvalidArgumentException If the name is reserved or already used.
+     * An invalid name returns a repeater that is not registered on this block.
+     * The message is reported in the WordPress admin.
      */
     public function repeater(string $name, string $label): Repeater
     {
-        $this->assertAttributeName($name);
+        $nameOk = $this->assertAttributeName($name);
+        $available = !isset($this->attributes[$name]) && !isset($this->repeaters[$name]);
 
-        if (isset($this->attributes[$name]) || isset($this->repeaters[$name])) {
-            throw new InvalidArgumentException(sprintf(
+        if (!$available) {
+            Notices::error(sprintf(
                 'Field name "%s" is already used on this block.',
                 $name
             ));
+        }
+
+        if (!$nameOk || !$available) {
+            return new Repeater($this, null, $name, $label);
         }
 
         $repeater = new Repeater($this, null, $name, $label);
@@ -1045,21 +1061,27 @@ class Block
      *
      * @param string $name Field name.
      *
-     * @throws InvalidArgumentException If the name is reserved or empty.
+     * @return bool False when the name is empty or reserved. The message is reported in the WordPress admin.
      */
-    public static function assertFieldName(string $name): void
+    public static function assertFieldName(string $name): bool
     {
         if ($name === '') {
-            throw new InvalidArgumentException('Block attribute name cannot be empty.');
+            Notices::error('Block attribute name cannot be empty.');
+
+            return false;
         }
 
         if (in_array($name, self::RESERVED_ATTRIBUTE_NAMES, true)) {
-            throw new InvalidArgumentException(sprintf(
+            Notices::error(sprintf(
                 'Attribute name "%s" is reserved by block supports. Reserved names: %s.',
                 $name,
                 implode(', ', self::RESERVED_ATTRIBUTE_NAMES)
             ));
+
+            return false;
         }
+
+        return true;
     }
 
     /**
@@ -1069,11 +1091,11 @@ class Block
      *
      * @param string $name Attribute name.
      *
-     * @throws InvalidArgumentException If the name is reserved or empty.
+     * @return bool False when the name is empty or reserved.
      */
-    private function assertAttributeName(string $name): void
+    private function assertAttributeName(string $name): bool
     {
-        self::assertFieldName($name);
+        return self::assertFieldName($name);
     }
 
     /**
@@ -1084,47 +1106,55 @@ class Block
      * @param string               $name   Attribute name.
      * @param array<string, mixed> $schema Attribute schema.
      *
-     * @throws InvalidArgumentException If the schema is not supported.
+     * @return bool False when the schema is not supported. Each problem is reported in the WordPress admin.
      */
-    private function assertAttributeSchema(string $name, array $schema): void
+    private function assertAttributeSchema(string $name, array $schema): bool
     {
         $type = $schema['type'] ?? '';
+        $valid = true;
 
         if (!in_array($type, self::ALLOWED_ATTRIBUTE_TYPES, true)) {
-            throw new InvalidArgumentException(sprintf(
+            Notices::error(sprintf(
                 'Invalid type for attribute "%s". Allowed types: %s.',
                 $name,
                 implode(', ', self::ALLOWED_ATTRIBUTE_TYPES)
             ));
+            $valid = false;
         }
 
         if (isset($schema['source'])) {
-            throw new InvalidArgumentException(sprintf(
+            Notices::error(sprintf(
                 'Attribute "%s" cannot use a source. Choose post meta or post content with saveAsContent().',
                 $name
             ));
+            $valid = false;
         }
 
         if (($schema['role'] ?? '') === 'local') {
-            throw new InvalidArgumentException(sprintf(
+            Notices::error(sprintf(
                 'Attribute "%s" uses role "local" and will not generate Inspector controls.',
                 $name
             ));
+            $valid = false;
         }
 
         if (isset($schema['enum']) && $type !== 'string') {
-            throw new InvalidArgumentException(sprintf(
+            Notices::error(sprintf(
                 'Enum attribute "%s" must use type "string".',
                 $name
             ));
+            $valid = false;
         }
 
         if (isset($schema['enum']) && (!is_array($schema['enum']) || $schema['enum'] === [])) {
-            throw new InvalidArgumentException(sprintf(
+            Notices::error(sprintf(
                 'Enum attribute "%s" requires a non-empty list of values.',
                 $name
             ));
+            $valid = false;
         }
+
+        return $valid;
     }
 
     /**
@@ -1134,16 +1164,20 @@ class Block
      *
      * @param string $name Field name.
      *
-     * @throws InvalidArgumentException If the name is already a repeater.
+     * @return bool False when the name is already a repeater. The message is reported in the WordPress admin.
      */
-    private function assertFieldAvailable(string $name): void
+    private function assertFieldAvailable(string $name): bool
     {
         if (isset($this->repeaters[$name])) {
-            throw new InvalidArgumentException(sprintf(
+            Notices::error(sprintf(
                 'Field name "%s" is already used on this block.',
                 $name
             ));
+
+            return false;
         }
+
+        return true;
     }
 
     /**

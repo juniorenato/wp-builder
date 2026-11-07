@@ -10,8 +10,8 @@
 
 namespace WPB\Forms;
 
-use InvalidArgumentException;
 use WPB\Builder;
+use WPB\Notices;
 
 /**
  * Builds, renders, sanitizes, and saves admin form fields.
@@ -196,7 +196,7 @@ trait AdminForm
      * @param array<mixed, mixed>  $options     Field options or editor settings.
      * @param string               $description Field description.
      *
-     * @throws InvalidArgumentException If the field type is not allowed.
+     * An invalid field type is ignored and reported in the WordPress admin.
      */
     public function formField(
         string $type,
@@ -207,6 +207,10 @@ trait AdminForm
         string $description = ''
     ): void {
         $type = $this->assertFieldType($type);
+
+        if ($type === '') {
+            return;
+        }
 
         if ($description) {
             $attributes['aria-describedby'] = $name . '-description';
@@ -420,7 +424,7 @@ trait AdminForm
      *
      * @return mixed Stored value, or an empty string when unavailable.
      *
-     * @throws InvalidArgumentException If `$type` is not allowed.
+     * An invalid value type is reported in the WordPress admin and this method returns an empty string.
      *
      * @see https://developer.wordpress.org/reference/functions/get_option/
      * @see https://developer.wordpress.org/reference/functions/get_post_meta/
@@ -430,11 +434,17 @@ trait AdminForm
     protected function getValue(string $key, ?string $type = null): mixed
     {
         if ($type) {
-            $this->valueType = $this->assertValueType($type);
+            $type = $this->assertValueType($type);
+
+            if ($type === '') {
+                return '';
+            }
+
+            $this->valueType = $type;
         }
 
-        if ($this->valueType !== '') {
-            $this->assertValueType($this->valueType);
+        if ($this->valueType !== '' && $this->assertValueType($this->valueType) === '') {
+            return '';
         }
 
         if ($this->valueType != 'option'
@@ -478,7 +488,7 @@ trait AdminForm
      *
      * @return int|bool|string Write result, or an empty string when unavailable.
      *
-     * @throws InvalidArgumentException If the current value type is not allowed.
+     * An invalid value type is reported in the WordPress admin and this method returns an empty string.
      *
      * @see https://developer.wordpress.org/reference/functions/update_option/
      * @see https://developer.wordpress.org/reference/functions/update_post_meta/
@@ -487,8 +497,8 @@ trait AdminForm
      */
     protected function setValue(string $key, mixed $value): int|bool|string
     {
-        if ($this->valueType !== '') {
-            $this->assertValueType($this->valueType);
+        if ($this->valueType !== '' && $this->assertValueType($this->valueType) === '') {
+            return '';
         }
 
         if ($this->valueType != 'option'
@@ -529,37 +539,43 @@ trait AdminForm
      *
      * @param string $type Field type.
      *
-     * @return string Sanitized field type.
+     * @return string Sanitized field type, or an empty string when the type is rejected.
      *
-     * @throws InvalidArgumentException If the type is invalid or the partial is missing.
+     * A rejected type is reported in the WordPress admin.
      */
     protected function assertFieldType(string $type): string
     {
         $type = preg_replace('/[^a-z0-9_-]/', '', $type) ?? '';
 
         if ($type === '') {
-            throw new InvalidArgumentException(sprintf(
+            Notices::error(sprintf(
                 'Invalid field type. Allowed types: %s.',
                 implode(', ', self::ALLOWED_FIELD_TYPES)
             ));
+
+            return '';
         }
 
         if (!in_array($type, self::ALLOWED_FIELD_TYPES, true)) {
-            throw new InvalidArgumentException(sprintf(
+            Notices::error(sprintf(
                 'Invalid field type "%s". Allowed types: %s.',
                 $type,
                 implode(', ', self::ALLOWED_FIELD_TYPES)
             ));
+
+            return '';
         }
 
         $partialPath = Builder::PATH['FORM'] . 'partials/' . $type . '.php';
 
         if (!file_exists($partialPath)) {
-            throw new InvalidArgumentException(sprintf(
+            Notices::error(sprintf(
                 'Field type "%s" has no partial view at "%s".',
                 $type,
                 $partialPath
             ));
+
+            return '';
         }
 
         return $type;
@@ -572,20 +588,22 @@ trait AdminForm
      *
      * @param string $type Layout type.
      *
-     * @return string Sanitized layout type.
+     * @return string Sanitized layout type, or an empty string when the type is rejected.
      *
-     * @throws InvalidArgumentException If the type is not allowed.
+     * A rejected type is reported in the WordPress admin.
      */
     protected function assertFieldsType(string $type): string
     {
         $type = preg_replace('/[^a-z0-9_-]/', '', $type) ?? '';
 
         if ($type === '' || !in_array($type, self::ALLOWED_FIELDS_TYPES, true)) {
-            throw new InvalidArgumentException(sprintf(
+            Notices::error(sprintf(
                 'Invalid fields type "%s". Allowed types: %s.',
                 $type,
                 implode(', ', self::ALLOWED_FIELDS_TYPES)
             ));
+
+            return '';
         }
 
         return $type;
@@ -598,20 +616,22 @@ trait AdminForm
      *
      * @param string $type Value type.
      *
-     * @return string Sanitized value type.
+     * @return string Sanitized value type, or an empty string when the type is rejected.
      *
-     * @throws InvalidArgumentException If the type is not allowed.
+     * A rejected type is reported in the WordPress admin.
      */
     protected function assertValueType(string $type): string
     {
         $type = preg_replace('/[^a-z0-9_-]/', '', $type) ?? '';
 
         if ($type === '' || !in_array($type, self::ALLOWED_VALUE_TYPES, true)) {
-            throw new InvalidArgumentException(sprintf(
+            Notices::error(sprintf(
                 'Invalid value type "%s". Allowed types: %s.',
                 $type,
                 implode(', ', self::ALLOWED_VALUE_TYPES)
             ));
+
+            return '';
         }
 
         return $type;
@@ -624,13 +644,15 @@ trait AdminForm
      *
      * @param string $type Field type.
      *
-     * @return string Absolute partial path.
-     *
-     * @throws InvalidArgumentException If the field type is invalid.
+     * @return string Absolute partial path, or an empty string when the field type is invalid.
      */
     protected function fieldPartialPath(string $type): string
     {
         $type = $this->assertFieldType($type);
+
+        if ($type === '') {
+            return '';
+        }
 
         return Builder::PATH['FORM'] . 'partials/' . $type . '.php';
     }
@@ -752,21 +774,23 @@ trait AdminForm
      *
      * @param string $type Field type.
      *
-     * @return string Absolute view path.
-     *
-     * @throws InvalidArgumentException If the view file is missing.
+     * @return string Absolute view path, or an empty string when the view or field type is missing.
      */
     protected function fieldViewPath(string $type): string
     {
-        $this->assertFieldType($type);
+        if ($this->assertFieldType($type) === '') {
+            return '';
+        }
 
         $path = Builder::PATH['FORM'] . 'get-field.php';
 
         if (!file_exists($path)) {
-            throw new InvalidArgumentException(sprintf(
+            Notices::error(sprintf(
                 'Field view "%s" was not found.',
                 $path
             ));
+
+            return '';
         }
 
         return $path;
@@ -779,11 +803,16 @@ trait AdminForm
      *
      * @param array<string, mixed> $field Field configuration.
      *
-     * @throws InvalidArgumentException If the field type is invalid.
+     * An invalid field type is reported in the WordPress admin and skipped.
      */
     protected function renderField(array $field): void
     {
         $fieldType = $this->assertFieldType($field['type'] ?? 'text');
+        $view = $fieldType === '' ? '' : $this->fieldViewPath($fieldType);
+
+        if ($fieldType === '' || $view === '') {
+            return;
+        }
 
         $this->field = $field;
         $this->field['type'] = $fieldType;
@@ -792,7 +821,7 @@ trait AdminForm
             $this->field['val'] = $this->getValue($this->field['name']);
         }
 
-        require $this->fieldViewPath($fieldType);
+        require $view;
     }
 
     /**
@@ -802,12 +831,18 @@ trait AdminForm
      *
      * @param string $fieldsType Optional layout type override.
      *
-     * @throws InvalidArgumentException If `$fieldsType` is invalid.
+     * An invalid layout type is reported in the WordPress admin and rendering stops.
      */
     protected function renderFields(string $fieldsType = ''): void
     {
         if ($fieldsType !== '') {
-            $this->fieldsType = $this->assertFieldsType($fieldsType);
+            $fieldsType = $this->assertFieldsType($fieldsType);
+
+            if ($fieldsType === '') {
+                return;
+            }
+
+            $this->fieldsType = $fieldsType;
         }
 
         foreach ($this->fields as $field) {
