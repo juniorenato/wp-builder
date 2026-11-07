@@ -10,6 +10,8 @@
 
 namespace WPB;
 
+use WPB\Blocks\Block;
+
 /**
  * Stores default library settings and loads translations.
  *
@@ -257,6 +259,7 @@ class Builder
     public function build(): static
     {
         $this->i18n();
+        Block::hookCoreTemplates();
 
         return $this;
     }

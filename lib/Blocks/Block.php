@@ -943,6 +943,59 @@ class Block
     }
 
     /**
+     * Registers the public render filter for core blocks.
+     *
+     * @since 0.10.0
+     *
+     * @see https://developer.wordpress.org/reference/hooks/render_block/
+     */
+    public static function hookCoreTemplates(): void
+    {
+        static $hooked = false;
+
+        if ($hooked) {
+            return;
+        }
+
+        $hooked = true;
+        add_filter('render_block', [self::class, 'filterCoreBlock'], 10, 3);
+    }
+
+    /**
+     * Replaces a core block with a theme template when that file exists.
+     *
+     * Names registered by this library keep the HTML returned by `renderBlock()`.
+     * Any other non-core name keeps the HTML WordPress passed in.
+     *
+     * @since 0.10.0
+     *
+     * @param string               $content  HTML WordPress rendered, including inner blocks.
+     * @param array<string, mixed> $block    Parsed block.
+     * @param \WP_Block            $instance Block instance.
+     *
+     * @return string Template output, or the original HTML.
+     */
+    public static function filterCoreBlock(string $content, array $block, \WP_Block $instance): string
+    {
+        $name = isset($block['blockName']) && is_string($block['blockName'])
+            ? $block['blockName']
+            : '';
+
+        if (!str_starts_with($name, 'core/') || isset(self::$libraryBlocks[$name])) {
+            return $content;
+        }
+
+        $rendered = self::captureTemplate('blocks/' . $name, [
+            'attributes' => is_array($block['attrs'] ?? null) ? $block['attrs'] : [],
+            'content'    => $content,
+            'block'      => $instance,
+            'name'       => $name,
+        ]);
+
+        return is_string($rendered) ? $rendered : $content;
+    }
+
+    /**
      * Copies field values and replaces image IDs with media objects.
      *
      * @since 0.10.0
