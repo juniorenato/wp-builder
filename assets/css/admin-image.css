@@ -13,6 +13,37 @@
 	background: #f0f0f1;
 }
 
+.wpb-image-field--multiple .wpb-image-field__preview {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 8px;
+	margin: 0 0 8px;
+}
+
+.wpb-image-field--multiple .wpb-image-field__item {
+	position: relative;
+	margin: 0;
+}
+
+.wpb-image-field--multiple .wpb-image-field__item img {
+	width: 80px;
+	height: 80px;
+	max-width: none;
+	margin: 0;
+	object-fit: cover;
+}
+
+.wpb-image-field--multiple .wpb-image-field__remove {
+	position: absolute;
+	top: 2px;
+	right: 2px;
+	min-height: 0;
+	padding: 0 4px;
+	border: 0;
+	background: #fff;
+	line-height: 1.4;
+}
+
 .wpb-image-field__actions {
 	display: flex;
 	flex-wrap: wrap;

@@ -393,7 +393,7 @@ class Repeater
     }
 
     /**
-     * Adds an image field stored as a media library attachment ID.
+     * Adds an image field stored as one attachment ID or a list of IDs.
      *
      * @since 0.9.0
      *
@@ -402,6 +402,7 @@ class Repeater
      * @param string               $description Field description.
      * @param string               $class       Extra CSS classes.
      * @param array<string, mixed> $attrs       Extra HTML attributes.
+     * @param bool                 $multiple    Whether several images are allowed.
      *
      * @return static
      *
@@ -412,9 +413,17 @@ class Repeater
         string $label,
         string $description = '',
         string $class = '',
-        array $attrs = []
+        array $attrs = [],
+        bool $multiple = false
     ): static {
-        return $this->addScalar($this->owner->defineImageField($name, $label, $description, $class, $attrs));
+        return $this->addScalar($this->owner->defineImageField(
+            $name,
+            $label,
+            $description,
+            $class,
+            $attrs,
+            $multiple
+        ));
     }
 
     /**

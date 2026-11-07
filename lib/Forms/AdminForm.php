@@ -484,8 +484,9 @@ trait AdminForm
     /**
      * Adds an image field stored as a media library attachment ID.
      *
-     * The control opens the WordPress media modal. An empty image is stored
-     * as an empty string.
+     * The control opens the WordPress media modal. One image is stored as an
+     * attachment ID, or as an empty string when none is chosen. Several images
+     * are stored as a list of attachment IDs.
      *
      * @since 0.9.0
      *
@@ -494,10 +495,24 @@ trait AdminForm
      * @param string               $description Field description.
      * @param string               $class       Extra CSS classes.
      * @param array<string, mixed> $attrs       Extra HTML attributes.
+     * @param bool                 $multiple    Whether several images are allowed.
      */
-    public function addImageField(string $name, string $label, string $description = '', string $class = '', array $attrs = []): void
-    {
-        $this->registerDefinedField($this->defineImageField($name, $label, $description, $class, $attrs));
+    public function addImageField(
+        string $name,
+        string $label,
+        string $description = '',
+        string $class = '',
+        array $attrs = [],
+        bool $multiple = false
+    ): void {
+        $this->registerDefinedField($this->defineImageField(
+            $name,
+            $label,
+            $description,
+            $class,
+            $attrs,
+            $multiple
+        ));
     }
 
     /**
@@ -510,16 +525,33 @@ trait AdminForm
      * @param string               $description Field description.
      * @param string               $class       Extra CSS classes.
      * @param array<string, mixed> $attrs       Extra HTML attributes.
+     * @param bool                 $multiple    Whether several images are allowed.
      *
      * @return array<string, mixed> Field configuration.
      */
-    public function defineImageField(string $name, string $label, string $description = '', string $class = '', array $attrs = []): array
-    {
+    public function defineImageField(
+        string $name,
+        string $label,
+        string $description = '',
+        string $class = '',
+        array $attrs = [],
+        bool $multiple = false
+    ): array {
         $extraClass = trim($class . ' ' . (string) ($attrs['class'] ?? ''));
         unset($attrs['class']);
+
+        if (array_key_exists('multiple', $attrs)) {
+            $multiple = (bool) $attrs['multiple'];
+            unset($attrs['multiple']);
+        }
+
         $attributes = array_merge($attrs, [
-            'class' => trim('wpb-image-field ' . $extraClass),
+            'class' => trim('wpb-image-field' . ($multiple ? ' wpb-image-field--multiple' : '') . ' ' . $extraClass),
         ]);
+
+        if ($multiple) {
+            $attributes['multiple'] = true;
+        }
 
         return $this->defineFormField('image', $name, $label, $attributes, [], $description);
     }
@@ -1038,6 +1070,10 @@ trait AdminForm
                 return (string) (int) rest_sanitize_boolean($value);
 
             case 'image':
+                if (!empty($field['multiple'])) {
+                    return $this->sanitizeImageList($value);
+                }
+
                 return $this->sanitizeImageValue($value);
 
             case 'repeater':
@@ -1137,6 +1173,7 @@ trait AdminForm
         if (
             ($type === 'checkbox' && !empty($field['options']))
             || ($type === 'select' && !empty($field['multiple']))
+            || ($type === 'image' && !empty($field['multiple']))
         ) {
             return [];
         }
@@ -1170,7 +1207,7 @@ trait AdminForm
 
         if ($type === 'checkbox' && !$hasOptions) {
             $value = isset($_POST[$name]) ? wp_unslash($_POST[$name]) : '';
-        } elseif (($type === 'checkbox' && $hasOptions) || ($type === 'select' && $multiple)) {
+        } elseif (($type === 'checkbox' && $hasOptions) || ($type === 'select' && $multiple) || ($type === 'image' && $multiple)) {
             $value = wp_unslash($_POST[$name] ?? []);
         } else {
             $value = wp_unslash($_POST[$name] ?? '');
@@ -1445,6 +1482,37 @@ trait AdminForm
         }
 
         return (string) $id;
+    }
+
+    /**
+     * Keeps unique image attachment IDs in the submitted order.
+     *
+     * @since 0.9.0
+     *
+     * @param mixed $value Submitted value.
+     *
+     * @return list<string> Attachment IDs.
+     */
+    private function sanitizeImageList(mixed $value): array
+    {
+        if ($value === '' || $value === null || $value === false) {
+            return [];
+        }
+
+        $items = is_array($value) ? $value : [$value];
+        $ids = [];
+
+        foreach ($items as $item) {
+            $id = $this->sanitizeImageValue($item);
+
+            if ($id === '' || in_array($id, $ids, true)) {
+                continue;
+            }
+
+            $ids[] = $id;
+        }
+
+        return $ids;
     }
 
     /**

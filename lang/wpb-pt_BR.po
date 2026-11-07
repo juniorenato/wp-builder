@@ -227,3 +227,9 @@ msgstr "Substituir imagem"
 #: lib/Blocks/Block.php
 msgid "Remove image"
 msgstr "Remover imagem"
+
+msgid "Select images"
+msgstr "Selecionar imagens"
+
+msgid "Add images"
+msgstr "Adicionar imagens"

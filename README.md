@@ -390,7 +390,7 @@ Values are stored as options. Read them with `get_option('company_name')`.
 | `addSelectField($name, $label, $options, $multiple = false, ...)` | Select |
 | `addRadioField($name, $label, $options, ...)` | Radio |
 | `addCheckboxField($name, $label, $options = [], $multiple = true, ...)` | Checkbox |
-| `addImageField($name, $label, $description = '', $class = '', $attrs = [])` | Media library image |
+| `addImageField($name, $label, $description = '', $class = '', $attrs = [], $multiple = false)` | Media library image |
 | `addRichTextField($name, $label, $editorSettings = [], ...)` | `wp_editor()` |
 | `formField($type, $name, $label, $attributes, $options, $description)` | Any allowed scalar type |
 | `repeater($name, $label, $description = '')` | Repeater |
@@ -401,9 +401,14 @@ Storage depends on the parent object:
 - taxonomy: term meta
 - admin page: options
 
-Submitted values are sanitized (`sanitize_text_field()`, `sanitize_textarea_field()`, `wp_kses_post()`, and related helpers). An image is stored as the attachment ID. An empty image is an empty string. A value that is not an image attachment is discarded.
+Submitted values are sanitized (`sanitize_text_field()`, `sanitize_textarea_field()`, `wp_kses_post()`, and related helpers). One image is stored as the attachment ID, and an empty image is an empty string. `multiple: true` stores a list of attachment IDs. An empty list is saved when every image is removed. A value that is not an image attachment is discarded. Duplicate IDs are stored once, in the order they were chosen.
 
-`addImageField()` opens the WordPress media modal (`wp.media`), limited to images. The same method works on a post type, a meta box, a taxonomy, an admin page, and inside a repeater.
+`addImageField()` opens the WordPress media modal (`wp.media`), limited to images. With `multiple: true`, the modal accepts several images and each later choice is added to the list. The same method works on a post type, a meta box, a taxonomy, an admin page, and inside a repeater.
+
+```php
+->addImageField('photo', 'Photo')
+->addImageField('gallery', 'Gallery', multiple: true)
+```
 
 ### Repeaters
 
