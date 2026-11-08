@@ -655,7 +655,16 @@ new Performance([
 ]);
 ```
 
-Calling a method directly is the same thing: `(new Performance())->disableEmoji()`.
+Calling a method directly is the same thing: `(new Performance())->disableEmoji()`. `enableAll()` turns on every feature with its default. Put a custom number before `enableAll` and that number stays.
+
+```php
+new Performance([
+    'heartbeat' => 120,
+    'enableAll',
+]);
+
+(new Performance())->enableAll();
+```
 
 - `disableEmoji()` removes the emoji script, inline styles, feed and mail rewriting, the TinyMCE emoji plugin, and emoji CDN hints. Other `s.w.org` hints stay.
 - `cleanHead()` removes the RSD, Windows Live Writer, generator, shortlink, and adjacent-post tags from `wp_head`.
@@ -664,9 +673,9 @@ Calling a method directly is the same thing: `(new Performance())->disableEmoji(
 - `revisions(int $limit = 5)` caps revisions through `wp_revisions_to_keep`. Post types without revision support stay at zero. A `WP_POST_REVISIONS` value of `0` or `false` stays off. Older revisions are trimmed the next time that post is saved. `0` turns revisions off.
 - `emptyTrash(int $days = 7)` replaces the daily trash cleanup. `EMPTY_TRASH_DAYS` is already defined by the time the theme loads, so the class cannot change that constant. Auto-draft cleanup is unchanged. `0` deletes trash on the next run.
 - `images()` saves new JPEG and PNG intermediate sizes as AVIF when the image editor supports it, otherwise WebP. The original upload is unchanged. Existing `srcset` behavior stays. `loading="lazy"` and `decoding="async"` are added only when WordPress left them off, the image has width and height, and it is not `fetchpriority="high"`.
-- `enableCache(int $seconds = 3600)` is the call that starts page cache. Without it, nothing is stored or served. It caches anonymous `GET` HTML after WordPress boots. A fresh file is sent at `template_redirect` and the template does not render again. Query strings, logged-in users, admin, AJAX, cron, REST, previews, and feeds are skipped. Each page editor has a sidebar checkbox, **Disable cache**, which skips that page. Each HTML file is named with the MD5 of its URL, for example `0ac7ec625f71e888fe9db6f53d140195.html`. The readable URL stays in the matching `.json` file. Files live in `wp-content/cache/wpb/` until `$seconds` passes.
+- `enableCache(int $seconds = 3600)` is the call that starts page cache. Without it, nothing is stored or served. It caches anonymous `GET` HTML after WordPress boots. A fresh file is sent at `template_redirect` and the template does not render again. Query strings, logged-in users, admin, AJAX, cron, REST, previews, feeds, and URLs with a file extension other than `.html` are skipped. A file is stored only when the response status is 200 and the content type is HTML. Each page editor has a sidebar checkbox, **Disable cache**, which skips that page. Each HTML file is named with the MD5 of its URL, for example `0ac7ec625f71e888fe9db6f53d140195.html`. The readable URL stays in the matching `.json` file. Files live in `wp-content/cache/wpb/` until `$seconds` passes.
 
-`enableCache()` adds **Tools → Cache** through `AdminPage`, as a submenu of Tools. The status checkbox and one multiple select per public post type are AdminPage fields stored as options. Each post type uses the option `wpb_page_cache_pages_{post_type}`. The cached URL table is rendered below that form and clears files directly. Saving a public post clears that post URL, the post type archive and its `/page/N/` URLs, and the pages chosen for that post type. A post type without an archive has no archive URL to clear; link the listing page on this screen. The site root only clears `/` and `/page/N/`.
+`enableCache()` adds **Tools → Cache** through `AdminPage`, as a submenu of Tools. While the cache is on, the dashboard lists the cached URLs. The status checkbox and one multiple select per public post type are AdminPage fields stored as options. Each post type uses the option `wpb_page_cache_pages_{post_type}`. The cached URL table is rendered below that form and clears files directly. Saving a public post clears that post URL, the post type archive and its `/page/N/` URLs, and the pages chosen for that post type. A post type without an archive has no archive URL to clear; link the listing page on this screen. The site root only clears `/` and `/page/N/`.
 
 ## Security
 
@@ -679,6 +688,8 @@ new Security([
     'disableXmlRpc',
     'disableUserEnumeration',
 ]);
+
+(new Security())->enableAll();
 ```
 
 - `disableXmlRpc()` returns 403 from `xmlrpc.php`, removes XML-RPC methods, drops the `X-Pingback` header, and removes the RSD link.

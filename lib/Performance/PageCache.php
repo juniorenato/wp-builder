@@ -10,6 +10,7 @@
 
 namespace WPB\Performance;
 
+use WPB\Builder;
 use WPB\MetaBoxes\MetaBox;
 
 /**
@@ -20,7 +21,8 @@ use WPB\MetaBoxes\MetaBox;
  * `template_redirect` a fresh file is sent and the template does not render
  * again. The HTML file name is the MD5 of the URL. The Tools → Cache screen
  * is an `AdminPage`: its fields are options, and the URL table clears files.
- * Each page has a sidebar checkbox that keeps that page out of the cache.
+ * While the cache is on, the dashboard lists those URLs. Each page has a
+ * sidebar checkbox that keeps that page out of the cache.
  *
  * @since  0.10.0
  * @author Renato Rodrigues Jr <juniorenato@msn.com>
@@ -124,6 +126,7 @@ class PageCache
         add_action('before_delete_post', [$this, 'purgePost'], 20, 2);
         add_action('post_updated', [$this, 'purgeRenamed'], 20, 3);
         add_action('admin_init', [$this, 'handlePost']);
+        add_action('wp_dashboard_setup', [$this, 'registerDashboard']);
 
         if (is_admin()) {
             if (did_action('init')) {
@@ -696,6 +699,36 @@ class PageCache
     }
 
     /**
+     * Adds the cached URL list to the dashboard while the cache is on.
+     *
+     * @since 0.10.0
+     *
+     * @see https://developer.wordpress.org/reference/functions/wp_add_dashboard_widget/
+     */
+    public function registerDashboard(): void
+    {
+        if (!current_user_can('manage_options') || !$this->enabled()) {
+            return;
+        }
+
+        wp_add_dashboard_widget(
+            'wpb_page_cache',
+            __('Cached pages', 'wpb'),
+            [$this, 'renderDashboard']
+        );
+    }
+
+    /**
+     * Prints the dashboard list of cached URLs.
+     *
+     * @since 0.10.0
+     */
+    public function renderDashboard(): void
+    {
+        include Builder::PATH['PAGE'] . 'performance/dashboard.php';
+    }
+
+    /**
      * Clears one cached URL or the whole directory from the Tools screen.
      *
      * Settings are saved by the AdminPage form through `options.php`.
@@ -775,7 +808,7 @@ class PageCache
             return false;
         }
 
-        if ((defined('REST_REQUEST') && REST_REQUEST) || $this->pageDisablesCache()) {
+        if ((defined('REST_REQUEST') && REST_REQUEST) || $this->pageDisablesCache() || $this->hasFileExtension()) {
             return false;
         }
 
@@ -793,17 +826,55 @@ class PageCache
      */
     private function shouldStore(string $html): bool
     {
-        if (!$this->shouldCache() || $html === '' || is_404() || http_response_code() !== 200) {
+        if (!$this->shouldCache() || $html === '' || is_404() || $this->responseStatus() !== 200) {
             return false;
         }
 
         foreach (headers_list() as $header) {
-            if (stripos($header, 'Content-Type:') === 0 && stripos($header, 'text/html') === false) {
-                return false;
+            if (stripos($header, 'Content-Type:') === 0) {
+                return stripos($header, 'text/html') !== false;
             }
         }
 
-        return true;
+        return false;
+    }
+
+    /**
+     * Reports whether the URL points at a file other than an HTML page.
+     *
+     * Plain permalinks do not mark `/favicon.ico` as a favicon request, so the
+     * path extension is what keeps that `.ico` file out of the HTML cache.
+     *
+     * @since 0.10.0
+     */
+    private function hasFileExtension(): bool
+    {
+        $path = (string) parse_url($this->requestUrl(), PHP_URL_PATH);
+        $extension = strtolower(pathinfo(untrailingslashit($path), PATHINFO_EXTENSION));
+
+        return $extension !== '' && !in_array($extension, ['html', 'htm'], true);
+    }
+
+    /**
+     * Reads the HTTP status that will be sent with this response.
+     *
+     * @since 0.10.0
+     */
+    private function responseStatus(): int
+    {
+        $status = http_response_code();
+
+        if (is_int($status) && $status >= 100) {
+            return $status;
+        }
+
+        foreach (headers_list() as $header) {
+            if (preg_match('#^HTTP/\d+(?:\.\d+)?\s+(\d{3})\b#i', $header, $matches) === 1) {
+                return (int) $matches[1];
+            }
+        }
+
+        return 0;
     }
 
     /**

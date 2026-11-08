@@ -17,6 +17,7 @@ use WPB\Notices;
  *
  * Pass the features to enable. An empty constructor changes nothing.
  * `false` skips that entry. A bare method name enables that method.
+ * `enableAll()` turns every feature on.
  *
  * File editing stays in `wp-config.php` as `DISALLOW_FILE_EDIT`. A theme
  * class loads too late to be the lock.
@@ -191,6 +192,17 @@ class Security
     }
 
     /**
+     * Enables every security feature.
+     *
+     * @since 0.10.0
+     */
+    public function enableAll(): void
+    {
+        $this->disableXmlRpc();
+        $this->disableUserEnumeration();
+    }
+
+    /**
      * Hooks one named feature.
      *
      * @since 0.10.0
@@ -202,6 +214,7 @@ class Security
         match ($feature) {
             'disableXmlRpc' => $this->disableXmlRpc(),
             'disableUserEnumeration' => $this->disableUserEnumeration(),
+            'enableAll' => $this->enableAll(),
             default => Notices::error(sprintf(
                 'Unknown security feature "%s".',
                 $feature

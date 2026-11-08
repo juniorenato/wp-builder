@@ -291,5 +291,8 @@ msgstr "Nenhuma página em cache."
 msgid "Disable cache"
 msgstr "Desativar o cache"
 
+msgid "Manage cache"
+msgstr "Gerenciar o cache"
+
 msgid "This page is rendered on every visit and is not stored."
 msgstr "Esta página é renderizada em toda visita e não é armazenada."

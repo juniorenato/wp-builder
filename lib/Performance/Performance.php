@@ -17,6 +17,7 @@ use WPB\Notices;
  *
  * Pass the features to enable. An empty constructor changes nothing.
  * `false` skips that entry. A bare method name uses the method default.
+ * `enableAll()` turns every feature on with those defaults.
  *
  * @since  0.10.0
  * @author Renato Rodrigues Jr <juniorenato@msn.com>
@@ -509,6 +510,40 @@ class Performance
     }
 
     /**
+     * Enables every performance feature with its default argument.
+     *
+     * Heartbeat, revisions, trash, and the page cache keep a value already set
+     * on this instance. The defaults are 60 seconds, 5 revisions, 7 days, and
+     * a cache lifetime of 3600 seconds.
+     *
+     * @since 0.10.0
+     */
+    public function enableAll(): void
+    {
+        $this->disableEmoji();
+        $this->cleanHead();
+        $this->disableEmbeds();
+
+        if (!isset($this->active['heartbeat'])) {
+            $this->heartbeat();
+        }
+
+        if (!isset($this->active['revisions'])) {
+            $this->revisions();
+        }
+
+        if (!isset($this->active['emptyTrash'])) {
+            $this->emptyTrash();
+        }
+
+        $this->images();
+
+        if (!$this->cache instanceof PageCache) {
+            $this->enableCache();
+        }
+    }
+
+    /**
      * Starts the page cache and adds the Tools screen that controls it.
      *
      * Nothing is stored or served until this method runs. The HTML file name
@@ -555,6 +590,7 @@ class Performance
             'emptyTrash' => $this->emptyTrash(is_int($argument) ? $argument : 7),
             'images' => $this->images(),
             'enableCache' => $this->enableCache(is_int($argument) ? $argument : 3600),
+            'enableAll' => $this->enableAll(),
             default => Notices::error(sprintf(
                 'Unknown performance feature "%s".',
                 $feature
