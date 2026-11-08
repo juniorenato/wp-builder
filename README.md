@@ -2,7 +2,7 @@
 
 WordPress Builder is a PHP library **created for developers**. It is not an admin plugin and does not add a graphical interface to WordPress.
 
-Use it in a theme or plugin to register custom post types, taxonomies, meta boxes, admin pages, form fields, and server-rendered Gutenberg blocks with a small fluent API instead of repeating WordPress boilerplate.
+Use it in a theme or plugin to register custom post types, taxonomies, navigation menus, meta boxes, admin pages, form fields, and server-rendered Gutenberg blocks with a small fluent API instead of repeating WordPress boilerplate.
 
 ## Contents
 
@@ -12,6 +12,7 @@ Use it in a theme or plugin to register custom post types, taxonomies, meta boxe
 - [Bootstrap](#bootstrap)
 - [Custom post types](#custom-post-types)
 - [Taxonomies](#taxonomies)
+- [Menus](#menus)
 - [Meta boxes](#meta-boxes)
 - [Admin pages](#admin-pages)
 - [Form fields](#form-fields)
@@ -92,6 +93,8 @@ wp-builder/
 │   │   ├── PostTypeMetaBox.php
 │   │   ├── Repeater.php
 │   │   └── TaxonomyCustomField.php
+│   ├── Menus/
+│   │   └── Menu.php
 │   ├── MetaBoxes/
 │   │   └── MetaBox.php
 │   ├── Pages/
@@ -161,7 +164,7 @@ require_once __DIR__ . '/vendor/autoload.php';
 new Builder(Builder::PLUGIN);
 ```
 
-Constructors in this library are safe to call from a bootstrap file. Blocks, post types, taxonomies, and meta boxes are created on `init`. A call made while `init` is running still creates them inside that hook. A call made after `init` has finished waits for the next request.
+Constructors in this library are safe to call from a bootstrap file. Blocks, post types, taxonomies, menus, and meta boxes are created on `init`. A call made while `init` is running still creates them inside that hook. A call made after `init` has finished waits for the next request.
 
 Invalid arguments do not throw and do not stop PHP. The library ignores that change and shows the message in the WordPress admin, as an error notice, to users who can `manage_options`.
 
@@ -308,6 +311,55 @@ $genre->addTextareaField('intro', 'Archive intro');
 $genre->register();
 ```
 
+## Menus
+
+### Quick registration
+
+Pass the location slug and the description shown under Appearance → Menus. WordPress receives `register_nav_menu()` on `init`.
+
+```php
+use WPB\Menus\Menu;
+
+new Menu('primary', 'Primary menu');
+```
+
+The slug passes through `sanitize_key()`.
+
+### Fluent registration
+
+```php
+use WPB\Menus\Menu;
+
+$menus = new Menu();
+$menus->location('primary', 'Primary menu');
+$menus->location('footer', 'Footer menu');
+$menus->register();
+```
+
+Read the assigned menu with `get_nav_menu_locations()`. Print it with [`wp_nav_menu()`](https://developer.wordpress.org/reference/functions/wp_nav_menu/).
+
+### Fields on the menu item
+
+Custom fields appear on every item in the menu editor and are saved as post meta on that item. WordPress edits items on the menu, so the fields are not limited to one theme location.
+
+```php
+use WPB\Menus\Menu;
+
+$menus = new Menu();
+$menus->location('primary', 'Primary menu');
+$menus->addTextField('icon', 'Icon', 'Dashicon class or a short label.');
+$menus->addCheckboxField('highlight', 'Highlight', [
+    '1' => 'Show as highlighted',
+]);
+$menus->register();
+```
+
+`wp_setup_nav_menu_item` copies each value onto the item. A walker, or `wp_get_nav_menu_items()`, can read `$item->icon`. The same value is `get_post_meta($item->ID, 'icon', true)`.
+
+Field names must contain only letters, numbers, hyphens, and underscores. A name WordPress already uses on the item, such as `url`, `title`, or `classes`, is ignored and reported in the admin. The same name cannot be registered twice.
+
+The menu editor submits every item in one form. The library keeps the meta key equal to the field name and posts that item under its own input.
+
 ## Meta boxes
 
 Use a standalone meta box when you want an explicit title, screen, context, or priority. Attach it to a post type with `metaBox()`:
@@ -391,7 +443,7 @@ Values are stored as options. Read them with `get_option('company_name')`.
 
 ## Form fields
 
-`CustomPostType`, `Taxonomy`, `MetaBox`, and `AdminPage` share the same field helpers.
+`CustomPostType`, `Taxonomy`, `Menu`, `MetaBox`, and `AdminPage` share the same field helpers.
 
 | Method | Field type |
 | --- | --- |
@@ -411,11 +463,12 @@ Storage depends on the parent object:
 
 - post type / meta box: post meta
 - taxonomy: term meta
+- menu: post meta on the menu item
 - admin page: options
 
 Submitted values are sanitized (`sanitize_text_field()`, `sanitize_textarea_field()`, `wp_kses_post()`, and related helpers). One image or file is stored as the attachment ID, and an empty value is an empty string. `multiple: true` stores a list of attachment IDs. An empty list is saved when every item is removed. An image field discards a value that is not an image. A file field discards a value that is not an attachment. Duplicate IDs are stored once, in the order they were chosen.
 
-`addImageField()` opens the WordPress media modal (`wp.media`), limited to images. `addFileField()` opens the same modal for any file. With `multiple: true`, the modal accepts several items and each later choice is added to the list. Both methods work on a post type, a meta box, a taxonomy, an admin page, and inside a repeater.
+`addImageField()` opens the WordPress media modal (`wp.media`), limited to images. `addFileField()` opens the same modal for any file. With `multiple: true`, the modal accepts several items and each later choice is added to the list. Both methods work on a post type, a meta box, a taxonomy, a menu item, an admin page, and inside a repeater.
 
 ```php
 ->addImageField('photo', 'Photo')
@@ -426,7 +479,7 @@ Submitted values are sanitized (`sanitize_text_field()`, `sanitize_textarea_fiel
 
 ### Repeaters
 
-`repeater()` stores a list under one meta key or option. It works on a post type, a meta box, a taxonomy, and an admin page. Subfields use the same scalar methods as the form. `end()` returns to the parent repeater, or to the form at the root.
+`repeater()` stores a list under one meta key or option. It works on a post type, a meta box, a taxonomy, a menu item, and an admin page. Subfields use the same scalar methods as the form. `end()` returns to the parent repeater, or to the form at the root.
 
 ```php
 $details->repeater('authors', 'Authors')

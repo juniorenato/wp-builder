@@ -17,11 +17,14 @@ $this->enqueueAdminRepeater();
 
 $wpbRepeaterSchema = $wpbRepeater->schema();
 $wpbRepeaterName = (string) ($this->field['name'] ?? $wpbRepeaterSchema['name']);
+$wpbRepeaterDataName = str_contains($wpbRepeaterName, '[')
+    ? (string) $wpbRepeaterSchema['name']
+    : $wpbRepeaterName;
 $wpbRepeaterRows = $wpbRepeater->rowsForForm($this->field['val'] ?? []);
 ?>
 <div
     class="wpb-repeater"
-    data-name="<?php echo esc_attr((string) $wpbRepeaterSchema['name']); ?>"
+    data-name="<?php echo esc_attr($wpbRepeaterDataName); ?>"
     data-min="<?php echo esc_attr((string) $wpbRepeaterSchema['min']); ?>"
     data-max="<?php echo esc_attr((string) $wpbRepeaterSchema['max']); ?>">
     <div class="wpb-repeater__items">

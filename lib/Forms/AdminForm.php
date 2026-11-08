@@ -68,6 +68,7 @@ trait AdminForm
         'box',
         'term',
         'table',
+        'menu',
     ];
 
     /**
@@ -1367,8 +1368,10 @@ trait AdminForm
         $this->field = $field;
         $this->field['type'] = $fieldType;
 
-        if (($field['val'] ?? '') === '') {
-            $this->field['val'] = $this->getValue($this->field['name']);
+        $storage = (string) ($this->field['storage'] ?? $this->field['name'] ?? '');
+
+        if (($field['val'] ?? '') === '' && $storage !== '') {
+            $this->field['val'] = $this->getValue($storage);
         }
 
         require $view;
