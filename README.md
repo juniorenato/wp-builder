@@ -17,6 +17,8 @@ Use it in a theme or plugin to register custom post types, taxonomies, meta boxe
 - [Form fields](#form-fields)
 - [Gutenberg blocks (PHP only)](#gutenberg-blocks-php-only)
 - [Comments](#comments)
+- [Performance](#performance)
+- [Security](#security)
 - [License](#license)
 
 ## Requirements
@@ -79,6 +81,10 @@ wp-builder/
 │   │   └── Repeater.php
 │   ├── Comments/
 │   │   └── Comment.php
+│   ├── Performance/
+│   │   └── Performance.php
+│   ├── Security/
+│   │   └── Security.php
 │   ├── Forms/
 │   │   ├── AdminForm.php
 │   │   ├── PostTypeMetaBox.php
@@ -625,6 +631,52 @@ use WPB\Comments\Comment;
 
 (new Comment())->disable();
 ```
+
+## Performance
+
+Opt-in front-end cleanup. An empty constructor does nothing. A list entry calls the method with its default. Map a name to an integer when the method takes one. `false` skips that entry.
+
+```php
+use WPB\Performance\Performance;
+
+new Performance([
+    'disableEmoji',
+    'cleanHead',
+    'disableEmbeds',
+    'heartbeat' => 120,
+    'revisions' => 5,
+    'emptyTrash' => 7,
+    'images',
+]);
+```
+
+Calling a method directly is the same thing: `(new Performance())->disableEmoji()`.
+
+- `disableEmoji()` removes the emoji script, inline styles, feed and mail rewriting, the TinyMCE emoji plugin, and emoji CDN hints. Other `s.w.org` hints stay.
+- `cleanHead()` removes the RSD, Windows Live Writer, generator, shortlink, and adjacent-post tags from `wp_head`.
+- `disableEmbeds()` removes oEmbed discovery links and deregisters `wp-embed`.
+- `heartbeat(int $seconds = 60)` sets the Heartbeat interval. WordPress accepts 1 to 3600 seconds. Anything outside that range uses 60.
+- `revisions(int $limit = 5)` caps revisions through `wp_revisions_to_keep`. Post types without revision support stay at zero. A `WP_POST_REVISIONS` value of `0` or `false` stays off. Older revisions are trimmed the next time that post is saved. `0` turns revisions off.
+- `emptyTrash(int $days = 7)` replaces the daily trash cleanup. `EMPTY_TRASH_DAYS` is already defined by the time the theme loads, so the class cannot change that constant. Auto-draft cleanup is unchanged. `0` deletes trash on the next run.
+- `images()` saves new JPEG and PNG intermediate sizes as AVIF when the image editor supports it, otherwise WebP. The original upload is unchanged. Existing `srcset` behavior stays. `loading="lazy"` and `decoding="async"` are added only when WordPress left them off, the image has width and height, and it is not `fetchpriority="high"`.
+
+There is no page cache in this class.
+
+## Security
+
+Opt-in request hardening. Same constructor rules as performance. `DISALLOW_FILE_EDIT` still belongs in `wp-config.php`.
+
+```php
+use WPB\Security\Security;
+
+new Security([
+    'disableXmlRpc',
+    'disableUserEnumeration',
+]);
+```
+
+- `disableXmlRpc()` returns 403 from `xmlrpc.php`, removes XML-RPC methods, drops the `X-Pingback` header, and removes the RSD link.
+- `disableUserEnumeration()` sends anonymous `/?author=1` requests to the home URL before the canonical redirect can reveal the user slug. Author archives that already use the slug stay public. Guests receive 401 for `/wp/v2/users`. Logged-in users keep that route for the editor. `/wp/v2/users/me` is left to WordPress.
 
 ## License
 
