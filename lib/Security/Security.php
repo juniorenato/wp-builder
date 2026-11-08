@@ -19,8 +19,8 @@ use WPB\Notices;
  * `false` skips that entry. A bare method name enables that method.
  * `enableAll()` turns every feature on.
  *
- * File editing stays in `wp-config.php` as `DISALLOW_FILE_EDIT`. A theme
- * class loads too late to be the lock.
+ * `disableFileEdit()` removes the theme and plugin file editors. Installing
+ * and updating plugins and themes stays available.
  *
  * @since  0.10.0
  * @author Renato Rodrigues Jr <juniorenato@msn.com>
@@ -192,6 +192,50 @@ class Security
     }
 
     /**
+     * Removes the theme and plugin file editors.
+     *
+     * WordPress checks `edit_themes`, `edit_plugins`, and `edit_files` when
+     * the admin menu and the editor screens load, which is after the theme.
+     * The constant covers that same check. The capability filter still denies
+     * editing when `wp-config.php` defined the constant as false.
+     *
+     * @since 0.10.0
+     *
+     * @see https://developer.wordpress.org/reference/hooks/map_meta_cap/
+     */
+    public function disableFileEdit(): void
+    {
+        if (!$this->once('disableFileEdit')) {
+            return;
+        }
+
+        if (!defined('DISALLOW_FILE_EDIT')) {
+            define('DISALLOW_FILE_EDIT', true);
+        }
+
+        add_filter('map_meta_cap', [$this, 'denyFileEdit'], 10, 2);
+    }
+
+    /**
+     * Denies the capabilities that open the theme and plugin file editors.
+     *
+     * @since 0.10.0
+     *
+     * @param list<string> $caps Primitive capabilities required for the check.
+     * @param string       $cap  Capability being checked.
+     *
+     * @return list<string> `do_not_allow` for the file editors, otherwise the original list.
+     */
+    public function denyFileEdit(array $caps, string $cap): array
+    {
+        if (in_array($cap, ['edit_files', 'edit_plugins', 'edit_themes'], true)) {
+            return ['do_not_allow'];
+        }
+
+        return $caps;
+    }
+
+    /**
      * Enables every security feature.
      *
      * @since 0.10.0
@@ -200,6 +244,7 @@ class Security
     {
         $this->disableXmlRpc();
         $this->disableUserEnumeration();
+        $this->disableFileEdit();
     }
 
     /**
@@ -214,6 +259,7 @@ class Security
         match ($feature) {
             'disableXmlRpc' => $this->disableXmlRpc(),
             'disableUserEnumeration' => $this->disableUserEnumeration(),
+            'disableFileEdit' => $this->disableFileEdit(),
             'enableAll' => $this->enableAll(),
             default => Notices::error(sprintf(
                 'Unknown security feature "%s".',

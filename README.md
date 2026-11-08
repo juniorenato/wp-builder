@@ -679,7 +679,7 @@ new Performance([
 
 ## Security
 
-Opt-in request hardening. Same constructor rules as performance. `DISALLOW_FILE_EDIT` still belongs in `wp-config.php`.
+Opt-in request hardening. Same constructor rules as performance.
 
 ```php
 use WPB\Security\Security;
@@ -687,6 +687,7 @@ use WPB\Security\Security;
 new Security([
     'disableXmlRpc',
     'disableUserEnumeration',
+    'disableFileEdit',
 ]);
 
 (new Security())->enableAll();
@@ -694,6 +695,7 @@ new Security([
 
 - `disableXmlRpc()` returns 403 from `xmlrpc.php`, removes XML-RPC methods, drops the `X-Pingback` header, and removes the RSD link.
 - `disableUserEnumeration()` sends anonymous `/?author=1` requests to the home URL before the canonical redirect can reveal the user slug. Author archives that already use the slug stay public. Guests receive 401 for `/wp/v2/users`. Logged-in users keep that route for the editor. `/wp/v2/users/me` is left to WordPress.
+- `disableFileEdit()` removes the theme file editor and the plugin file editor by denying `edit_themes`, `edit_plugins`, and `edit_files`. Installing and updating plugins and themes stays available.
 
 ## License
 
