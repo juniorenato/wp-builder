@@ -296,3 +296,32 @@ msgstr "Gerenciar o cache"
 
 msgid "This page is rendered on every visit and is not stored."
 msgstr "Esta página é renderizada em toda visita e não é armazenada."
+
+msgid "Image files"
+msgstr "Arquivos de imagem"
+
+msgid "Rebuilds existing JPEG, PNG, WebP, and AVIF uploads. The longest edge is %d pixels."
+msgstr "Reconstrói os JPEG, PNG, WebP e AVIF já enviados. A maior aresta fica com %d pixels."
+
+msgid "%d image can be regenerated."
+msgid_plural "%d images can be regenerated."
+msgstr[0] "%d imagem pode ser regenerada."
+msgstr[1] "%d imagens podem ser regeneradas."
+
+msgid "Regenerate images"
+msgstr "Regenerar imagens"
+
+msgid "The images could not be regenerated."
+msgstr "Não foi possível regenerar as imagens."
+
+msgid "%1$d of %2$d images regenerated."
+msgstr "%1$d de %2$d imagens regeneradas."
+
+msgid "Finished. Regenerated %d images."
+msgstr "Concluído. %d imagens regeneradas."
+
+msgid "Finished. Regenerated %1$d images. %2$d failed."
+msgstr "Concluído. %1$d imagens regeneradas. %2$d falharam."
+
+msgid "Sorry, you are not allowed to do that."
+msgstr "Você não tem permissão para fazer isso."

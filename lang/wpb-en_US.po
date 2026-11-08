@@ -296,3 +296,32 @@ msgstr "Manage cache"
 
 msgid "This page is rendered on every visit and is not stored."
 msgstr "This page is rendered on every visit and is not stored."
+
+msgid "Image files"
+msgstr "Image files"
+
+msgid "Rebuilds existing JPEG, PNG, WebP, and AVIF uploads. The longest edge is %d pixels."
+msgstr "Rebuilds existing JPEG, PNG, WebP, and AVIF uploads. The longest edge is %d pixels."
+
+msgid "%d image can be regenerated."
+msgid_plural "%d images can be regenerated."
+msgstr[0] "%d image can be regenerated."
+msgstr[1] "%d images can be regenerated."
+
+msgid "Regenerate images"
+msgstr "Regenerate images"
+
+msgid "The images could not be regenerated."
+msgstr "The images could not be regenerated."
+
+msgid "%1$d of %2$d images regenerated."
+msgstr "%1$d of %2$d images regenerated."
+
+msgid "Finished. Regenerated %d images."
+msgstr "Finished. Regenerated %d images."
+
+msgid "Finished. Regenerated %1$d images. %2$d failed."
+msgstr "Finished. Regenerated %1$d images. %2$d failed."
+
+msgid "Sorry, you are not allowed to do that."
+msgstr "Sorry, you are not allowed to do that."
