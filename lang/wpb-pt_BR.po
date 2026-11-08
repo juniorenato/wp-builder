@@ -248,3 +248,48 @@ msgstr "Selecionar arquivos"
 
 msgid "Add files"
 msgstr "Adicionar arquivos"
+
+msgid "Cache"
+msgstr "Cache"
+
+msgid "Status"
+msgstr "Status"
+
+msgid "Enable page cache"
+msgstr "Ativar cache de página"
+
+msgid "Cache cleared."
+msgstr "Cache limpo."
+
+msgid "Page removed from the cache."
+msgstr "Página removida do cache."
+
+msgid "Page cache is off. Existing files stay on disk until you clear them."
+msgstr "O cache de página está desligado. Os arquivos existentes permanecem no disco até você limpá-los."
+
+msgid "Saving a post also clears that post, the post type archive and its pagination, and the pages selected here."
+msgstr "Salvar um post também limpa esse post, o arquivo do post type, a paginação e as páginas selecionadas aqui."
+
+msgid "Cached pages"
+msgstr "Páginas em cache"
+
+msgid "Clear all cache"
+msgstr "Limpar todo o cache"
+
+msgid "URL"
+msgstr "URL"
+
+msgid "Stored"
+msgstr "Armazenado"
+
+msgid "Clear"
+msgstr "Limpar"
+
+msgid "No cached pages."
+msgstr "Nenhuma página em cache."
+
+msgid "Disable cache"
+msgstr "Desativar o cache"
+
+msgid "This page is rendered on every visit and is not stored."
+msgstr "Esta página é renderizada em toda visita e não é armazenada."

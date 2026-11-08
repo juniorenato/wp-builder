@@ -54,6 +54,13 @@ class Performance
     private int $trashDays = 7;
 
     /**
+     * Page cache started by this instance.
+     *
+     * @since 0.10.0
+     */
+    private ?PageCache $cache = null;
+
+    /**
      * Enables the given performance features.
      *
      * @since 0.10.0
@@ -502,6 +509,34 @@ class Performance
     }
 
     /**
+     * Starts the page cache and adds the Tools screen that controls it.
+     *
+     * Nothing is stored or served until this method runs. The HTML file name
+     * is the MD5 of the normalized URL, not the page slug. The URL itself is
+     * kept in a sidecar file so the Tools screen can list it. Saving a public
+     * post removes that post URL, the post type archive and its pagination,
+     * and any pages linked to the post type. `$seconds` is how long a file
+     * stays valid. A value below 1 uses 3600.
+     *
+     * @since 0.10.0
+     *
+     * @param int $seconds Cache lifetime in seconds.
+     */
+    public function enableCache(int $seconds = 3600): void
+    {
+        $seconds = $seconds >= 1 ? $seconds : 3600;
+
+        if (!$this->cache instanceof PageCache) {
+            $this->cache = new PageCache($seconds);
+            $this->cache->register();
+
+            return;
+        }
+
+        $this->cache->ttl($seconds);
+    }
+
+    /**
      * Hooks one named feature.
      *
      * @since 0.10.0
@@ -519,6 +554,7 @@ class Performance
             'revisions' => $this->revisions(is_int($argument) ? $argument : 5),
             'emptyTrash' => $this->emptyTrash(is_int($argument) ? $argument : 7),
             'images' => $this->images(),
+            'enableCache' => $this->enableCache(is_int($argument) ? $argument : 3600),
             default => Notices::error(sprintf(
                 'Unknown performance feature "%s".',
                 $feature

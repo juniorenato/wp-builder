@@ -38,7 +38,7 @@ class AdminPage
      *
      * @since 0.2.0
      */
-    private string $pageTitle;
+    protected string $pageTitle;
 
     /**
      * Menu title.
@@ -59,7 +59,7 @@ class AdminPage
      *
      * @since 0.2.0
      */
-    private string $menuSlug;
+    protected string $menuSlug;
 
     /**
      * Menu icon URL or Dashicon class.
