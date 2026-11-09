@@ -87,6 +87,7 @@ wp-builder/
 │   │   ├── PageCache.php
 │   │   └── Performance.php
 │   ├── Security/
+│   │   ├── RateLimit.php
 │   │   └── Security.php
 │   ├── Forms/
 │   │   ├── AdminForm.php
@@ -760,6 +761,51 @@ new Security([
 - `disableXmlRpc()` returns 403 from `xmlrpc.php`, removes XML-RPC methods, drops the `X-Pingback` header, and removes the RSD link.
 - `disableUserEnumeration()` sends anonymous `/?author=1` requests to the home URL before the canonical redirect can reveal the user slug. Author archives that already use the slug stay public. Guests receive 401 for `/wp/v2/users`. Logged-in users keep that route for the editor. `/wp/v2/users/me` is left to WordPress.
 - `disableFileEdit()` removes the theme file editor and the plugin file editor by denying `edit_themes`, `edit_plugins`, and `edit_files`. Installing and updating plugins and themes stays available.
+
+## Rate limit
+
+Opt-in counters for login, comments, anonymous REST, and `admin-ajax`. The same object can count any key you choose. Nothing runs until you call a policy or `allow()`.
+
+```php
+use WPB\Security\RateLimit;
+
+(new RateLimit())
+    ->login()
+    ->comments()
+    ->rest();
+```
+
+Put the proxy list in `wp-config.php`. An empty or missing constant trusts no proxy, so the client is `REMOTE_ADDR`.
+
+```php
+define('WPB_TRUSTED_PROXIES', 'private_ranges');
+```
+
+`private_ranges` is the loopback, link-local, and private network list Symfony uses. A comma-separated list of addresses and CIDR ranges works too. `REMOTE_ADDR` trusts the peer that opened the connection. `trustedProxies()` on the instance replaces the constant for that object.
+
+```php
+(new RateLimit())
+    ->trustedProxies(['203.0.113.10'])
+    ->login();
+```
+
+Only `X-Forwarded-For` is read, and only when `REMOTE_ADDR` is in the trusted list. The client is the rightmost address in that chain that is not itself a trusted proxy. A forged value to the left of the proxy's entry does not become the client. `private_ranges` also treats a visitor on a private address as a proxy, so list the proxy address itself when visitors share that network.
+
+Counters live in WordPress transients for one fixed window. The window starts at the first hit and later hits do not extend it. A transient write is not atomic.
+
+- `login(int $maxAttempts = 5, int $interval = 60)` counts failed `wp-login.php` attempts. The same username and IP can fail `$maxAttempts` times in the window. That IP can fail `5 * $maxAttempts` times across usernames. A successful login clears both. Password reset allows `$maxAttempts` requests per 15 minutes for that IP. A blocked login stays on the form as a `WP_Error`. The first call to `login()`, `comments()`, or `rest()` in the process wins.
+- `comments(int $limit = 5, int $window = 600)` counts comment submits per IP, including logged-in authors. The submit past the limit ends with 429 and `Retry-After`.
+- `rest(int $limit = 60, int $window = 60)` counts anonymous REST and `admin-ajax` requests on one shared bucket per IP. Logged-in requests are not counted. REST over the limit is a `WP_Error` with status 429 and `retry_after`. `admin-ajax` ends the request with 429. Both send `Retry-After`.
+- `form(string $name, int $limit = 5, int $window = 600)` counts one named public form for the current client and returns false when the window is full. Call it before accepting the POST.
+- `allow(string $key, int $limit, int $window)` counts an exact key and returns false when the window is full. `clear(string $key)` deletes that bucket. The stored name is an HMAC of the key.
+
+```php
+$limit = new RateLimit();
+
+if (!$limit->form('contact', 5, 600)) {
+    // Ask the visitor to wait.
+}
+```
 
 ## License
 
