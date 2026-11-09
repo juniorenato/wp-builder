@@ -16,7 +16,6 @@ use WPB\Forms\AdminForm;
 /**
  * Registers a top-level or submenu admin page with settings fields.
  *
- * @since  0.2.0
  * @author Renato Rodrigues Jr <juniorenato@msn.com>
  *
  * @see https://developer.wordpress.org/reference/functions/add_menu_page/
@@ -28,57 +27,41 @@ class AdminPage
 
     /**
      * Parent menu slug.
-     *
-     * @since 0.2.0
      */
     private string $parentSlug;
 
     /**
      * Page title.
-     *
-     * @since 0.2.0
      */
     protected string $pageTitle;
 
     /**
      * Menu title.
-     *
-     * @since 0.2.0
      */
     private string $menuTitle;
 
     /**
      * Required capability.
-     *
-     * @since 0.2.0
      */
     private string $capability;
 
     /**
      * Menu slug.
-     *
-     * @since 0.2.0
      */
     protected string $menuSlug;
 
     /**
      * Menu icon URL or Dashicon class.
-     *
-     * @since 0.2.0
      */
     private string $iconUrl;
 
     /**
      * Menu position.
-     *
-     * @since 0.2.0
      */
     private int $position;
 
     /**
      * Page render callback.
-     *
-     * @since 0.2.0
      *
      * @var callable
      */
@@ -86,8 +69,6 @@ class AdminPage
 
     /**
      * Optionally registers an admin page immediately.
-     *
-     * @since 0.2.0
      *
      * @param string|null   $title    Page title.
      * @param callable|null $callback Render callback.
@@ -109,8 +90,6 @@ class AdminPage
 
     /**
      * Resets the page configuration to defaults.
-     *
-     * @since 0.2.0
      */
     public function init(): void
     {
@@ -130,8 +109,6 @@ class AdminPage
     /**
      * Sets the parent menu from a short slug.
      *
-     * @since 0.2.0
-     *
      * @param string $slug Parent slug without `.php`.
      *
      * @return static
@@ -145,8 +122,6 @@ class AdminPage
 
     /**
      * Sets the page title, menu title, and slug from a single value.
-     *
-     * @since 0.2.0
      *
      * @param string $title Page title.
      *
@@ -166,8 +141,6 @@ class AdminPage
     /**
      * Sets the menu slug.
      *
-     * @since 0.2.0
-     *
      * @param string $slug Menu slug.
      *
      * @return static
@@ -181,8 +154,6 @@ class AdminPage
 
     /**
      * Sets the menu icon.
-     *
-     * @since 0.2.0
      *
      * @param string $icon Dashicon class or icon URL.
      *
@@ -198,8 +169,6 @@ class AdminPage
 
     /**
      * Sets the parent menu slug, appending `.php` when needed.
-     *
-     * @since 0.2.0
      *
      * @param string $slug Parent slug.
      *
@@ -219,8 +188,6 @@ class AdminPage
     /**
      * Sets the page title.
      *
-     * @since 0.2.0
-     *
      * @param string $title Page title.
      *
      * @return static
@@ -237,8 +204,6 @@ class AdminPage
     /**
      * Sets the menu title.
      *
-     * @since 0.2.0
-     *
      * @param string $title Menu title.
      *
      * @return static
@@ -254,8 +219,6 @@ class AdminPage
 
     /**
      * Sets the required capability.
-     *
-     * @since 0.2.0
      *
      * @param string $capability WordPress capability.
      *
@@ -274,8 +237,6 @@ class AdminPage
     /**
      * Sets the sanitized menu slug.
      *
-     * @since 0.2.0
-     *
      * @param string $slug Unsanitized slug.
      *
      * @return static
@@ -291,8 +252,6 @@ class AdminPage
 
     /**
      * Sets the menu icon URL or Dashicon class.
-     *
-     * @since 0.2.0
      *
      * @param string $icon Icon URL or Dashicon class.
      *
@@ -311,8 +270,6 @@ class AdminPage
     /**
      * Sets the menu position.
      *
-     * @since 0.2.0
-     *
      * @param string $position Menu position.
      *
      * @return static
@@ -329,8 +286,6 @@ class AdminPage
     /**
      * Sets the page render callback.
      *
-     * @since 0.2.0
-     *
      * @param callable $callback Render callback.
      *
      * @return static
@@ -346,8 +301,6 @@ class AdminPage
 
     /**
      * Queues the admin page for registration.
-     *
-     * @since 0.2.0
      *
      * @param string|null   $title    Page title.
      * @param callable|null $callback Render callback.
@@ -387,8 +340,6 @@ class AdminPage
     /**
      * Registers the menu page or submenu page.
      *
-     * @since 0.2.0
-     *
      * @see https://developer.wordpress.org/reference/functions/add_menu_page/
      * @see https://developer.wordpress.org/reference/functions/add_submenu_page/
      * @see https://developer.wordpress.org/reference/hooks/admin_init/
@@ -423,8 +374,6 @@ class AdminPage
     /**
      * Registers settings for each page field.
      *
-     * @since 0.2.0
-     *
      * @see https://developer.wordpress.org/reference/functions/register_setting/
      * @see https://developer.wordpress.org/plugins/settings/settings-api/
      */
@@ -447,8 +396,6 @@ class AdminPage
 
     /**
      * Renders the admin page view.
-     *
-     * @since 0.2.0
      *
      * @see https://developer.wordpress.org/plugins/settings/settings-api/
      * @see https://developer.wordpress.org/reference/functions/settings_fields/

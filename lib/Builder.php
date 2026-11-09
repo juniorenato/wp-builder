@@ -15,29 +15,22 @@ use WPB\Blocks\Block;
 /**
  * Stores default library settings and loads translations.
  *
- * @since  0.1.0
  * @author Renato Rodrigues Jr <juniorenato@msn.com>
  */
 class Builder
 {
     /**
      * Theme environment identifier.
-     *
-     * @since 0.1.0
      */
     public const string THEME = 'theme';
 
     /**
      * Plugin environment identifier.
-     *
-     * @since 0.1.0
      */
     public const string PLUGIN = 'plugin';
 
     /**
      * Absolute paths used by the library.
-     *
-     * @since 0.1.0
      *
      * @var array{
      *     FORM: string,
@@ -55,8 +48,6 @@ class Builder
 
     /**
      * Registers the library bootstrap for the given environment.
-     *
-     * @since 0.1.0
      *
      * @param string $env `theme` or `plugin`.
      *
@@ -81,8 +72,6 @@ class Builder
      * The callback is not executed after `init` has finished. A call made while
      * `init` is running executes immediately, because that call is still inside
      * the hook. Constructors stay safe to call from a plugin or theme file.
-     *
-     * @since 0.1.0
      *
      * @param callable $callback Callback to run.
      * @param int      $priority Hook priority.
@@ -109,8 +98,6 @@ class Builder
     /**
      * Determines whether translation functions may run without a 6.7 notice.
      *
-     * @since 0.1.0
-     *
      * @return bool True after `after_setup_theme` has started.
      *
      * @see https://developer.wordpress.org/reference/functions/did_action/
@@ -124,8 +111,6 @@ class Builder
 
     /**
      * Determines whether the library is running as a plugin.
-     *
-     * @since 0.1.0
      *
      * @global string $wp_builder Current library environment.
      *
@@ -141,8 +126,6 @@ class Builder
     /**
      * Determines whether the library is running as a theme.
      *
-     * @since 0.1.0
-     *
      * @global string $wp_builder Current library environment.
      *
      * @return bool True when the environment is a theme.
@@ -156,8 +139,6 @@ class Builder
 
     /**
      * Converts an absolute path inside this install to a URL.
-     *
-     * @since 0.8.0
      *
      * @param string $path Absolute filesystem path.
      *
@@ -203,8 +184,6 @@ class Builder
      *
      * Symlinked themes and plugins keep their public URL while PHP sees the
      * real path. Comparing those real paths is what makes the asset URL work.
-     *
-     * @since 0.8.0
      *
      * @return list<array{dir: string, url: string}> Directory and its public URL.
      *
@@ -257,8 +236,6 @@ class Builder
     /**
      * Bootstraps library services hooked to `init`.
      *
-     * @since 0.1.0
-     *
      * @return static
      */
     public function build(): static
@@ -271,8 +248,6 @@ class Builder
 
     /**
      * Loads the library text domain for the current environment.
-     *
-     * @since 0.1.0
      *
      * @see https://make.wordpress.org/core/2024/10/21/i18n-improvements-6-7/
      * @see https://developer.wordpress.org/reference/functions/load_theme_textdomain/
@@ -302,8 +277,6 @@ class Builder
      *
      * JIT loading looks for `{domain}-{locale}.mo` and `{domain}-{locale}.l10n.php`
      * inside `WP_LANG_DIR/plugins` or `WP_LANG_DIR/themes`.
-     *
-     * @since 0.1.0
      *
      * @param 'plugins'|'themes' $type    Language subdirectory for the environment.
      * @param list<string>       $locales Locales to install.

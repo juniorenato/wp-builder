@@ -19,7 +19,6 @@ use InvalidArgumentException;
  * directive are merged in first-seen order. A repeated source is kept once.
  * Directive names match without case.
  *
- * @since  0.11.0
  * @author Renato Rodrigues Jr <juniorenato@msn.com>
  *
  * @see https://developer.mozilla.org/en-US/docs/Web/HTTP/Reference/Headers/Content-Security-Policy
@@ -28,8 +27,6 @@ class Csp
 {
     /**
      * Source keywords that browsers expect in single quotes.
-     *
-     * @since 0.11.0
      *
      * @var list<string>
      */
@@ -47,16 +44,12 @@ class Csp
     /**
      * Sources for each directive, keyed by the lowercase name.
      *
-     * @since 0.11.0
-     *
      * @var array<string, list<string>>
      */
     private array $directives = [];
 
     /**
      * Header that sends the policy. Empty until the first real `register()`.
-     *
-     * @since 0.11.0
      */
     private ?Header $header = null;
 
@@ -65,8 +58,6 @@ class Csp
      *
      * An empty list does not create the directive. An invalid call leaves the
      * stored policy unchanged.
-     *
-     * @since 0.11.0
      *
      * @param string       $directive Directive name, such as `script-src`.
      * @param array<mixed> $sources   Source list.
@@ -108,8 +99,6 @@ class Csp
     /**
      * Returns the policy value.
      *
-     * @since 0.11.0
-     *
      * @return string Directives separated by `; `, or an empty string.
      */
     public function policy(): string
@@ -129,8 +118,6 @@ class Csp
      * A later `add()` is sent only after `register()` runs again. The second
      * call updates the same header and does not add another filter. An empty
      * policy does not register a header.
-     *
-     * @since 0.11.0
      */
     public function register(): void
     {
@@ -150,8 +137,6 @@ class Csp
 
     /**
      * Accepts a directive name that can be sent.
-     *
-     * @since 0.11.0
      *
      * @param string $directive Directive name.
      *
@@ -179,8 +164,6 @@ class Csp
 
     /**
      * Returns a source as it is written in the policy.
-     *
-     * @since 0.11.0
      *
      * @param string $source Source expression.
      *
@@ -216,8 +199,6 @@ class Csp
 
     /**
      * Reports whether a source is written in single quotes.
-     *
-     * @since 0.11.0
      *
      * @param string $source Unquoted source.
      *

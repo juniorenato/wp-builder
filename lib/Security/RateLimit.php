@@ -33,15 +33,12 @@ use InvalidArgumentException;
  * and later hits do not extend it. Two requests can pass the limit together,
  * because the transient write is not atomic.
  *
- * @since  0.12.0
  * @author Renato Rodrigues Jr <juniorenato@msn.com>
  */
 class RateLimit
 {
     /**
      * Seconds for the password-reset bucket.
-     *
-     * @since 0.12.0
      */
     private const int LOST_PASSWORD_WINDOW = 900;
 
@@ -49,8 +46,6 @@ class RateLimit
      * Loopback, link-local, and private networks.
      *
      * This is Symfony's `IpUtils::PRIVATE_RANGES` list.
-     *
-     * @since 0.12.0
      *
      * @var list<string>
      */
@@ -71,8 +66,6 @@ class RateLimit
     /**
      * Policies already hooked in this process.
      *
-     * @since 0.12.0
-     *
      * @var array<string, true>
      */
     private static array $hooked = [];
@@ -82,51 +75,37 @@ class RateLimit
      *
      * Null until the constant or `trustedProxies()` has been read.
      *
-     * @since 0.12.0
-     *
      * @var list<string>|null
      */
     private ?array $proxies = null;
 
     /**
      * Failed logins allowed for one username and IP.
-     *
-     * @since 0.12.0
      */
     private int $loginMax = 5;
 
     /**
      * Login window in seconds.
-     *
-     * @since 0.12.0
      */
     private int $loginInterval = 60;
 
     /**
      * Comment submits allowed for one IP.
-     *
-     * @since 0.12.0
      */
     private int $commentLimit = 5;
 
     /**
      * Comment window in seconds.
-     *
-     * @since 0.12.0
      */
     private int $commentWindow = 600;
 
     /**
      * Anonymous API requests allowed for one IP.
-     *
-     * @since 0.12.0
      */
     private int $restLimit = 60;
 
     /**
      * API window in seconds.
-     *
-     * @since 0.12.0
      */
     private int $restWindow = 60;
 
@@ -137,8 +116,6 @@ class RateLimit
      * `REMOTE_ADDR`. A string may list several entries separated by commas.
      * `REMOTE_ADDR` is the peer of the current request, resolved when the
      * client address is read.
-     *
-     * @since 0.12.0
      *
      * @param list<string>|string $proxies Proxy rules.
      *
@@ -155,8 +132,6 @@ class RateLimit
 
     /**
      * Returns the client address for this request.
-     *
-     * @since 0.12.0
      *
      * @return string An IP address, or `0.0.0.0` when the peer is missing.
      */
@@ -214,8 +189,6 @@ class RateLimit
      * The key is the identity. Include the client, user, or form in it when
      * the bucket should not be global. The stored name is an HMAC of the key.
      *
-     * @since 0.12.0
-     *
      * @param string $key    Bucket identity.
      * @param int    $limit  Hits allowed in the window.
      * @param int    $window Window length in seconds.
@@ -234,8 +207,6 @@ class RateLimit
     /**
      * Deletes one bucket.
      *
-     * @since 0.12.0
-     *
      * @param string $key Bucket identity passed to `allow()`.
      */
     public function clear(string $key): void
@@ -248,8 +219,6 @@ class RateLimit
      *
      * There is no WordPress hook for an arbitrary form. Call this before
      * accepting the POST.
-     *
-     * @since 0.12.0
      *
      * @param string $name   Form identity. It is trimmed.
      * @param int    $limit  Submits allowed in the window.
@@ -282,8 +251,6 @@ class RateLimit
      * A blocked login stays on the login form as a `WP_Error`. The check runs
      * before WordPress verifies the password.
      *
-     * @since 0.12.0
-     *
      * @param int $maxAttempts Failures allowed for one username and IP.
      * @param int $interval    Window length in seconds.
      *
@@ -311,8 +278,6 @@ class RateLimit
 
     /**
      * Rejects a login attempt that is already over the limit.
-     *
-     * @since 0.12.0
      *
      * @param mixed  $user     User, error, or null from an earlier authenticator.
      * @param string $username Submitted username.
@@ -343,8 +308,6 @@ class RateLimit
     /**
      * Counts one failed login against the IP and, when present, the username.
      *
-     * @since 0.12.0
-     *
      * @param string $username Submitted username.
      */
     public function recordLoginFailure(string $username): void
@@ -363,8 +326,6 @@ class RateLimit
     /**
      * Clears the login buckets after a successful login.
      *
-     * @since 0.12.0
-     *
      * @param string $username Authenticated username.
      */
     public function clearLogin(string $username): void
@@ -381,8 +342,6 @@ class RateLimit
 
     /**
      * Counts a password-reset request and records an error when it is over the limit.
-     *
-     * @since 0.12.0
      *
      * @param mixed $errors Error bag from `lostpassword_post`.
      */
@@ -414,8 +373,6 @@ class RateLimit
      * Logged-in authors count too. The submit past the limit ends with status
      * 429 and a `Retry-After` header.
      *
-     * @since 0.12.0
-     *
      * @param int $limit  Submits allowed in the window.
      * @param int $window Window length in seconds.
      *
@@ -440,8 +397,6 @@ class RateLimit
 
     /**
      * Stops a comment submit that is over the limit.
-     *
-     * @since 0.12.0
      *
      * @param mixed $comment Comment data from `preprocess_comment`.
      *
@@ -470,8 +425,6 @@ class RateLimit
      * `WP_Error` with status 429. `admin-ajax` ends with status 429. Both
      * send `Retry-After`.
      *
-     * @since 0.12.0
-     *
      * @param int $limit  Requests allowed in the window.
      * @param int $window Window length in seconds.
      *
@@ -497,8 +450,6 @@ class RateLimit
 
     /**
      * Stops an anonymous REST request that is over the shared API limit.
-     *
-     * @since 0.12.0
      *
      * @param mixed $result  Short-circuit result.
      * @param mixed $server  REST server. Unused. The bucket is the client IP.
@@ -538,8 +489,6 @@ class RateLimit
 
     /**
      * Stops an anonymous `admin-ajax` request that is over the shared API limit.
-     *
-     * @since 0.12.0
      */
     public function guardAjax(): void
     {
@@ -564,8 +513,6 @@ class RateLimit
     /**
      * Records a policy the first time it is enabled.
      *
-     * @since 0.12.0
-     *
      * @param string $feature Policy name.
      *
      * @return bool True when this call should register hooks.
@@ -584,8 +531,6 @@ class RateLimit
     /**
      * Rejects a limit below 1.
      *
-     * @since 0.12.0
-     *
      * @param int $limit  Hits allowed in the window.
      * @param int $window Window length in seconds.
      *
@@ -600,8 +545,6 @@ class RateLimit
 
     /**
      * Builds the login failure shown on the form.
-     *
-     * @since 0.12.0
      */
     private function loginError(): \WP_Error
     {
@@ -613,8 +556,6 @@ class RateLimit
 
     /**
      * Normalizes a submitted username for the bucket key.
-     *
-     * @since 0.12.0
      *
      * @param string $username Raw username.
      *
@@ -638,8 +579,6 @@ class RateLimit
     /**
      * Bucket for every failed login from one client.
      *
-     * @since 0.12.0
-     *
      * @param string $ip Client address.
      */
     private function loginIpKey(string $ip): string
@@ -649,8 +588,6 @@ class RateLimit
 
     /**
      * Bucket for one username from one client.
-     *
-     * @since 0.12.0
      *
      * @param string $username Normalized username.
      * @param string $ip       Client address.
@@ -662,8 +599,6 @@ class RateLimit
 
     /**
      * Reports whether a bucket is already full.
-     *
-     * @since 0.12.0
      *
      * @param string $key   Bucket identity.
      * @param int    $limit Hits allowed in the window.
@@ -682,8 +617,6 @@ class RateLimit
     /**
      * Adds one hit without caring about the limit.
      *
-     * @since 0.12.0
-     *
      * @param string $key    Bucket identity.
      * @param int    $window Window length in seconds.
      */
@@ -694,8 +627,6 @@ class RateLimit
 
     /**
      * Adds one hit and returns the decision for this window.
-     *
-     * @since 0.12.0
      *
      * @param string $key    Bucket identity.
      * @param int    $limit  Hits allowed in the window.
@@ -728,8 +659,6 @@ class RateLimit
     /**
      * Ends the request with status 429.
      *
-     * @since 0.12.0
-     *
      * @param int    $retryAfter Seconds until the window ends.
      * @param string $message    Response body.
      */
@@ -747,8 +676,6 @@ class RateLimit
     /**
      * Hashes a bucket identity into a transient name.
      *
-     * @since 0.12.0
-     *
      * @param string $key Bucket identity.
      */
     private function storageKey(string $key): string
@@ -758,8 +685,6 @@ class RateLimit
 
     /**
      * Returns the proxy rules for this instance.
-     *
-     * @since 0.12.0
      *
      * @return list<string>
      */
@@ -782,8 +707,6 @@ class RateLimit
 
     /**
      * Expands proxy configuration into addresses, ranges, and the `REMOTE_ADDR` token.
-     *
-     * @since 0.12.0
      *
      * @param list<string>|string $proxies Proxy rules.
      *
@@ -836,8 +759,6 @@ class RateLimit
     /**
      * Reports whether a rule is an IP address or a CIDR range.
      *
-     * @since 0.12.0
-     *
      * @param string $proxy One proxy entry.
      */
     private function isProxyRule(string $proxy): bool
@@ -860,8 +781,6 @@ class RateLimit
 
     /**
      * Reports whether an address belongs to a trusted rule.
-     *
-     * @since 0.12.0
      *
      * @param string $ip Address to test.
      */
@@ -888,8 +807,6 @@ class RateLimit
 
     /**
      * Reports whether an address belongs to an exact address or a CIDR range.
-     *
-     * @since 0.12.0
      *
      * @param string $ip   Address to test.
      * @param string $rule Exact address or CIDR range.
@@ -936,8 +853,6 @@ class RateLimit
      *
      * Strips a bracketed IPv6 port and an IPv4 port. An IPv4-mapped IPv6
      * address is returned as IPv4 so it matches IPv4 ranges.
-     *
-     * @since 0.12.0
      *
      * @param string $value Raw address.
      */

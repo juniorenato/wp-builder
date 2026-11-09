@@ -24,57 +24,42 @@ use WPB\MetaBoxes\MetaBox;
  * While the cache is on, the dashboard lists those URLs. Each page has a
  * sidebar checkbox that keeps that page out of the cache.
  *
- * @since  0.10.0
  * @author Renato Rodrigues Jr <juniorenato@msn.com>
  */
 class PageCache
 {
     /**
      * Option that turns serving and writing on or off.
-     *
-     * @since 0.10.0
      */
     public const string OPTION_ENABLED = 'wpb_page_cache_enabled';
 
     /**
      * Prefix for the option that stores pages linked to one post type.
-     *
-     * @since 0.10.0
      */
     public const string OPTION_PAGES_PREFIX = 'wpb_page_cache_pages_';
 
     /**
      * Post meta that keeps one page out of the cache.
-     *
-     * @since 0.10.0
      */
     public const string META_DISABLED = 'wpb_page_cache_disabled';
 
     /**
      * Tools submenu slug.
-     *
-     * @since 0.10.0
      */
     public const string MENU_SLUG = 'wpb-page-cache';
 
     /**
      * How long a stored file stays valid, in seconds.
-     *
-     * @since 0.10.0
      */
     private int $ttl;
 
     /**
      * Whether this request is capturing the template output.
-     *
-     * @since 0.10.0
      */
     private bool $capturing = false;
 
     /**
      * Prepares the cache lifetime.
-     *
-     * @since 0.10.0
      *
      * @param int $ttl Cache lifetime in seconds.
      */
@@ -85,8 +70,6 @@ class PageCache
 
     /**
      * Changes the lifetime used for later reads.
-     *
-     * @since 0.10.0
      *
      * @param int $seconds Cache lifetime in seconds.
      */
@@ -99,22 +82,16 @@ class PageCache
 
     /**
      * Tools screen registered for this cache.
-     *
-     * @since 0.10.0
      */
     private ?CacheScreen $screen = null;
 
     /**
      * Page editor meta box registered for this cache.
-     *
-     * @since 0.10.0
      */
     private ?MetaBox $metaBox = null;
 
     /**
      * Hooks serving, storage, invalidation, and the Tools screen.
-     *
-     * @since 0.10.0
      */
     public function register(): void
     {
@@ -145,8 +122,6 @@ class PageCache
 
     /**
      * Registers the Tools screen after public post types exist.
-     *
-     * @since 0.10.0
      */
     public function registerScreen(): void
     {
@@ -184,8 +159,6 @@ class PageCache
     /**
      * Option name for the pages linked to a post type.
      *
-     * @since 0.10.0
-     *
      * @param string $postType Post type slug.
      */
     public static function pagesOption(string $postType): string
@@ -195,8 +168,6 @@ class PageCache
 
     /**
      * Registers the sidebar checkbox on every page.
-     *
-     * @since 0.10.0
      */
     public function registerMetaBox(): void
     {
@@ -228,8 +199,6 @@ class PageCache
     /**
      * Keeps the page cache meta box visible on the page editor.
      *
-     * @since 0.10.0
-     *
      * @param array<int, string> $hidden Hidden meta box identifiers.
      * @param mixed              $screen Current screen.
      *
@@ -248,8 +217,6 @@ class PageCache
 
     /**
      * Reports whether the current page opted out of the cache.
-     *
-     * @since 0.10.0
      */
     private function pageDisablesCache(): bool
     {
@@ -268,8 +235,6 @@ class PageCache
 
     /**
      * Sends a fresh cached file and stops the template.
-     *
-     * @since 0.10.0
      */
     public function serve(): void
     {
@@ -295,8 +260,6 @@ class PageCache
 
     /**
      * Writes the captured HTML when the response is cacheable.
-     *
-     * @since 0.10.0
      */
     public function store(): void
     {
@@ -315,8 +278,6 @@ class PageCache
 
     /**
      * Removes the post, its archive, and the pages linked to its post type.
-     *
-     * @since 0.10.0
      *
      * @param int      $postId Post ID.
      * @param \WP_Post $post   Post object.
@@ -341,8 +302,6 @@ class PageCache
 
     /**
      * Removes a stored URL left behind by a slug change.
-     *
-     * @since 0.10.0
      *
      * @param int      $postId Post ID.
      * @param \WP_Post $after  Post after the update.
@@ -369,8 +328,6 @@ class PageCache
 
     /**
      * Stores one URL.
-     *
-     * @since 0.10.0
      *
      * @param string $url  Public URL.
      * @param string $html Rendered HTML.
@@ -400,8 +357,6 @@ class PageCache
     /**
      * Deletes the file for one URL.
      *
-     * @since 0.10.0
-     *
      * @param string $url Public URL.
      */
     public function forgetUrl(string $url): void
@@ -417,8 +372,6 @@ class PageCache
 
     /**
      * Deletes a post type archive and its paginated URLs.
-     *
-     * @since 0.10.0
      *
      * @param string $postType Post type slug.
      */
@@ -437,8 +390,6 @@ class PageCache
      * Deletes a listing URL and the `/page/N/` URLs under it.
      *
      * The site root only drops `/` and `/page/N/`. It does not drop every path.
-     *
-     * @since 0.10.0
      *
      * @param string $url Archive or home URL.
      */
@@ -473,8 +424,6 @@ class PageCache
     /**
      * Deletes pages linked to a post type on the Tools screen.
      *
-     * @since 0.10.0
-     *
      * @param string $postType Post type slug.
      */
     public function forgetLinked(string $postType): void
@@ -490,8 +439,6 @@ class PageCache
 
     /**
      * Deletes every cached file.
-     *
-     * @since 0.10.0
      */
     public function flush(): void
     {
@@ -507,8 +454,6 @@ class PageCache
     /**
      * Deletes one cached file by its hash.
      *
-     * @since 0.10.0
-     *
      * @param string $hash MD5 file name without an extension.
      */
     public function forget(string $hash): void
@@ -520,8 +465,6 @@ class PageCache
 
     /**
      * Lists the cached URLs.
-     *
-     * @since 0.10.0
      *
      * @return list<array{url: string, created: int, hash: string}>
      */
@@ -552,8 +495,6 @@ class PageCache
     /**
      * Reports whether a stored URL is inside the lifetime.
      *
-     * @since 0.10.0
-     *
      * @param string $url Public URL.
      *
      * @return bool True when the file exists and is younger than the lifetime.
@@ -575,8 +516,6 @@ class PageCache
 
     /**
      * Normalizes a public URL to scheme, host, and path.
-     *
-     * @since 0.10.0
      *
      * @param string $url Raw URL.
      *
@@ -604,8 +543,6 @@ class PageCache
     /**
      * Reports whether the Tools screen has the cache turned on.
      *
-     * @since 0.10.0
-     *
      * @return bool True when serving and writing are allowed.
      */
     public function enabled(): bool
@@ -621,8 +558,6 @@ class PageCache
 
     /**
      * Page IDs cleared together with a post type.
-     *
-     * @since 0.10.0
      *
      * @param string $postType Post type slug.
      *
@@ -652,8 +587,6 @@ class PageCache
     /**
      * Public post types shown on the Tools screen.
      *
-     * @since 0.10.0
-     *
      * @return array<string, string> Slug mapped to the plural label.
      */
     public function postTypeChoices(): array
@@ -675,8 +608,6 @@ class PageCache
 
     /**
      * Published pages that can be linked to a post type.
-     *
-     * @since 0.10.0
      *
      * @return array<int, string> Page ID mapped to the title.
      */
@@ -701,8 +632,6 @@ class PageCache
     /**
      * Adds the cached URL list to the dashboard while the cache is on.
      *
-     * @since 0.10.0
-     *
      * @see https://developer.wordpress.org/reference/functions/wp_add_dashboard_widget/
      */
     public function registerDashboard(): void
@@ -720,8 +649,6 @@ class PageCache
 
     /**
      * Prints the dashboard list of cached URLs.
-     *
-     * @since 0.10.0
      */
     public function renderDashboard(): void
     {
@@ -732,8 +659,6 @@ class PageCache
      * Clears one cached URL or the whole directory from the Tools screen.
      *
      * Settings are saved by the AdminPage form through `options.php`.
-     *
-     * @since 0.10.0
      */
     public function handlePost(): void
     {
@@ -771,8 +696,6 @@ class PageCache
     /**
      * Reads the current request without its query string.
      *
-     * @since 0.10.0
-     *
      * @return string Normalized URL, or an empty string.
      */
     private function requestUrl(): string
@@ -786,8 +709,6 @@ class PageCache
 
     /**
      * Reports whether this request may read or write the cache.
-     *
-     * @since 0.10.0
      */
     private function shouldCache(): bool
     {
@@ -820,8 +741,6 @@ class PageCache
     /**
      * Reports whether the captured response is worth storing.
      *
-     * @since 0.10.0
-     *
      * @param string $html Captured output.
      */
     private function shouldStore(string $html): bool
@@ -844,8 +763,6 @@ class PageCache
      *
      * Plain permalinks do not mark `/favicon.ico` as a favicon request, so the
      * path extension is what keeps that `.ico` file out of the HTML cache.
-     *
-     * @since 0.10.0
      */
     private function hasFileExtension(): bool
     {
@@ -857,8 +774,6 @@ class PageCache
 
     /**
      * Reads the HTTP status that will be sent with this response.
-     *
-     * @since 0.10.0
      */
     private function responseStatus(): int
     {
@@ -880,8 +795,6 @@ class PageCache
     /**
      * Reports whether a post type participates in cache clearing.
      *
-     * @since 0.10.0
-     *
      * @param \WP_Post $post Post being saved or deleted.
      */
     private function tracks(\WP_Post $post): bool
@@ -897,8 +810,6 @@ class PageCache
 
     /**
      * Absolute directory for the HTML and meta files.
-     *
-     * @since 0.10.0
      */
     private function directory(): string
     {
@@ -907,8 +818,6 @@ class PageCache
 
     /**
      * Hashes a normalized URL.
-     *
-     * @since 0.10.0
      *
      * @param string $url Normalized URL.
      */
@@ -920,8 +829,6 @@ class PageCache
     /**
      * Path of the HTML file for a URL.
      *
-     * @since 0.10.0
-     *
      * @param string $url Public URL.
      */
     private function htmlFile(string $url): string
@@ -931,8 +838,6 @@ class PageCache
 
     /**
      * Deletes the HTML and meta files for a hash.
-     *
-     * @since 0.10.0
      *
      * @param string $hash MD5 file name without an extension.
      */

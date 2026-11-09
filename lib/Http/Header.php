@@ -19,7 +19,6 @@ use InvalidArgumentException;
  * The last operation for a name wins. Matching ignores case. This filter runs
  * on the public response. Admin, REST, and `admin-ajax` do not pass through it.
  *
- * @since  0.11.0
  * @author Renato Rodrigues Jr <juniorenato@msn.com>
  *
  * @see https://developer.wordpress.org/reference/hooks/wp_headers/
@@ -32,16 +31,12 @@ class Header
      * A null value removes the header. `replace` false keeps a value already
      * present on the response.
      *
-     * @since 0.11.0
-     *
      * @var array<string, array{name: string, value: string|null, replace: bool}>
      */
     private array $operations = [];
 
     /**
      * Whether `wp_headers` is already hooked for this instance.
-     *
-     * @since 0.11.0
      */
     private bool $registered = false;
 
@@ -49,8 +44,6 @@ class Header
      * Stores a header value.
      *
      * The stored name is trimmed. An empty value is kept.
-     *
-     * @since 0.11.0
      *
      * @param string $name  Header name.
      * @param string $value Header value.
@@ -74,8 +67,6 @@ class Header
      * The stored name is trimmed. An empty value is kept. A header WordPress
      * already set, in any capitalization, stays as it is.
      *
-     * @since 0.11.0
-     *
      * @param string $name  Header name.
      * @param string $value Header value.
      *
@@ -97,8 +88,6 @@ class Header
      *
      * The stored name is trimmed.
      *
-     * @since 0.11.0
-     *
      * @param string $name Header name.
      *
      * @return static
@@ -119,8 +108,6 @@ class Header
      * Operations added after this call still apply. The list is read when
      * WordPress sends the headers.
      *
-     * @since 0.11.0
-     *
      * @see https://developer.wordpress.org/reference/hooks/wp_headers/
      */
     public function register(): void
@@ -136,8 +123,6 @@ class Header
 
     /**
      * Applies the stored operations to a header list.
-     *
-     * @since 0.11.0
      *
      * @param array<string, string> $headers Response headers.
      *
@@ -183,8 +168,6 @@ class Header
     /**
      * Accepts a header name that can be sent.
      *
-     * @since 0.11.0
-     *
      * @param string $name Header name.
      *
      * @return string Trimmed name.
@@ -212,8 +195,6 @@ class Header
     /**
      * Stores the last operation for a header name.
      *
-     * @since 0.11.0
-     *
      * @param string      $name    Trimmed header name.
      * @param string|null $value   Header value, or null to remove it.
      * @param bool        $replace False keeps a value already present on the response.
@@ -229,8 +210,6 @@ class Header
 
     /**
      * Accepts a header value that can be sent.
-     *
-     * @since 0.11.0
      *
      * @param string $value Header value.
      *

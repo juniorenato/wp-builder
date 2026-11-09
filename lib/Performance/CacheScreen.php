@@ -16,22 +16,17 @@ use WPB\Pages\AdminPage;
 /**
  * Renders the cache settings with the project admin page and the file list.
  *
- * @since  0.10.0
  * @author Renato Rodrigues Jr <juniorenato@msn.com>
  */
 class CacheScreen extends AdminPage
 {
     /**
      * Page cache controlled by this screen.
-     *
-     * @since 0.10.0
      */
     private PageCache $cache;
 
     /**
      * Attaches the cache service and resets the admin page defaults.
-     *
-     * @since 0.10.0
      *
      * @param PageCache $cache Page cache service.
      */
@@ -44,8 +39,6 @@ class CacheScreen extends AdminPage
 
     /**
      * Returns the cache service rendered with this screen.
-     *
-     * @since 0.10.0
      */
     public function cache(): PageCache
     {
@@ -54,8 +47,6 @@ class CacheScreen extends AdminPage
 
     /**
      * Prints the settings form and the cached URL table.
-     *
-     * @since 0.10.0
      */
     public function buildPage(): void
     {

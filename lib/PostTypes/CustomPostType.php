@@ -15,7 +15,6 @@ use WPB\Builder;
 /**
  * Registers a custom post type with WordPress.
  *
- * @since  0.1.0
  * @author Renato Rodrigues Jr <juniorenato@msn.com>
  *
  * @see https://developer.wordpress.org/reference/functions/register_post_type/
@@ -24,8 +23,6 @@ class CustomPostType extends PostType
 {
     /**
      * Optionally registers a post type immediately.
-     *
-     * @since 0.1.0
      *
      * @param string|null $postType Post type key.
      * @param string|null $singular Singular label.
@@ -45,8 +42,6 @@ class CustomPostType extends PostType
 
     /**
      * Resets the post type configuration to defaults.
-     *
-     * @since 0.1.0
      *
      * @return static
      */
@@ -71,8 +66,6 @@ class CustomPostType extends PostType
 
     /**
      * Merges default arguments with user-provided arguments.
-     *
-     * @since 0.1.0
      *
      * @see https://developer.wordpress.org/reference/functions/register_post_type/
      */
@@ -99,8 +92,6 @@ class CustomPostType extends PostType
 
     /**
      * Queues the post type for registration on `init`.
-     *
-     * @since 0.1.0
      *
      * @param string|null $postType Post type key.
      * @param string|null $singular Singular label.
@@ -130,8 +121,6 @@ class CustomPostType extends PostType
 
     /**
      * Registers the post type with WordPress.
-     *
-     * @since 0.1.0
      *
      * @see https://developer.wordpress.org/reference/functions/register_post_type/
      */

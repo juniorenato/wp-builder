@@ -13,7 +13,6 @@ namespace WPB\PostTypes;
 /**
  * Removes a post type from menus, search, and public queries.
  *
- * @since  0.4.0
  * @author Renato Rodrigues Jr <juniorenato@msn.com>
  *
  * @see https://developer.wordpress.org/reference/hooks/register_post_type_post_type_args/
@@ -23,8 +22,6 @@ class RemovePostType extends EditPostType
 {
     /**
      * Optionally removes a post type immediately.
-     *
-     * @since 0.4.0
      *
      * @param string|null $postType Post type key.
      */
@@ -39,8 +36,6 @@ class RemovePostType extends EditPostType
 
     /**
      * Hides the given post type without unregistering it.
-     *
-     * @since 0.4.0
      *
      * @param string $postType Post type key.
      *

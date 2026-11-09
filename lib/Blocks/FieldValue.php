@@ -13,15 +13,12 @@ namespace WPB\Blocks;
 /**
  * Converts submitted block fields into the array stored in post meta or block JSON.
  *
- * @since  0.8.0
  * @author Renato Rodrigues Jr <juniorenato@msn.com>
  */
 class FieldValue
 {
     /**
      * Normalizes a map of fields, dropping unknown keys.
-     *
-     * @since 0.8.0
      *
      * @param list<array<string, mixed>> $fields Field schemas in declaration order.
      * @param mixed                      $value  Submitted map.
@@ -47,8 +44,6 @@ class FieldValue
 
     /**
      * Normalizes one field value.
-     *
-     * @since 0.8.0
      *
      * @param array<string, mixed> $field Field schema.
      * @param mixed                $value Submitted value.
@@ -94,8 +89,6 @@ class FieldValue
     /**
      * Builds the REST schema for a meta object property list.
      *
-     * @since 0.8.0
-     *
      * @param list<array<string, mixed>> $fields Field schemas.
      *
      * @return array<string, array<string, mixed>> REST properties.
@@ -113,8 +106,6 @@ class FieldValue
 
     /**
      * Builds the default map for a field list.
-     *
-     * @since 0.8.0
      *
      * @param list<array<string, mixed>> $fields Field schemas.
      *
@@ -139,8 +130,6 @@ class FieldValue
      *
      * A legacy value is the field bag itself. Current values are objects keyed
      * by the insertion id stored in the block comment.
-     *
-     * @since 0.9.0
      *
      * @param list<array<string, mixed>> $fields Field schemas.
      * @param mixed                      $value  Submitted meta value.
@@ -174,8 +163,6 @@ class FieldValue
      * Legacy meta is one bag shared by every insertion. A map returns only the
      * entry for `$instanceId`.
      *
-     * @since 0.9.0
-     *
      * @param mixed  $meta       Stored post meta.
      * @param string $instanceId Insertion id from the block comment.
      *
@@ -203,8 +190,6 @@ class FieldValue
     /**
      * Checks whether a string is an insertion id.
      *
-     * @since 0.9.0
-     *
      * @param string $id Candidate id.
      */
     public static function isInstanceId(string $id): bool
@@ -217,8 +202,6 @@ class FieldValue
 
     /**
      * Checks whether meta is a map of insertion ids to field bags.
-     *
-     * @since 0.9.0
      *
      * @param mixed $value Stored meta.
      */
@@ -249,8 +232,6 @@ class FieldValue
 
     /**
      * Normalizes a repeater into a list of known fields.
-     *
-     * @since 0.8.0
      *
      * @param array<string, mixed> $field Repeater schema.
      * @param mixed                $value Submitted list.
@@ -286,8 +267,6 @@ class FieldValue
     /**
      * Keeps an integer, or the default when the value is not numeric.
      *
-     * @since 0.8.0
-     *
      * @param mixed $value   Submitted value.
      * @param int   $default Fallback integer.
      */
@@ -307,8 +286,6 @@ class FieldValue
     /**
      * Keeps a number, or the default when the value is not numeric.
      *
-     * @since 0.8.0
-     *
      * @param mixed $value   Submitted value.
      * @param mixed $default Fallback number.
      */
@@ -326,8 +303,6 @@ class FieldValue
     /**
      * Keeps an enum member, or the field default.
      *
-     * @since 0.8.0
-     *
      * @param array<string, mixed> $field Enum schema.
      * @param mixed                $value Submitted value.
      */
@@ -343,8 +318,6 @@ class FieldValue
     /**
      * Keeps a non-negative attachment ID.
      *
-     * @since 0.8.0
-     *
      * @param mixed $value Submitted attachment ID.
      */
     private static function normalizeImage(mixed $value): int
@@ -358,8 +331,6 @@ class FieldValue
 
     /**
      * Casts an object or array into an array.
-     *
-     * @since 0.8.0
      *
      * @param mixed $value Object or array value.
      *
@@ -376,8 +347,6 @@ class FieldValue
 
     /**
      * Builds one REST schema property.
-     *
-     * @since 0.8.0
      *
      * @param array<string, mixed> $field Field schema.
      *

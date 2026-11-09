@@ -16,7 +16,6 @@ namespace WPB;
  * Invalid use of the fluent API reports here and returns control to the
  * caller. The request keeps running.
  *
- * @since  0.9.0
  * @author Renato Rodrigues Jr <juniorenato@msn.com>
  */
 class Notices
@@ -24,16 +23,12 @@ class Notices
     /**
      * Messages queued during this request.
      *
-     * @since 0.9.0
-     *
      * @var list<string>
      */
     private static array $errors = [];
 
     /**
      * Whether the admin notice hooks are registered.
-     *
-     * @since 0.9.0
      */
     private static bool $hooked = false;
 
@@ -41,8 +36,6 @@ class Notices
      * Queues a developer error for the admin panel.
      *
      * Repeated messages are stored once.
-     *
-     * @since 0.9.0
      *
      * @param string $message Error message.
      */
@@ -58,8 +51,6 @@ class Notices
 
     /**
      * Prints the queued errors for administrators.
-     *
-     * @since 0.9.0
      *
      * @see https://developer.wordpress.org/reference/hooks/admin_notices/
      */
@@ -94,8 +85,6 @@ class Notices
 
     /**
      * Registers the admin notice callbacks once.
-     *
-     * @since 0.9.0
      */
     private static function hook(): void
     {
