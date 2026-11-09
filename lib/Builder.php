@@ -10,8 +10,6 @@
 
 namespace WPB;
 
-use WPB\Blocks\Block;
-
 /**
  * Stores default library settings and loads translations.
  *
@@ -234,14 +232,13 @@ class Builder
     }
 
     /**
-     * Bootstraps library services hooked to `init`.
+     * Loads translations on `init`.
      *
      * @return static
      */
     public function build(): static
     {
         $this->i18n();
-        Block::hookCoreTemplates();
 
         return $this;
     }

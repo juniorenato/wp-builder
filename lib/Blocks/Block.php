@@ -260,6 +260,7 @@ class Block
     public function __construct(?string $name = null, ?string $title = null, mixed $render = null)
     {
         $this->init();
+        self::hookCoreTemplates();
 
         if ($name && $title && is_callable($render)) {
             $this->register($name, $title, $render);
@@ -842,13 +843,16 @@ class Block
     /**
      * Registers the public render filter for core blocks.
      *
+     * `new Block()` calls this. Call it alone when the theme replaces core
+     * blocks and does not register a block of its own.
+     *
      * @see https://developer.wordpress.org/reference/hooks/render_block/
      */
     public static function hookCoreTemplates(): void
     {
         static $hooked = false;
 
-        if ($hooked) {
+        if ($hooked || !function_exists('add_filter')) {
             return;
         }
 

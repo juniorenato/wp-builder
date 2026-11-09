@@ -726,7 +726,13 @@ Blocks saved in post meta, and any block with a repeater, load `assets/js/block-
 
 ### Core blocks
 
-`Builder` attaches a `render_block` filter. A theme file replaces the public HTML of a core block when the file exists. `core/paragraph` uses `template-parts/blocks/core/paragraph.php`. `core/image`, `core/group`, and `core/navigation` follow the same path: `template-parts/blocks/core/{slug}.php`.
+`new Block()` attaches a `render_block` filter. Call `Block::hookCoreTemplates()` when the theme replaces core blocks and does not construct a `Block`. A theme file replaces the public HTML of a core block when the file exists. `core/paragraph` uses `template-parts/blocks/core/paragraph.php`. `core/image`, `core/group`, and `core/navigation` follow the same path: `template-parts/blocks/core/{slug}.php`.
+
+```php
+use WPB\Blocks\Block;
+
+Block::hookCoreTemplates();
+```
 
 No file means the WordPress HTML is unchanged, and the admin shows no notice. The template output replaces the block. A template that prints nothing leaves the block empty.
 
