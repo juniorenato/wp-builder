@@ -10,8 +10,6 @@
 
 namespace WPB;
 
-use WPB\Blocks\Block;
-
 /**
  * Stores default library settings and loads translations.
  *
@@ -45,6 +43,16 @@ class Builder
         'PAGE'  => __DIR__ . '/../views/',
         'BLOCK' => __DIR__ . '/../views/blocks/',
     ];
+
+    /**
+     * Theme-relative directory for block CSS and JavaScript.
+     */
+    private static string $blockAssets = 'assets/public/blocks';
+
+    /**
+     * Theme-relative directory for public block PHP templates.
+     */
+    private static string $blockTemplates = 'template-parts/blocks';
 
     /**
      * Registers the library bootstrap for the given environment.
@@ -135,6 +143,103 @@ class Builder
         global $wp_builder;
 
         return self::THEME === $wp_builder;
+    }
+
+    /**
+     * Sets or reads the theme directory that holds block CSS and JavaScript.
+     *
+     * Pass a path to change it. Call with no argument to read the current one.
+     * `assets/public/blocks` is the default. `my-theme/cta` then uses
+     * `assets/public/blocks/my-theme/cta.css` and `.js` when {@see \WPB\Blocks\Block::assets()}
+     * is enabled. The child theme is checked first, then the parent.
+     *
+     * An empty path, or a path that leaves the theme with `..`, is ignored and
+     * reported in the WordPress admin.
+     *
+     * @param string|null $directory Theme-relative directory, without a leading slash.
+     *
+     * @return string Directory in effect.
+     */
+    public static function blockAssets(?string $directory = null): string
+    {
+        if ($directory === null) {
+            return self::$blockAssets;
+        }
+
+        $normalized = self::themeDirectory($directory, 'Block asset');
+
+        if ($normalized !== null) {
+            self::$blockAssets = $normalized;
+        }
+
+        return self::$blockAssets;
+    }
+
+    /**
+     * Sets or reads the theme directory that holds public block PHP templates.
+     *
+     * Pass a path to change it. Call with no argument to read the current one.
+     * `template-parts/blocks` is the default. `my-theme/team` then uses
+     * `template-parts/blocks/my-theme/team.php` when the block has no `template()`
+     * slug. Core block overrides use the same directory. The child theme is
+     * checked first, then the parent.
+     *
+     * An empty path, or a path that leaves the theme with `..`, is ignored and
+     * reported in the WordPress admin.
+     *
+     * @param string|null $directory Theme-relative directory, without a leading slash.
+     *
+     * @return string Directory in effect.
+     *
+     * @see https://developer.wordpress.org/reference/functions/locate_template/
+     */
+    public static function blockTemplates(?string $directory = null): string
+    {
+        if ($directory === null) {
+            return self::$blockTemplates;
+        }
+
+        $normalized = self::themeDirectory($directory, 'Block template');
+
+        if ($normalized !== null) {
+            self::$blockTemplates = $normalized;
+        }
+
+        return self::$blockTemplates;
+    }
+
+    /**
+     * Normalizes a theme-relative directory.
+     *
+     * @param string $directory Raw directory.
+     * @param string $label     Name used in the admin notice.
+     *
+     * @return string|null Normalized directory, or null when the value is rejected.
+     */
+    private static function themeDirectory(string $directory, string $label): ?string
+    {
+        $directory = trim(str_replace('\\', '/', $directory), " \t\n\r\0\x0B/");
+
+        if ($directory === '') {
+            Notices::error($label . ' directory cannot be empty.');
+
+            return null;
+        }
+
+        if (
+            str_contains($directory, "\0")
+            || str_contains($directory, '..')
+            || preg_match('/^[A-Za-z]:/', $directory) === 1
+        ) {
+            Notices::error(sprintf(
+                '%s directory must stay inside the theme and cannot contain "..".',
+                $label
+            ));
+
+            return null;
+        }
+
+        return $directory;
     }
 
     /**
@@ -234,14 +339,13 @@ class Builder
     }
 
     /**
-     * Bootstraps library services hooked to `init`.
+     * Loads translations on `init`.
      *
      * @return static
      */
     public function build(): static
     {
         $this->i18n();
-        Block::hookCoreTemplates();
 
         return $this;
     }
