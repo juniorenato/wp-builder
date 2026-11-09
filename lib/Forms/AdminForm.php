@@ -17,15 +17,12 @@ use WPB\Notices;
 /**
  * Builds, renders, sanitizes, and saves admin form fields.
  *
- * @since  0.2.0
  * @author Renato Rodrigues Jr <juniorenato@msn.com>
  */
 trait AdminForm
 {
     /**
      * Allowed field partial types.
-     *
-     * @since 0.2.0
      *
      * @var list<string>
      */
@@ -46,8 +43,6 @@ trait AdminForm
     /**
      * Allowed value storage types.
      *
-     * @since 0.2.0
-     *
      * @var list<string>
      */
     private const array ALLOWED_VALUE_TYPES = [
@@ -60,8 +55,6 @@ trait AdminForm
     /**
      * Allowed field layout types.
      *
-     * @since 0.2.0
-     *
      * @var list<string>
      */
     private const array ALLOWED_FIELDS_TYPES = [
@@ -73,15 +66,11 @@ trait AdminForm
 
     /**
      * Current object ID used when reading or writing values.
-     *
-     * @since 0.2.0
      */
     protected int $id = 0;
 
     /**
      * Field currently being rendered.
-     *
-     * @since 0.2.0
      *
      * @var array<string, mixed>
      */
@@ -90,23 +79,17 @@ trait AdminForm
     /**
      * Registered fields.
      *
-     * @since 0.2.0
-     *
      * @var array<string, array<string, mixed>>
      */
     public array $fields = [];
 
     /**
      * Current field layout type.
-     *
-     * @since 0.2.0
      */
     public string $fieldsType = '';
 
     /**
      * Field names persisted as post meta.
-     *
-     * @since 0.2.0
      *
      * @var list<string>
      */
@@ -114,15 +97,11 @@ trait AdminForm
 
     /**
      * Value storage type.
-     *
-     * @since 0.2.0
      */
     public string $valueType = '';
 
     /**
      * Renders the WordPress nonce field used by meta boxes.
-     *
-     * @since 0.2.0
      *
      * @see https://developer.wordpress.org/reference/functions/wp_create_nonce/
      * @see https://developer.wordpress.org/reference/functions/wp_nonce_field/
@@ -141,8 +120,6 @@ trait AdminForm
 
     /**
      * Saves registered meta fields for a post.
-     *
-     * @since 0.2.0
      *
      * @param int      $post_id Post ID.
      * @param \WP_Post $post    Post object being saved.
@@ -192,8 +169,6 @@ trait AdminForm
     /**
      * Registers a form field.
      *
-     * @since 0.2.0
-     *
      * @param string               $type        Field type.
      * @param string               $name        Field name.
      * @param string               $label       Field label.
@@ -223,8 +198,6 @@ trait AdminForm
 
     /**
      * Builds a field configuration without registering it.
-     *
-     * @since 0.9.0
      *
      * @param string               $type        Field type.
      * @param string               $name        Field name.
@@ -288,8 +261,6 @@ trait AdminForm
     /**
      * Stores a field configuration.
      *
-     * @since 0.9.0
-     *
      * @param array<string, mixed> $field Field configuration.
      */
     protected function registerDefinedField(array $field): void
@@ -307,8 +278,6 @@ trait AdminForm
     /**
      * Adds a text field.
      *
-     * @since 0.2.0
-     *
      * @param string               $name        Field name.
      * @param string               $label       Field label.
      * @param string               $description Field description.
@@ -322,8 +291,6 @@ trait AdminForm
 
     /**
      * Builds a text field configuration.
-     *
-     * @since 0.9.0
      *
      * @param string               $name        Field name.
      * @param string               $label       Field label.
@@ -343,8 +310,6 @@ trait AdminForm
 
     /**
      * Adds a select field.
-     *
-     * @since 0.2.0
      *
      * @param string                   $name        Field name.
      * @param string                   $label       Field label.
@@ -377,8 +342,6 @@ trait AdminForm
     /**
      * Builds a select field configuration.
      *
-     * @since 0.9.0
-     *
      * @param string                   $name        Field name.
      * @param string                   $label       Field label.
      * @param array<string|int, mixed> $options     Select options.
@@ -410,8 +373,6 @@ trait AdminForm
     /**
      * Adds a textarea field.
      *
-     * @since 0.2.0
-     *
      * @param string               $name        Field name.
      * @param string               $label       Field label.
      * @param string               $description Field description.
@@ -425,8 +386,6 @@ trait AdminForm
 
     /**
      * Builds a textarea field configuration.
-     *
-     * @since 0.9.0
      *
      * @param string               $name        Field name.
      * @param string               $label       Field label.
@@ -448,8 +407,6 @@ trait AdminForm
     /**
      * Adds a number field.
      *
-     * @since 0.2.0
-     *
      * @param string               $name        Field name.
      * @param string               $label       Field label.
      * @param string               $description Field description.
@@ -463,8 +420,6 @@ trait AdminForm
 
     /**
      * Builds a number field configuration.
-     *
-     * @since 0.9.0
      *
      * @param string               $name        Field name.
      * @param string               $label       Field label.
@@ -489,8 +444,6 @@ trait AdminForm
      * The control opens the WordPress media modal. One image is stored as an
      * attachment ID, or as an empty string when none is chosen. Several images
      * are stored as a list of attachment IDs.
-     *
-     * @since 0.9.0
      *
      * @param string               $name        Field name.
      * @param string               $label       Field label.
@@ -519,8 +472,6 @@ trait AdminForm
 
     /**
      * Builds an image field configuration.
-     *
-     * @since 0.9.0
      *
      * @param string               $name        Field name.
      * @param string               $label       Field label.
@@ -565,8 +516,6 @@ trait AdminForm
      * stored as an attachment ID, or as an empty string when none is chosen.
      * Several files are stored as a list of attachment IDs.
      *
-     * @since 0.9.0
-     *
      * @param string               $name        Field name.
      * @param string               $label       Field label.
      * @param string               $description Field description.
@@ -594,8 +543,6 @@ trait AdminForm
 
     /**
      * Builds a file field configuration.
-     *
-     * @since 0.9.0
      *
      * @param string               $name        Field name.
      * @param string               $label       Field label.
@@ -636,8 +583,6 @@ trait AdminForm
     /**
      * Adds a radio field.
      *
-     * @since 0.2.0
-     *
      * @param string                   $name        Field name.
      * @param string                   $label       Field label.
      * @param array<string|int, mixed> $options     Radio options.
@@ -652,8 +597,6 @@ trait AdminForm
 
     /**
      * Builds a radio field configuration.
-     *
-     * @since 0.9.0
      *
      * @param string                   $name        Field name.
      * @param string                   $label       Field label.
@@ -686,8 +629,6 @@ trait AdminForm
     /**
      * Adds a checkbox field.
      *
-     * @since 0.2.0
-     *
      * @param string                   $name        Field name.
      * @param string                   $label       Field label.
      * @param array<string|int, mixed> $options     Checkbox options.
@@ -718,8 +659,6 @@ trait AdminForm
 
     /**
      * Builds a checkbox field configuration.
-     *
-     * @since 0.9.0
      *
      * @param string                   $name        Field name.
      * @param string                   $label       Field label.
@@ -758,8 +697,6 @@ trait AdminForm
     /**
      * Adds a rich text field.
      *
-     * @since 0.2.0
-     *
      * @param string               $name           Field name.
      * @param string               $label          Field label.
      * @param array<string, mixed> $editorSettings `wp_editor()` settings.
@@ -787,8 +724,6 @@ trait AdminForm
     /**
      * Builds a rich text field configuration.
      *
-     * @since 0.9.0
-     *
      * @param string               $name           Field name.
      * @param string               $label          Field label.
      * @param array<string, mixed> $editorSettings `wp_editor()` settings.
@@ -815,8 +750,6 @@ trait AdminForm
 
     /**
      * Adds a repeater stored in one meta key or option.
-     *
-     * @since 0.9.0
      *
      * @param string $name        Field name.
      * @param string $label       Field label.
@@ -857,8 +790,6 @@ trait AdminForm
 
     /**
      * Reads a stored value by the current value type.
-     *
-     * @since 0.2.0
      *
      * @param string      $key  Meta or option key.
      * @param string|null $type Optional value type override.
@@ -922,8 +853,6 @@ trait AdminForm
     /**
      * Writes a value by the current value type.
      *
-     * @since 0.2.0
-     *
      * @param string $key   Meta or option key.
      * @param mixed  $value Value to store.
      *
@@ -976,8 +905,6 @@ trait AdminForm
     /**
      * Validates a field type and ensures its partial exists.
      *
-     * @since 0.2.0
-     *
      * @param string $type Field type.
      *
      * @return string Sanitized field type, or an empty string when the type is rejected.
@@ -1025,8 +952,6 @@ trait AdminForm
     /**
      * Validates a field layout type.
      *
-     * @since 0.2.0
-     *
      * @param string $type Layout type.
      *
      * @return string Sanitized layout type, or an empty string when the type is rejected.
@@ -1052,8 +977,6 @@ trait AdminForm
 
     /**
      * Validates a value storage type.
-     *
-     * @since 0.2.0
      *
      * @param string $type Value type.
      *
@@ -1081,8 +1004,6 @@ trait AdminForm
     /**
      * Returns the absolute path of a field partial.
      *
-     * @since 0.2.0
-     *
      * @param string $type Field type.
      *
      * @return string Absolute partial path, or an empty string when the field type is invalid.
@@ -1100,8 +1021,6 @@ trait AdminForm
 
     /**
      * Sanitizes a submitted field value.
-     *
-     * @since 0.2.0
      *
      * @param array<string, mixed> $field Field configuration.
      * @param mixed                $value Submitted value.
@@ -1165,8 +1084,6 @@ trait AdminForm
     /**
      * Sanitizes a repeater into a list of known fields.
      *
-     * @since 0.9.0
-     *
      * @param array<string, mixed> $field Repeater schema.
      * @param mixed                $value Submitted rows.
      *
@@ -1212,8 +1129,6 @@ trait AdminForm
     /**
      * Returns the live repeater schema when the builder is still attached.
      *
-     * @since 0.9.0
-     *
      * @param array<string, mixed> $field Field configuration.
      *
      * @return array<string, mixed> Repeater schema.
@@ -1231,8 +1146,6 @@ trait AdminForm
 
     /**
      * Returns the value used when a repeater subfield was not submitted.
-     *
-     * @since 0.9.0
      *
      * @param array<string, mixed> $field Field configuration.
      *
@@ -1259,8 +1172,6 @@ trait AdminForm
 
     /**
      * Reads a field value from the current request.
-     *
-     * @since 0.2.0
      *
      * @param array<string, mixed> $field Field configuration.
      *
@@ -1295,8 +1206,6 @@ trait AdminForm
     /**
      * Builds the CSS class list for an admin field.
      *
-     * @since 0.2.0
-     *
      * @param string $baseClass       Default WordPress admin class.
      * @param string $class           Extra classes.
      * @param bool   $addRegularText  Whether to append `$baseClass` when `widefat` is absent.
@@ -1320,8 +1229,6 @@ trait AdminForm
 
     /**
      * Returns the absolute path of the field wrapper view.
-     *
-     * @since 0.2.0
      *
      * @param string $type Field type.
      *
@@ -1349,8 +1256,6 @@ trait AdminForm
 
     /**
      * Renders a single field.
-     *
-     * @since 0.2.0
      *
      * @param array<string, mixed> $field Field configuration.
      *
@@ -1380,8 +1285,6 @@ trait AdminForm
     /**
      * Renders one repeater subfield.
      *
-     * @since 0.9.0
-     *
      * @param array<string, mixed> $field Field configuration.
      */
     protected function renderControl(array $field): void
@@ -1400,8 +1303,6 @@ trait AdminForm
     /**
      * Renders one repeater row.
      *
-     * @since 0.9.0
-     *
      * @param Repeater                 $repeater Repeater level that owns the row.
      * @param array<string, mixed>     $schema   Repeater schema.
      * @param array<string, mixed>     $item     Saved row.
@@ -1416,8 +1317,6 @@ trait AdminForm
      * Prints the repeater script and styles.
      *
      * Styles are printed inline when the admin header has already rendered.
-     *
-     * @since 0.9.0
      *
      * @see https://developer.wordpress.org/reference/functions/wp_enqueue_script/
      */
@@ -1477,8 +1376,6 @@ trait AdminForm
      * Prints the media modal script and the image field styles.
      *
      * Styles are printed inline when the admin header has already rendered.
-     *
-     * @since 0.9.0
      *
      * @see https://developer.wordpress.org/reference/functions/wp_enqueue_media/
      */
@@ -1541,8 +1438,6 @@ trait AdminForm
     /**
      * Keeps one attachment ID, or a list of IDs when several are allowed.
      *
-     * @since 0.9.0
-     *
      * @param mixed $value      Submitted value.
      * @param bool  $multiple   Whether several attachments are allowed.
      * @param bool  $imagesOnly Whether only image attachments are kept.
@@ -1578,8 +1473,6 @@ trait AdminForm
     /**
      * Keeps a positive attachment ID and clears every other value.
      *
-     * @since 0.9.0
-     *
      * @param mixed $value      Submitted value.
      * @param bool  $imagesOnly Whether a non-image attachment is cleared.
      *
@@ -1607,8 +1500,6 @@ trait AdminForm
     /**
      * Renders all registered fields.
      *
-     * @since 0.2.0
-     *
      * @param string $fieldsType Optional layout type override.
      *
      * An invalid layout type is reported in the WordPress admin and rendering stops.
@@ -1632,8 +1523,6 @@ trait AdminForm
 
     /**
      * Saves all registered fields from the current request.
-     *
-     * @since 0.2.0
      */
     protected function saveFieldsFromPost(): void
     {
@@ -1651,8 +1540,6 @@ trait AdminForm
 
     /**
      * Converts an attribute map into an HTML attribute string.
-     *
-     * @since 0.2.0
      *
      * @param array<string, mixed> $arr_attributes Attribute map.
      *
@@ -1684,8 +1571,6 @@ trait AdminForm
 
     /**
      * Renders the registered fields using the current layout.
-     *
-     * @since 0.2.0
      */
     protected function field(): void
     {

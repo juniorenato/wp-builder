@@ -20,15 +20,12 @@ use WPB\Notices;
  * `false` skips that entry. A bare method name uses the method default.
  * `enableAll()` turns every feature on with those defaults.
  *
- * @since  0.10.0
  * @author Renato Rodrigues Jr <juniorenato@msn.com>
  */
 class Performance
 {
     /**
      * Mime types rebuilt by the dashboard regenerate button.
-     *
-     * @since 0.10.0
      *
      * @var list<string>
      */
@@ -42,65 +39,47 @@ class Performance
     /**
      * Features already hooked on this instance.
      *
-     * @since 0.10.0
-     *
      * @var array<string, true>
      */
     private array $active = [];
 
     /**
      * Heartbeat interval in seconds.
-     *
-     * @since 0.10.0
      */
     private int $heartbeatInterval = 60;
 
     /**
      * Revisions kept for post types that support them.
-     *
-     * @since 0.10.0
      */
     private int $revisionLimit = 5;
 
     /**
      * Days before trashed posts and comments are deleted.
-     *
-     * @since 0.10.0
      */
     private int $trashDays = 7;
 
     /**
      * Longest edge kept for a new upload, in pixels.
-     *
-     * @since 0.10.0
      */
     private int $imageMaxEdge = 2048;
 
     /**
      * Quality used when saving AVIF or WebP.
-     *
-     * @since 0.10.0
      */
     private int $imageQuality = 75;
 
     /**
      * Attachment image size preloaded as the LCP candidate.
-     *
-     * @since 0.10.0
      */
     private string $lcpImageSize = 'large';
 
     /**
      * Page cache started by this instance.
-     *
-     * @since 0.10.0
      */
     private ?PageCache $cache = null;
 
     /**
      * Enables the given performance features.
-     *
-     * @since 0.10.0
      *
      * @param array<int|string, bool|int|string> $features Method names, or names mapped to an argument.
      */
@@ -122,8 +101,6 @@ class Performance
 
     /**
      * Removes emoji scripts, styles, mail rewriting, and the emoji CDN hint.
-     *
-     * @since 0.10.0
      *
      * @see https://developer.wordpress.org/reference/functions/print_emoji_detection_script/
      * @see https://developer.wordpress.org/reference/functions/wp_enqueue_emoji_styles/
@@ -151,8 +128,6 @@ class Performance
     /**
      * Removes the emoji plugin from TinyMCE.
      *
-     * @since 0.10.0
-     *
      * @param string[] $plugins TinyMCE plugin slugs.
      *
      * @return string[]
@@ -166,8 +141,6 @@ class Performance
      * Drops resource hints that point at the emoji CDN.
      *
      * Other `s.w.org` hints stay. Current WordPress also hosts fonts there.
-     *
-     * @since 0.10.0
      *
      * @param array<int, mixed> $urls         Hint URLs.
      * @param string            $relationType Relation type such as `dns-prefetch`.
@@ -193,8 +166,6 @@ class Performance
     /**
      * Removes RSD, WLW, generator, shortlink, and adjacent-post links from `wp_head`.
      *
-     * @since 0.10.0
-     *
      * @see https://developer.wordpress.org/reference/functions/wp_generator/
      */
     public function cleanHead(): void
@@ -212,8 +183,6 @@ class Performance
 
     /**
      * Stops WordPress from enqueueing `wp-embed` and printing oEmbed discovery links.
-     *
-     * @since 0.10.0
      *
      * @see https://developer.wordpress.org/reference/functions/wp_oembed_add_host_js/
      * @see https://developer.wordpress.org/reference/functions/wp_maybe_enqueue_oembed_host_js/
@@ -234,8 +203,6 @@ class Performance
     /**
      * Dequeues and deregisters the embed host script.
      *
-     * @since 0.10.0
-     *
      * @see https://developer.wordpress.org/reference/functions/wp_dequeue_script/
      */
     public function dequeueEmbed(): void
@@ -249,8 +216,6 @@ class Performance
      *
      * WordPress accepts 1 to 3600 seconds and then converts that value to
      * milliseconds. A value outside the range falls back to 60.
-     *
-     * @since 0.10.0
      *
      * @param int $seconds Interval in seconds.
      *
@@ -267,8 +232,6 @@ class Performance
 
     /**
      * Applies the configured Heartbeat interval.
-     *
-     * @since 0.10.0
      *
      * @param array<string, mixed> $settings Heartbeat settings.
      *
@@ -289,8 +252,6 @@ class Performance
      * that post is saved. `0` disables revisions. A constant set to `0` or
      * `false` stays off.
      *
-     * @since 0.10.0
-     *
      * @param int $limit Maximum revisions to keep.
      *
      * @see https://developer.wordpress.org/reference/hooks/wp_revisions_to_keep/
@@ -306,8 +267,6 @@ class Performance
 
     /**
      * Returns the revision cap for a post type that supports revisions.
-     *
-     * @since 0.10.0
      *
      * @param int      $number Revisions requested by WordPress.
      * @param \WP_Post $post   Post being saved.
@@ -330,8 +289,6 @@ class Performance
      * the `wp_scheduled_delete` callback. Auto-drafts stay on their own cron.
      * `0` deletes trash on the next daily run.
      *
-     * @since 0.10.0
-     *
      * @param int $days Days to keep trash.
      *
      * @see https://developer.wordpress.org/reference/functions/wp_scheduled_delete/
@@ -348,8 +305,6 @@ class Performance
 
     /**
      * Swaps the core trash callback for {@see self::deleteExpiredTrash()}.
-     *
-     * @since 0.10.0
      */
     public function replaceTrashCleanup(): void
     {
@@ -364,8 +319,6 @@ class Performance
      * Deletes trash older than the configured number of days.
      *
      * Same queries as `wp_scheduled_delete()`, with the day count from this class.
-     *
-     * @since 0.10.0
      *
      * @global \wpdb $wpdb WordPress database abstraction.
      */
@@ -432,8 +385,6 @@ class Performance
      *
      * A dimension, quality, or LCP size already set on this instance stays.
      * The defaults are 2048 pixels, quality 75, and the `large` size.
-     *
-     * @since 0.10.0
      */
     public function images(): void
     {
@@ -490,8 +441,6 @@ class Performance
      * WordPress stores a `-scaled` file when the upload is larger and keeps
      * the original for editing. A value below 1 uses 2048.
      *
-     * @since 0.10.0
-     *
      * @param int $pixels Longest edge in pixels.
      *
      * @see https://developer.wordpress.org/reference/hooks/big_image_size_threshold/
@@ -508,8 +457,6 @@ class Performance
     /**
      * Returns the configured longest edge.
      *
-     * @since 0.10.0
-     *
      * @return int
      */
     public function bigImageSizeThreshold(): int
@@ -524,8 +471,6 @@ class Performance
      * converts JPEG to sRGB before the profile is removed. WebP and AVIF are
      * stripped only when Imagick is available, so they are not encoded twice.
      *
-     * @since 0.10.0
-     *
      * @see https://developer.wordpress.org/reference/hooks/wp_handle_upload/
      */
     public function stripImageMetadata(): void
@@ -539,8 +484,6 @@ class Performance
 
     /**
      * Strips metadata from one uploaded image.
-     *
-     * @since 0.10.0
      *
      * @param array<string, mixed> $upload Upload result with `file`, `url`, and `type`.
      *
@@ -571,8 +514,6 @@ class Performance
      * as it is. A JPEG or PNG that is already within the size threshold also
      * gets one full-size modern file next to the original.
      *
-     * @since 0.10.0
-     *
      * @see https://developer.wordpress.org/reference/hooks/image_editor_output_format/
      * @see https://developer.wordpress.org/reference/hooks/wp_generate_attachment_metadata/
      */
@@ -591,8 +532,6 @@ class Performance
      *
      * JPEG and PNG keep the editor default. A value outside 1–100 uses 75.
      *
-     * @since 0.10.0
-     *
      * @param int $quality Encoder quality from 1 to 100.
      *
      * @see https://developer.wordpress.org/reference/hooks/wp_editor_set_quality/
@@ -608,8 +547,6 @@ class Performance
 
     /**
      * Returns the modern-format quality and leaves other mime types unchanged.
-     *
-     * @since 0.10.0
      *
      * @param int    $quality  Quality requested by the editor.
      * @param string $mimeType Mime type being saved.
@@ -630,8 +567,6 @@ class Performance
      *
      * Thumbnail, medium, and large stay. `medium_large`, 1536, and 2048 are removed.
      *
-     * @since 0.10.0
-     *
      * @see https://developer.wordpress.org/reference/hooks/intermediate_image_sizes_advanced/
      */
     public function disableExtraImageSizes(): void
@@ -645,8 +580,6 @@ class Performance
 
     /**
      * Removes the extra default sizes from a size list.
-     *
-     * @since 0.10.0
      *
      * @param array<string, mixed> $sizes Registered intermediate sizes.
      *
@@ -664,8 +597,6 @@ class Performance
      *
      * The smallest candidate stays when every source is wider than that cap.
      *
-     * @since 0.10.0
-     *
      * @see https://developer.wordpress.org/reference/hooks/wp_calculate_image_srcset/
      */
     public function capImageDensity(): void
@@ -679,8 +610,6 @@ class Performance
 
     /**
      * Removes srcset sources above the 2x cap.
-     *
-     * @since 0.10.0
      *
      * @param array<int, array<string, mixed>> $sources   Sources keyed by width.
      * @param array<int, int>                  $sizeArray Requested width and height.
@@ -730,8 +659,6 @@ class Performance
      *
      * AVIF wins when both files exist. JPEG and PNG URLs stay when neither does.
      *
-     * @since 0.10.0
-     *
      * @see https://developer.wordpress.org/reference/hooks/wp_get_attachment_image_src/
      * @see https://developer.wordpress.org/reference/hooks/wp_calculate_image_srcset/
      * @see https://developer.wordpress.org/reference/hooks/wp_content_img_tag/
@@ -749,8 +676,6 @@ class Performance
 
     /**
      * Swaps one attachment image URL for its modern sibling.
-     *
-     * @since 0.10.0
      *
      * @param mixed $image Image data `[url, width, height, is_intermediate]`, or false.
      *
@@ -770,8 +695,6 @@ class Performance
     /**
      * Swaps each srcset URL for its modern sibling.
      *
-     * @since 0.10.0
-     *
      * @param array<int, array<string, mixed>> $sources Sources keyed by width.
      *
      * @return array<int, array<string, mixed>>
@@ -789,8 +712,6 @@ class Performance
 
     /**
      * Swaps `src` and `srcset` in a content image for modern siblings.
-     *
-     * @since 0.10.0
      *
      * @param string $image Image tag.
      *
@@ -829,8 +750,6 @@ class Performance
      * An existing `sizes` value stays. The formula matches WordPress:
      * `(max-width: {width}px) 100vw, {width}px`.
      *
-     * @since 0.10.0
-     *
      * @see https://developer.wordpress.org/reference/hooks/wp_get_attachment_image_attributes/
      * @see https://developer.wordpress.org/reference/hooks/wp_content_img_tag/
      */
@@ -846,8 +765,6 @@ class Performance
 
     /**
      * Adds `sizes` when an attachment image has a width and no `sizes`.
-     *
-     * @since 0.10.0
      *
      * @param array<string, string> $attributes Image attributes.
      *
@@ -872,8 +789,6 @@ class Performance
 
     /**
      * Adds `sizes` when a content image has a width and no `sizes`.
-     *
-     * @since 0.10.0
      *
      * @param string $image Image tag.
      *
@@ -908,8 +823,6 @@ class Performance
      * On a singular view the queried post thumbnail gets `fetchpriority="high"`.
      * `$size` is the size used in the preload tag. An empty size uses `large`.
      *
-     * @since 0.10.0
-     *
      * @param string $size Attachment image size.
      *
      * @see https://developer.wordpress.org/reference/hooks/wp_get_attachment_image_attributes/
@@ -926,8 +839,6 @@ class Performance
 
     /**
      * Marks the queried post thumbnail as the high-priority image.
-     *
-     * @since 0.10.0
      *
      * @param array<string, string> $attributes Image attributes.
      * @param mixed                 $attachment Attachment post.
@@ -949,8 +860,6 @@ class Performance
 
     /**
      * Prints a preload tag for the queried post thumbnail.
-     *
-     * @since 0.10.0
      */
     public function preloadFeaturedImage(): void
     {
@@ -1002,8 +911,6 @@ class Performance
      * Images with `fetchpriority="high"` are unchanged. Lazy loading is added
      * only when the tag already has width and height.
      *
-     * @since 0.10.0
-     *
      * @see https://developer.wordpress.org/reference/hooks/wp_get_attachment_image_attributes/
      * @see https://developer.wordpress.org/reference/hooks/wp_content_img_tag/
      */
@@ -1020,8 +927,6 @@ class Performance
     /**
      * Adds the dashboard box that regenerates existing images.
      *
-     * @since 0.10.0
-     *
      * @see https://developer.wordpress.org/reference/functions/wp_add_dashboard_widget/
      */
     public function registerImageDashboard(): void
@@ -1037,8 +942,6 @@ class Performance
 
     /**
      * Adds the image box for administrators.
-     *
-     * @since 0.10.0
      */
     public function addImageDashboard(): void
     {
@@ -1055,8 +958,6 @@ class Performance
 
     /**
      * Prints the dashboard image box.
-     *
-     * @since 0.10.0
      */
     public function renderImageDashboard(): void
     {
@@ -1065,8 +966,6 @@ class Performance
 
     /**
      * Loads the regenerate script on the dashboard.
-     *
-     * @since 0.10.0
      *
      * @param string $hook Current admin page hook.
      */
@@ -1099,8 +998,6 @@ class Performance
 
     /**
      * Regenerates one batch of existing images and returns JSON.
-     *
-     * @since 0.10.0
      */
     public function regenerateImages(): void
     {
@@ -1120,8 +1017,6 @@ class Performance
 
     /**
      * Regenerates up to three images, always at least one when any remain.
-     *
-     * @since 0.10.0
      *
      * @param int $offset Images already handled in this run.
      * @param int $failed Images that failed earlier in this run.
@@ -1163,8 +1058,6 @@ class Performance
     /**
      * Counts JPEG, PNG, WebP, and AVIF attachments.
      *
-     * @since 0.10.0
-     *
      * @return int
      */
     public function imageAttachmentCount(): int
@@ -1186,8 +1079,6 @@ class Performance
 
     /**
      * Maps JPEG and PNG output to AVIF or WebP.
-     *
-     * @since 0.10.0
      *
      * @param array<string, string> $formats Source mime type to output mime type.
      *
@@ -1213,8 +1104,6 @@ class Performance
      * Scaled uploads are already stored in the modern format, so this returns
      * the metadata unchanged when the attached file is AVIF or WebP. An existing
      * sibling is left in place.
-     *
-     * @since 0.10.0
      *
      * @param array<string, mixed> $metadata     Attachment metadata.
      * @param int                  $attachmentId Attachment ID.
@@ -1265,8 +1154,6 @@ class Performance
     /**
      * Adds lazy loading and async decoding to an attachment image.
      *
-     * @since 0.10.0
-     *
      * @param array<string, string> $attributes Image attributes.
      *
      * @return array<string, string>
@@ -1293,8 +1180,6 @@ class Performance
 
     /**
      * Adds lazy loading and async decoding to an image tag in content.
-     *
-     * @since 0.10.0
      *
      * @param string $image Image tag.
      *
@@ -1337,8 +1222,6 @@ class Performance
      * Heartbeat, revisions, trash, and the page cache keep a value already set
      * on this instance. The defaults are 60 seconds, 5 revisions, 7 days, and
      * a cache lifetime of 3600 seconds. Image defaults stay inside `images()`.
-     *
-     * @since 0.10.0
      */
     public function enableAll(): void
     {
@@ -1375,8 +1258,6 @@ class Performance
      * and any pages linked to the post type. `$seconds` is how long a file
      * stays valid. A value below 1 uses 3600.
      *
-     * @since 0.10.0
-     *
      * @param int $seconds Cache lifetime in seconds.
      */
     public function enableCache(int $seconds = 3600): void
@@ -1395,8 +1276,6 @@ class Performance
 
     /**
      * Returns a page of image attachment IDs.
-     *
-     * @since 0.10.0
      *
      * @param int $offset Number of images to skip.
      * @param int $limit  Maximum IDs to return.
@@ -1430,8 +1309,6 @@ class Performance
      * Old generated files that the new metadata does not use are removed.
      * The original file stays.
      *
-     * @since 0.10.0
-     *
      * @param int $attachmentId Attachment ID.
      *
      * @return bool False when the file is missing or the editor cannot read it.
@@ -1463,8 +1340,6 @@ class Performance
 
     /**
      * Builds the status line for a regenerate batch.
-     *
-     * @since 0.10.0
      *
      * @param int  $done   Images handled so far.
      * @param int  $total  Images in the library.
@@ -1503,8 +1378,6 @@ class Performance
     /**
      * Resolves the original upload for an attachment.
      *
-     * @since 0.10.0
-     *
      * @param int $attachmentId Attachment ID.
      *
      * @return string|null Absolute path, or null when the file is missing.
@@ -1528,8 +1401,6 @@ class Performance
 
     /**
      * Lists generated files for an attachment, excluding the original.
-     *
-     * @since 0.10.0
      *
      * @param int    $attachmentId Attachment ID.
      * @param string $original     Absolute path of the original file.
@@ -1580,8 +1451,6 @@ class Performance
     /**
      * Returns AVIF and WebP paths beside an image.
      *
-     * @since 0.10.0
-     *
      * @param string $path Absolute path.
      *
      * @return list<string>
@@ -1603,8 +1472,6 @@ class Performance
 
     /**
      * Deletes generated files that the new metadata no longer uses.
-     *
-     * @since 0.10.0
      *
      * @param list<string> $previous Paths collected before the rebuild.
      * @param list<string> $current  Paths collected after the rebuild.
@@ -1652,8 +1519,6 @@ class Performance
     /**
      * Strips one image file, rotating JPEG and converting it to sRGB first.
      *
-     * @since 0.10.0
-     *
      * @param string $file Absolute path.
      * @param string $mime Mime type.
      */
@@ -1673,8 +1538,6 @@ class Performance
      *
      * Imagick chooses the output format from the extension.
      *
-     * @since 0.10.0
-     *
      * @param string $file Absolute path.
      *
      * @return string
@@ -1689,8 +1552,6 @@ class Performance
 
     /**
      * Rewrites one image in place with Imagick.
-     *
-     * @since 0.10.0
      *
      * @param string $file Absolute path.
      * @param string $mime Mime type.
@@ -1756,8 +1617,6 @@ class Performance
     /**
      * Rewrites a JPEG or PNG with GD, which drops embedded metadata.
      *
-     * @since 0.10.0
-     *
      * @param string $file Absolute path.
      * @param string $mime Mime type.
      */
@@ -1800,8 +1659,6 @@ class Performance
     /**
      * Loads a JPEG or PNG into GD.
      *
-     * @since 0.10.0
-     *
      * @param string $file Absolute path.
      * @param string $mime Mime type.
      *
@@ -1822,8 +1679,6 @@ class Performance
 
     /**
      * Rotates a JPEG resource from its EXIF orientation.
-     *
-     * @since 0.10.0
      *
      * @param \GdImage $image GD image.
      * @param string   $file  Absolute path used to read EXIF.
@@ -1857,8 +1712,6 @@ class Performance
     /**
      * Reads EXIF data, ignoring warnings from malformed files.
      *
-     * @since 0.10.0
-     *
      * @param string $file Absolute path.
      *
      * @return array<string, mixed>
@@ -1883,8 +1736,6 @@ class Performance
     /**
      * Returns AVIF when the editor supports it, otherwise WebP.
      *
-     * @since 0.10.0
-     *
      * @return string|null Null when neither format can be saved.
      */
     private function modernImageMime(): ?string
@@ -1907,8 +1758,6 @@ class Performance
     /**
      * Replaces the extension of a filesystem path.
      *
-     * @since 0.10.0
-     *
      * @param string $path      Absolute path.
      * @param string $extension New extension without the dot.
      *
@@ -1928,8 +1777,6 @@ class Performance
 
     /**
      * Returns an upload URL, swapping JPEG or PNG for an existing modern file.
-     *
-     * @since 0.10.0
      *
      * @param string $url Attachment URL.
      *
@@ -1972,8 +1819,6 @@ class Performance
     /**
      * Rewrites each URL in a srcset attribute.
      *
-     * @since 0.10.0
-     *
      * @param string $srcset Srcset attribute value.
      *
      * @return string
@@ -2002,8 +1847,6 @@ class Performance
 
     /**
      * Resolves an upload URL to a real file inside the uploads directory.
-     *
-     * @since 0.10.0
      *
      * @param string $url Upload URL without a query string.
      *
@@ -2046,8 +1889,6 @@ class Performance
     /**
      * Reports whether an attachment is the thumbnail of the queried singular post.
      *
-     * @since 0.10.0
-     *
      * @param mixed $attachment Attachment passed by WordPress.
      *
      * @return bool
@@ -2069,8 +1910,6 @@ class Performance
 
     /**
      * Hooks one named feature.
-     *
-     * @since 0.10.0
      *
      * @param string $feature  Method name.
      * @param mixed  $argument Constructor argument for that method.
@@ -2106,8 +1945,6 @@ class Performance
 
     /**
      * Records a feature the first time it is enabled.
-     *
-     * @since 0.10.0
      *
      * @param string $feature Feature name.
      *

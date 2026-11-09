@@ -17,7 +17,6 @@ use WPB\Forms\PostTypeMetaBox;
 /**
  * Stores labels, rewrite rules, supports, and arguments for a post type.
  *
- * @since  0.2.0
  * @author Renato Rodrigues Jr <juniorenato@msn.com>
  *
  * @see https://developer.wordpress.org/reference/functions/register_post_type/
@@ -29,8 +28,6 @@ class PostType
 
     /**
      * Accepted `register_post_type()` argument keys.
-     *
-     * @since 0.2.0
      *
      * @var list<string>
      *
@@ -76,36 +73,26 @@ class PostType
 
     /**
      * Post type slug.
-     *
-     * @since 0.2.0
      */
     protected string $postType;
 
     /**
      * Singular label.
-     *
-     * @since 0.2.0
      */
     protected string $singular;
 
     /**
      * Plural label.
-     *
-     * @since 0.2.0
      */
     protected string $plural;
 
     /**
      * Whether generated labels use the masculine form.
-     *
-     * @since 0.2.0
      */
     protected bool $male;
 
     /**
      * Post type labels.
-     *
-     * @since 0.2.0
      *
      * @var array<string, string>
      */
@@ -113,15 +100,11 @@ class PostType
 
     /**
      * Whether default translated labels have been generated.
-     *
-     * @since 0.2.0
      */
     protected bool $defaultLabelsBuilt = false;
 
     /**
      * Rewrite arguments.
-     *
-     * @since 0.2.0
      *
      * @var array<string, mixed>
      */
@@ -130,16 +113,12 @@ class PostType
     /**
      * Attached taxonomy slugs.
      *
-     * @since 0.2.0
-     *
      * @var list<string>
      */
     protected array $taxonomies;
 
     /**
      * Supported editor features.
-     *
-     * @since 0.2.0
      *
      * @var array<int|string, mixed>
      */
@@ -148,16 +127,12 @@ class PostType
     /**
      * Arguments passed to `register_post_type()`.
      *
-     * @since 0.2.0
-     *
      * @var array<string, mixed>
      */
     protected array $args;
 
     /**
      * Sets the post type slug.
-     *
-     * @since 0.2.0
      *
      * @param string $postType Post type key.
      *
@@ -174,8 +149,6 @@ class PostType
 
     /**
      * Builds the default post type labels.
-     *
-     * @since 0.2.0
      *
      * @param string $singular Singular name.
      * @param string $plural   Plural name.
@@ -201,8 +174,6 @@ class PostType
 
     /**
      * Builds the default translated post type labels.
-     *
-     * @since 0.2.0
      *
      * @see https://developer.wordpress.org/reference/functions/get_post_type_labels/
      */
@@ -296,8 +267,6 @@ class PostType
      * - item_link
      * - item_link_description
      *
-     * @since 0.2.0
-     *
      * @param string|array<string, string> $labels   Label key or a map of labels.
      * @param string|null                  $val      Label value when `$labels` is a key.
      * @param bool                         $ucfirst  Whether to uppercase the first character.
@@ -331,8 +300,6 @@ class PostType
      * - feeds
      * - pages
      * - ep_mask
-     *
-     * @since 0.2.0
      *
      * @param bool|string|array<string, mixed> $rewrite Rewrite flag, key, or map of values.
      * @param string|null                      $val     Value when `$rewrite` is a key.
@@ -382,8 +349,6 @@ class PostType
      * - page-attributes
      * - post-formats
      *
-     * @since 0.2.0
-     *
      * @param string|array<int|string, mixed> $supports Feature name or map of features.
      * @param int|string|bool|null            $val      Value when `$supports` is a feature name.
      *
@@ -407,8 +372,6 @@ class PostType
 
     /**
      * Attaches taxonomies to the post type.
-     *
-     * @since 0.2.0
      *
      * @param string|list<string> $taxonomies Taxonomy slug or list of slugs.
      *
@@ -469,8 +432,6 @@ class PostType
      * - _builtin
      * - _edit_link
      *
-     * @since 0.2.0
-     *
      * @param string|array<string, mixed> $config Argument key or map of arguments.
      * @param mixed                       $val    Value when `$config` is a key.
      *
@@ -496,8 +457,6 @@ class PostType
     /**
      * Sets the admin menu icon.
      *
-     * @since 0.2.0
-     *
      * @param string $icon Dashicon class or icon URL.
      *
      * @return static
@@ -514,8 +473,6 @@ class PostType
 
     /**
      * Sets the admin menu position.
-     *
-     * @since 0.2.0
      *
      * @param string $position Menu position.
      *

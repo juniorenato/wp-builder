@@ -13,7 +13,6 @@ namespace WPB\PostTypes;
 /**
  * Overrides arguments of an already registered post type.
  *
- * @since  0.4.0
  * @author Renato Rodrigues Jr <juniorenato@msn.com>
  *
  * @see https://developer.wordpress.org/reference/functions/get_post_type_object/
@@ -23,8 +22,6 @@ class EditPostType extends PostType
 {
     /**
      * Optionally loads and updates a post type immediately.
-     *
-     * @since 0.4.0
      *
      * @param string|null              $postType Post type key.
      * @param array<string, mixed>|null $args    Arguments to merge.
@@ -48,8 +45,6 @@ class EditPostType extends PostType
     /**
      * Resets the editor state.
      *
-     * @since 0.4.0
-     *
      * @return static
      */
     protected function init(): static
@@ -66,8 +61,6 @@ class EditPostType extends PostType
 
     /**
      * Loads the current arguments of an existing post type.
-     *
-     * @since 0.4.0
      *
      * @param string $postType Post type key.
      *
@@ -97,8 +90,6 @@ class EditPostType extends PostType
     /**
      * Applies pending argument changes to the post type.
      *
-     * @since 0.4.0
-     *
      * @param string|null               $postType Post type key.
      * @param array<string, mixed>|null $args     Arguments to merge.
      *
@@ -123,8 +114,6 @@ class EditPostType extends PostType
 
     /**
      * Filters registered post type arguments.
-     *
-     * @since 0.4.0
      *
      * @param array<string, mixed> $args Current post type arguments.
      *

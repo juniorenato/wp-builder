@@ -13,7 +13,6 @@ namespace WPB\Comments;
 /**
  * Disables WordPress comments in the admin and on the front end.
  *
- * @since  0.6.0
  * @author Renato Rodrigues Jr <juniorenato@msn.com>
  *
  * @see https://developer.wordpress.org/reference/hooks/comments_open/
@@ -23,8 +22,6 @@ class Comment
 {
     /**
      * Disables comments, pings, and related admin UI.
-     *
-     * @since 0.6.0
      *
      * @see https://developer.wordpress.org/reference/hooks/comments_open/
      * @see https://developer.wordpress.org/reference/hooks/pings_open/
@@ -41,8 +38,6 @@ class Comment
 
     /**
      * Removes comment support and the comments dashboard widget.
-     *
-     * @since 0.6.0
      *
      * @global string $pagenow Current admin page.
      *
@@ -72,8 +67,6 @@ class Comment
     /**
      * Forces comment and ping status to closed.
      *
-     * @since 0.6.0
-     *
      * @return bool Always false.
      *
      * @see https://developer.wordpress.org/reference/hooks/comments_open/
@@ -86,8 +79,6 @@ class Comment
 
     /**
      * Removes the comments screen from the admin menu.
-     *
-     * @since 0.6.0
      *
      * @see https://developer.wordpress.org/reference/functions/remove_menu_page/
      */

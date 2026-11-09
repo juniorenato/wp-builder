@@ -2,24 +2,26 @@
 
 WordPress Builder is a PHP library **created for developers**. It is not an admin plugin and does not add a graphical interface to WordPress.
 
-Use it in a theme or plugin to register custom post types, taxonomies, navigation menus, meta boxes, admin pages, form fields, and server-rendered Gutenberg blocks with a small fluent API instead of repeating WordPress boilerplate.
+Use it in a theme or plugin to register custom post types, taxonomies, navigation menus, meta boxes, admin pages, form fields, and server-rendered Gutenberg blocks, and to set response headers, with a small fluent API instead of repeating WordPress boilerplate.
 
 ## Contents
 
 - [Requirements](#requirements)
 - [Installation](#installation)
 - [Directory tree](#directory-tree)
-- [Bootstrap](#bootstrap)
-- [Custom post types](#custom-post-types)
-- [Taxonomies](#taxonomies)
-- [Menus](#menus)
-- [Meta boxes](#meta-boxes)
-- [Admin pages](#admin-pages)
-- [Form fields](#form-fields)
-- [Gutenberg blocks (PHP only)](#gutenberg-blocks-php-only)
-- [Comments](#comments)
-- [Performance](#performance)
-- [Security](#security)
+- [Bootstrap](#bootstrap) — `Builder`, `Notices`
+- [Custom post types](#custom-post-types) — `PostType`, `CustomPostType`, `EditPostType`, `RemovePostType`
+- [Taxonomies](#taxonomies) — `Taxonomy`
+- [Menus](#menus) — `Menu`
+- [Meta boxes](#meta-boxes) — `MetaBox`
+- [Admin pages](#admin-pages) — `AdminPage`
+- [Form fields](#form-fields) — `AdminForm`, `Forms\Repeater`
+- [Gutenberg blocks](#gutenberg-blocks) — `Block`, `Blocks\Repeater`, `FieldValue`
+- [Comments](#comments) — `Comment`
+- [Performance](#performance) — `Performance`, `PageCache`, `CacheScreen`
+- [Security](#security) — `Security`
+- [HTTP headers](#http-headers) — `Header`, `Csp`
+- [Rate limit](#rate-limit) — `RateLimit`
 - [License](#license)
 
 ## Requirements
@@ -57,8 +59,6 @@ wp-builder/
 ├── composer.lock
 ├── LICENSE
 ├── README.md
-├── tests/
-│   └── field-value.php
 ├── assets/
 │   ├── css/
 │   │   ├── admin-image.css
@@ -66,6 +66,7 @@ wp-builder/
 │   │   └── block-editor.css
 │   └── js/
 │       ├── admin-image.js
+│       ├── admin-regenerate-images.js
 │       ├── admin-repeater.js
 │       └── block-editor.js
 ├── lang/
@@ -87,12 +88,16 @@ wp-builder/
 │   │   ├── PageCache.php
 │   │   └── Performance.php
 │   ├── Security/
+│   │   ├── RateLimit.php
 │   │   └── Security.php
 │   ├── Forms/
 │   │   ├── AdminForm.php
 │   │   ├── PostTypeMetaBox.php
 │   │   ├── Repeater.php
 │   │   └── TaxonomyCustomField.php
+│   ├── Http/
+│   │   ├── Csp.php
+│   │   └── Header.php
 │   ├── Menus/
 │   │   └── Menu.php
 │   ├── MetaBoxes/
@@ -109,7 +114,9 @@ wp-builder/
 └── views/
     ├── page.php
     ├── performance/
-    │   └── cache.php
+    │   ├── cache.php
+    │   ├── dashboard.php
+    │   └── images.php
     ├── blocks/
     │   ├── repeater.php
     │   └── partials/
@@ -166,9 +173,44 @@ new Builder(Builder::PLUGIN);
 
 Constructors in this library are safe to call from a bootstrap file. Blocks, post types, taxonomies, menus, and meta boxes are created on `init`. A call made while `init` is running still creates them inside that hook. A call made after `init` has finished waits for the next request.
 
-Invalid arguments do not throw and do not stop PHP. The library ignores that change and shows the message in the WordPress admin, as an error notice, to users who can `manage_options`.
+`Builder::THEME` is `theme` and `Builder::PLUGIN` is `plugin`. `isTheme()` and `isPlugin()` read the environment stored by the constructor. `url()` turns an absolute path inside this install into a public URL, or returns an empty string when the path is outside it. `Builder::PATH` points at the packaged directories: `FORM` (`views/form/`), `LANG` (`lang/`), `PAGE` (`views/`), and `BLOCK` (`views/blocks/`).
+
+```php
+Builder::isTheme();
+Builder::url(get_stylesheet_directory() . '/assets/cta.css');
+```
+
+### `Notices`
+
+Invalid fluent registration is reported with `Notices` and the request keeps running. `error()` queues a message once. `render()` prints the queue in the WordPress admin, as an error notice, to users who can `manage_options`.
+
+```php
+use WPB\Notices;
+
+Notices::error('Field name is already in use.');
+```
+
+`Header` and `Csp` throw `InvalidArgumentException` when a name or a value cannot be sent.
 
 ## Custom post types
+
+`PostType` stores labels, rewrite rules, supports, taxonomies, and `register_post_type()` arguments. `CustomPostType` and `EditPostType` extend it, and `RemovePostType` extends `EditPostType`. Call these methods on the subclass:
+
+| Method | Use |
+| --- | --- |
+| `setPostType($postType)` | Post type key |
+| `setLabels($singular, $plural, $male = true)` | Generated singular and plural labels |
+| `labels($labels, $val = null, $ucfirst = true)` | One label, or a map of labels |
+| `icon($icon)` | Dashicon or image URL for the menu |
+| `position($position)` | Menu position |
+| `supports($supports, $val = null)` | Feature list, or one feature and its value |
+| `taxonomies($taxonomies)` | Taxonomy slugs attached to the type |
+| `rewrite($rewrite, $val = null)` | Rewrite slug or rewrite array |
+| `args($config, $val = null)` | Any `register_post_type()` argument |
+
+`metaBox()` comes from the `PostTypeMetaBox` trait. Pass one `MetaBox` or a list. The field methods come from the `AdminForm` trait.
+
+### `CustomPostType`
 
 ### Quick registration
 
@@ -231,6 +273,8 @@ $books->addSelectField('format', 'Format', [
 $books->register();
 ```
 
+### `EditPostType`
+
 ### Edit an existing post type
 
 Merge arguments into `post`, `page`, or any registered type:
@@ -255,6 +299,8 @@ $posts->args('show_in_rest', true);
 $posts->edit();
 ```
 
+### `RemovePostType`
+
 ### Hide a post type
 
 This does not unregister the type. It hides it from menus, search, and public queries:
@@ -266,6 +312,8 @@ new RemovePostType('attachment');
 ```
 
 ## Taxonomies
+
+`Taxonomy` registers a taxonomy with `register_taxonomy()` on `init`. `taxonomy()`, `postTypes()`, `setLabels()`, `labels()`, `rewrite()`, `capabilities()`, and `args()` set that registration. `register()` sends it to WordPress.
 
 ### Quick registration
 
@@ -297,7 +345,7 @@ $genre->register();
 
 ### Term fields
 
-Custom fields appear on the add-term and edit-term screens and are saved as term meta:
+Custom fields appear on the add-term and edit-term screens and are saved as term meta. `Taxonomy` uses the `TaxonomyCustomField` trait for those screens. The trait is not constructed on its own:
 
 ```php
 use WPB\Taxonomies\Taxonomy;
@@ -312,6 +360,8 @@ $genre->register();
 ```
 
 ## Menus
+
+`Menu` registers theme locations with `register_nav_menu()` on `init` and can store custom fields on each menu item.
 
 ### Quick registration
 
@@ -362,7 +412,7 @@ The menu editor submits every item in one form. The library keeps the meta key e
 
 ## Meta boxes
 
-Use a standalone meta box when you want an explicit title, screen, context, or priority. Attach it to a post type with `metaBox()`:
+`MetaBox` renders fields on a post screen and saves them as post meta. Use it when you want an explicit title, screen, context, or priority. Attach it to a post type with `metaBox()`:
 
 ```php
 use WPB\MetaBoxes\MetaBox;
@@ -398,6 +448,8 @@ $seo->register();
 ```
 
 ## Admin pages
+
+`AdminPage` adds a top-level menu or a submenu. With no render callback it prints a Settings API page and registers each field with `register_setting()`. `parent()`, `title()`, `slug()`, `icon()`, and `position()` are the short names. `parentSlug()`, `pageTitle()`, `menuTitle()`, `capability()`, `menuSlug()`, and `iconUrl()` set the same WordPress arguments directly. `callback()` replaces the settings form.
 
 ### Settings page with fields
 
@@ -443,7 +495,7 @@ Values are stored as options. Read them with `get_option('company_name')`.
 
 ## Form fields
 
-`CustomPostType`, `Taxonomy`, `Menu`, `MetaBox`, and `AdminPage` share the same field helpers.
+`CustomPostType`, `Taxonomy`, `Menu`, `MetaBox`, and `AdminPage` share the `AdminForm` trait. Call the helpers on those objects.
 
 | Method | Field type |
 | --- | --- |
@@ -477,9 +529,9 @@ Submitted values are sanitized (`sanitize_text_field()`, `sanitize_textarea_fiel
 ->addFileField('documents', 'Documents', multiple: true)
 ```
 
-### Repeaters
+### `Forms\Repeater`
 
-`repeater()` stores a list under one meta key or option. It works on a post type, a meta box, a taxonomy, a menu item, and an admin page. Subfields use the same scalar methods as the form. `end()` returns to the parent repeater, or to the form at the root.
+`repeater()` returns `WPB\Forms\Repeater` and stores a list under one meta key or option. It works on a post type, a meta box, a taxonomy, a menu item, and an admin page. Subfields use the same scalar methods as the form. `end()` returns to the parent repeater, or to the form at the root. `min()`, `max()`, and `name()` read the limits and the field name.
 
 ```php
 $details->repeater('authors', 'Authors')
@@ -512,9 +564,23 @@ Names at one level must be unique. A name may contain only letters, numbers, hyp
 
 ## Gutenberg blocks
 
-Requires **WordPress 7.0+**. Registers a server-rendered block (`supports.autoRegister`): no `block.json` and no build step.
+`Block` registers a server-rendered block. Requires **WordPress 7.0+** (`supports.autoRegister`): no `block.json` and no build step.
 
 On older WordPress versions, `register()` returns `false` and the rest of the library keeps working.
+
+`FieldValue` normalizes each field before it is stored. `Block` calls it. A missing key uses the field default, and an unknown key is dropped.
+
+```php
+use WPB\Blocks\FieldValue;
+
+$stored = FieldValue::normalizeBag([
+    [
+        'name'    => 'heading',
+        'type'    => 'string',
+        'default' => 'Hello',
+    ],
+], $submitted);
+```
 
 Field values are stored in post meta. The meta key is the block name with `/` replaced by `_`. Each insertion has its own entry in that value, keyed by `wpbId`. The id is saved in the block comment, so the same block can be placed twice on one page with different data. `get_post_meta()` returns that map. The render callback receives the fields for that insertion only.
 
@@ -601,9 +667,9 @@ The mount point is a single element:
 
 A block with a name and a title registers even when it has no `render()` callback and no repeater.
 
-### Repeaters
+### `Blocks\Repeater`
 
-A repeater is a list of fields. It can contain another repeater. The editor always shows an Add button.
+`Block::repeater()` returns `WPB\Blocks\Repeater`. A repeater is a list of fields. It can contain another repeater. The editor always shows an Add button. `min()` and `max()` limit the list. `end()` returns the parent repeater, or the `Block` at the root. `renderItems()` includes `views/blocks/repeater.php` for a list of normalized items. That file is not the public block HTML.
 
 ```php
 $team = new Block();
@@ -681,7 +747,7 @@ Attribute names reserved by block supports are rejected: `style`, `className`, `
 
 ## Comments
 
-Disable comments, pings, the comments admin screen, and comment support on post types:
+`Comment` disables comments, pings, the comments admin screen, and comment support on post types:
 
 ```php
 use WPB\Comments\Comment;
@@ -689,9 +755,11 @@ use WPB\Comments\Comment;
 (new Comment())->disable();
 ```
 
+`disable()` hooks `admin()`, `status()`, and `menu()`. `admin()` removes comment and trackback support, removes the recent-comments dashboard widget, and redirects `edit-comments.php` to the dashboard. `status()` returns false for `comments_open` and `pings_open`. `menu()` removes the Comments admin menu.
+
 ## Performance
 
-Opt-in front-end cleanup. An empty constructor does nothing. A list entry calls the method with its default. Map a name to an integer when the method takes one. `false` skips that entry.
+`Performance` is opt-in front-end cleanup. An empty constructor does nothing. A list entry calls the method with its default. Map a name to an integer when the method takes one. `false` skips that entry.
 
 ```php
 use WPB\Performance\Performance;
@@ -741,9 +809,31 @@ new Performance([
 
 `enableCache()` adds **Tools → Cache** through `AdminPage`, as a submenu of Tools. While the cache is on, the dashboard lists the cached URLs. The status checkbox and one multiple select per public post type are AdminPage fields stored as options. Each post type uses the option `wpb_page_cache_pages_{post_type}`. The cached URL table is rendered below that form and clears files directly. Saving a public post clears that post URL, the post type archive and its `/page/N/` URLs, and the pages chosen for that post type. A post type without an archive has no archive URL to clear; link the listing page on this screen. The site root only clears `/` and `/page/N/`.
 
+### `PageCache`
+
+`enableCache()` constructs `PageCache` and calls `register()`. Use the class directly when the cache is the only performance feature you want:
+
+```php
+use WPB\Performance\PageCache;
+
+$cache = new PageCache(3600);
+$cache->register();
+$cache->ttl(1800);
+```
+
+The constructor and `enableCache()` treat a lifetime below 1 as 3600 seconds. `ttl()` changes the lifetime used for later reads and ignores a value below 1. `register()` creates `wp-content/cache/wpb/`, serves a fresh file at `template_redirect`, stores the response on `shutdown`, and clears files when a public post is saved, renamed, or deleted.
+
+`OPTION_ENABLED` is `wpb_page_cache_enabled`. `OPTION_PAGES_PREFIX` is `wpb_page_cache_pages_`. `pagesOption($postType)` appends the sanitized post type to that prefix. `META_DISABLED` is the post meta key `wpb_page_cache_disabled`. `MENU_SLUG` is `wpb-page-cache`.
+
+`entries()` lists the cached URLs. `fresh($url)` reports whether that file is still inside the lifetime. `flush()` deletes every stored file. `forgetUrl($url)` deletes one URL.
+
+### `CacheScreen`
+
+`PageCache::register()` constructs `CacheScreen`, which extends `AdminPage`. It sets the title to Cache, the slug to `wpb-page-cache`, and the parent to Tools, then adds the status checkbox and one page select per public post type. `cache()` returns the `PageCache` attached to the screen. `buildPage()` prints `views/performance/cache.php` for a user who can `manage_options`.
+
 ## Security
 
-Opt-in request hardening. Same constructor rules as performance.
+`Security` is opt-in request hardening. Same constructor rules as performance.
 
 ```php
 use WPB\Security\Security;
@@ -760,6 +850,91 @@ new Security([
 - `disableXmlRpc()` returns 403 from `xmlrpc.php`, removes XML-RPC methods, drops the `X-Pingback` header, and removes the RSD link.
 - `disableUserEnumeration()` sends anonymous `/?author=1` requests to the home URL before the canonical redirect can reveal the user slug. Author archives that already use the slug stay public. Guests receive 401 for `/wp/v2/users`. Logged-in users keep that route for the editor. `/wp/v2/users/me` is left to WordPress.
 - `disableFileEdit()` removes the theme file editor and the plugin file editor by denying `edit_themes`, `edit_plugins`, and `edit_files`. Installing and updating plugins and themes stays available.
+
+## HTTP headers
+
+### `Header`
+
+`Header` collects response headers and applies them on `wp_headers`. Call `set()`, `setIfAbsent()`, and `remove()` in any order, then `register()`. The last operation for a name wins. Matching ignores case. This filter runs on the public response. Admin, REST, and `admin-ajax` do not pass through it.
+
+```php
+use WPB\Http\Header;
+
+$header = new Header();
+$header->remove('X-Pingback');
+$header->set('X-Frame-Options', 'SAMEORIGIN');
+$header->setIfAbsent('Cache-Control', 'public, max-age=600, stale-while-revalidate=3600');
+$header->register();
+```
+
+`set()` replaces a header already on the response. `setIfAbsent()` sends the value only when that name is missing, in any capitalization. An empty value is kept. `register()` hooks `wp_headers` once. Operations added after that call still apply when WordPress sends the headers. `apply()` is that filter callback.
+
+A name must not be empty and must not contain a colon or a line break. A value must not contain a line break. Those calls throw `InvalidArgumentException`.
+
+### `Csp`
+
+`Csp` builds one Content-Security-Policy and sends it through `Header`. Call `add()` for each directive, then `register()`. Sources for the same directive are merged in first-seen order. A repeated source is kept once. Directive names match without case. An empty source list does not create the directive.
+
+```php
+use WPB\Http\Csp;
+
+$csp = new Csp();
+$csp->add('default-src', ['self']);
+$csp->add('script-src', ['self', 'https://cdn.example.com']);
+$csp->add('style-src', ['self', 'unsafe-inline']);
+$csp->register();
+```
+
+`policy()` returns that value, with directives separated by `; `. Keywords are stored in single quotes: `self`, `none`, `unsafe-inline`, `unsafe-eval`, `strict-dynamic`, `wasm-unsafe-eval`, `unsafe-hashes`, and `report-sample`. A nonce (`nonce-…`) or a hash (`sha256-`, `sha384-`, `sha512-`) is quoted the same way. Passing `'self'` is the same as passing `self`.
+
+`register()` sets `Content-Security-Policy` on one `Header`. A later `add()` is sent after `register()` runs again. The second call updates that header and does not add another filter. An empty policy does not register a header.
+
+A directive may contain only letters, numbers, and hyphens. A source must not be empty and must not contain whitespace, a semicolon, or a comma. Those calls throw `InvalidArgumentException`.
+
+## Rate limit
+
+`RateLimit` counts login attempts, comments, anonymous REST, and `admin-ajax`. The same object can count any key you choose. Nothing runs until you call a policy or `allow()`.
+
+```php
+use WPB\Security\RateLimit;
+
+(new RateLimit())
+    ->login()
+    ->comments()
+    ->rest();
+```
+
+Put the proxy list in `wp-config.php`. An empty or missing constant trusts no proxy, so the client is `REMOTE_ADDR`.
+
+```php
+define('WPB_TRUSTED_PROXIES', 'private_ranges');
+```
+
+`private_ranges` is the loopback, link-local, and private network list Symfony uses. A comma-separated list of addresses and CIDR ranges works too. `REMOTE_ADDR` trusts the peer that opened the connection. `trustedProxies()` on the instance replaces the constant for that object.
+
+```php
+(new RateLimit())
+    ->trustedProxies(['203.0.113.10'])
+    ->login();
+```
+
+Only `X-Forwarded-For` is read, and only when `REMOTE_ADDR` is in the trusted list. The client is the rightmost address in that chain that is not itself a trusted proxy. A forged value to the left of the proxy's entry does not become the client. `private_ranges` also treats a visitor on a private address as a proxy, so list the proxy address itself when visitors share that network.
+
+Counters live in WordPress transients for one fixed window. The window starts at the first hit and later hits do not extend it. A transient write is not atomic.
+
+- `login(int $maxAttempts = 5, int $interval = 60)` counts failed `wp-login.php` attempts. The same username and IP can fail `$maxAttempts` times in the window. That IP can fail `5 * $maxAttempts` times across usernames. A successful login clears both. Password reset allows `$maxAttempts` requests per 15 minutes for that IP. A blocked login stays on the form as a `WP_Error`. The first call to `login()`, `comments()`, or `rest()` in the process wins.
+- `comments(int $limit = 5, int $window = 600)` counts comment submits per IP, including logged-in authors. The submit past the limit ends with 429 and `Retry-After`.
+- `rest(int $limit = 60, int $window = 60)` counts anonymous REST and `admin-ajax` requests on one shared bucket per IP. Logged-in requests are not counted. REST over the limit is a `WP_Error` with status 429 and `retry_after`. `admin-ajax` ends the request with 429. Both send `Retry-After`.
+- `form(string $name, int $limit = 5, int $window = 600)` counts one named public form for the current client and returns false when the window is full. Call it before accepting the POST.
+- `allow(string $key, int $limit, int $window)` counts an exact key and returns false when the window is full. `clear(string $key)` deletes that bucket. The stored name is an HMAC of the key.
+
+```php
+$limit = new RateLimit();
+
+if (!$limit->form('contact', 5, 600)) {
+    // Ask the visitor to wait.
+}
+```
 
 ## License
 

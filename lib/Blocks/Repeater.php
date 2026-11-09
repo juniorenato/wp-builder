@@ -18,57 +18,42 @@ use WPB\Notices;
  *
  * Create it from {@see Block::repeater()} or {@see Repeater::repeater()}.
  *
- * @since  0.8.0
  * @author Renato Rodrigues Jr <juniorenato@msn.com>
  */
 class Repeater
 {
     /**
      * Block that owns this repeater.
-     *
-     * @since 0.8.0
      */
     private Block $block;
 
     /**
      * Parent repeater, or null at the block root.
-     *
-     * @since 0.8.0
      */
     private ?Repeater $parent;
 
     /**
      * Field name.
-     *
-     * @since 0.8.0
      */
     private string $name;
 
     /**
      * Inspector label.
-     *
-     * @since 0.8.0
      */
     private string $label;
 
     /**
      * Minimum item count enforced in the editor.
-     *
-     * @since 0.8.0
      */
     private int $min = 0;
 
     /**
      * Maximum item count enforced in the editor. Zero means no limit.
-     *
-     * @since 0.8.0
      */
     private int $max = 0;
 
     /**
      * Scalar fields, keyed by name.
-     *
-     * @since 0.8.0
      *
      * @var array<string, array<string, mixed>>
      */
@@ -77,16 +62,12 @@ class Repeater
     /**
      * Nested repeaters, keyed by name.
      *
-     * @since 0.8.0
-     *
      * @var array<string, Repeater>
      */
     private array $children = [];
 
     /**
      * Field names in declaration order.
-     *
-     * @since 0.8.0
      *
      * @var list<string>
      */
@@ -95,8 +76,6 @@ class Repeater
     /**
      * Items currently being rendered.
      *
-     * @since 0.8.0
-     *
      * @var list<array<string, mixed>>
      */
     private array $items = [];
@@ -104,23 +83,17 @@ class Repeater
     /**
      * Field passed to a partial view.
      *
-     * @since 0.8.0
-     *
      * @var array<string, mixed>
      */
     private array $field = [];
 
     /**
      * Value passed to a partial view.
-     *
-     * @since 0.8.0
      */
     private mixed $value = null;
 
     /**
      * Creates a repeater level.
-     *
-     * @since 0.8.0
      *
      * @param Block         $block  Owning block.
      * @param Repeater|null $parent Parent repeater, or null at the root.
@@ -137,8 +110,6 @@ class Repeater
 
     /**
      * Returns the field name.
-     *
-     * @since 0.8.0
      */
     public function name(): string
     {
@@ -147,8 +118,6 @@ class Repeater
 
     /**
      * Sets the minimum number of items the editor allows.
-     *
-     * @since 0.8.0
      *
      * @param int $min Minimum count.
      *
@@ -182,8 +151,6 @@ class Repeater
      *
      * Zero removes the limit.
      *
-     * @since 0.8.0
-     *
      * @param int $max Maximum count.
      *
      * @return static
@@ -214,8 +181,6 @@ class Repeater
     /**
      * Adds a string field.
      *
-     * @since 0.8.0
-     *
      * @param string $name    Field name.
      * @param string $label   Inspector label.
      * @param string $default Default value.
@@ -236,8 +201,6 @@ class Repeater
 
     /**
      * Adds an integer field.
-     *
-     * @since 0.8.0
      *
      * @param string $name    Field name.
      * @param string $label   Inspector label.
@@ -262,8 +225,6 @@ class Repeater
      *
      * A true value adds `wpb-repeater__item--{name}` to the item.
      *
-     * @since 0.8.0
-     *
      * @param string $name    Field name.
      * @param string $label   Inspector label.
      * @param bool   $default Default value.
@@ -284,8 +245,6 @@ class Repeater
 
     /**
      * Adds a string field with a fixed set of choices.
-     *
-     * @since 0.8.0
      *
      * @param string       $name    Field name.
      * @param string       $label   Inspector label.
@@ -323,8 +282,6 @@ class Repeater
      *
      * An empty image is stored as `0`.
      *
-     * @since 0.8.0
-     *
      * @param string $name  Field name.
      * @param string $label Inspector label.
      *
@@ -344,8 +301,6 @@ class Repeater
 
     /**
      * Opens a nested repeater.
-     *
-     * @since 0.8.0
      *
      * @param string $name  Field name.
      * @param string $label Inspector label.
@@ -371,8 +326,6 @@ class Repeater
     /**
      * Returns to the parent repeater, or to the block at the root.
      *
-     * @since 0.8.0
-     *
      * @return Block|Repeater Parent builder.
      */
     public function end(): Block|Repeater
@@ -382,8 +335,6 @@ class Repeater
 
     /**
      * Returns the schema shared by the editor, the meta REST schema, and normalization.
-     *
-     * @since 0.8.0
      *
      * @return array<string, mixed> Repeater schema.
      */
@@ -402,8 +353,6 @@ class Repeater
     /**
      * Renders the repeater items.
      *
-     * @since 0.8.0
-     *
      * @param list<array<string, mixed>> $items Normalized items.
      *
      * @return string Repeater HTML.
@@ -420,8 +369,6 @@ class Repeater
 
     /**
      * Returns the nested repeater with the given name.
-     *
-     * @since 0.8.0
      *
      * @param string $name Child field name.
      *
@@ -447,8 +394,6 @@ class Repeater
     /**
      * Returns the field schemas in declaration order.
      *
-     * @since 0.8.0
-     *
      * @return list<array<string, mixed>> Field schemas.
      */
     public function fieldSchemas(): array
@@ -469,8 +414,6 @@ class Repeater
 
     /**
      * Stores a scalar field.
-     *
-     * @since 0.8.0
      *
      * @param string               $name   Field name.
      * @param array<string, mixed> $schema Field schema.
@@ -494,8 +437,6 @@ class Repeater
     /**
      * Rejects a field name that is reserved or already used on this level.
      *
-     * @since 0.8.0
-     *
      * @param string $name Field name.
      *
      * @return bool False when the name cannot be used. The message is reported in the WordPress admin.
@@ -518,8 +459,6 @@ class Repeater
 
     /**
      * Rejects a minimum greater than a positive maximum.
-     *
-     * @since 0.8.0
      *
      * @return bool False when the bounds are impossible. The message is reported in the WordPress admin.
      */

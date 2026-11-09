@@ -20,7 +20,6 @@ use WPB\Notices;
  * post content stay PHP-only. Repeaters and post meta storage load one shared
  * editor script.
  *
- * @since  0.7.0
  * @author Renato Rodrigues Jr <juniorenato@msn.com>
  *
  * @see https://developer.wordpress.org/reference/functions/register_block_type/
@@ -30,8 +29,6 @@ class Block
 {
     /**
      * Accepted `register_block_type()` argument keys.
-     *
-     * @since 0.7.0
      *
      * @var list<string>
      *
@@ -71,8 +68,6 @@ class Block
     /**
      * Attribute types that generate Inspector controls.
      *
-     * @since 0.7.0
-     *
      * @var list<string>
      */
     private const array ALLOWED_ATTRIBUTE_TYPES = [
@@ -84,8 +79,6 @@ class Block
 
     /**
      * Implicit attribute names reserved by block supports.
-     *
-     * @since 0.7.0
      *
      * @var list<string>
      */
@@ -102,50 +95,36 @@ class Block
 
     /**
      * Block attribute that identifies one insertion when values live in post meta.
-     *
-     * @since 0.9.0
      */
     public const string INSTANCE_ATTRIBUTE = 'wpbId';
 
     /**
      * Block type name (`namespace/slug`).
-     *
-     * @since 0.7.0
      */
     protected string $name;
 
     /**
      * Human-readable block title.
-     *
-     * @since 0.7.0
      */
     protected string $title;
 
     /**
      * Block description.
-     *
-     * @since 0.7.0
      */
     protected string $description;
 
     /**
      * Inserter category.
-     *
-     * @since 0.7.0
      */
     protected string $category;
 
     /**
      * Dashicon slug, without the `dashicons-` prefix.
-     *
-     * @since 0.7.0
      */
     protected string $icon;
 
     /**
      * Inserter search keywords.
-     *
-     * @since 0.7.0
      *
      * @var list<string>
      */
@@ -154,16 +133,12 @@ class Block
     /**
      * Block attribute schemas.
      *
-     * @since 0.7.0
-     *
      * @var array<string, array<string, mixed>>
      */
     protected array $attributes;
 
     /**
      * Block supports.
-     *
-     * @since 0.7.0
      *
      * @var array<string, mixed>
      */
@@ -172,16 +147,12 @@ class Block
     /**
      * Server render callback.
      *
-     * @since 0.7.0
-     *
      * @var callable|null
      */
     protected mixed $renderCallback;
 
     /**
      * Stylesheets registered for the block.
-     *
-     * @since 0.7.0
      *
      * @var list<array{src: string, handle: string}>
      */
@@ -190,8 +161,6 @@ class Block
     /**
      * Style handles associated with the block.
      *
-     * @since 0.7.0
-     *
      * @var list<string>
      */
     protected array $styleHandles;
@@ -199,23 +168,17 @@ class Block
     /**
      * Arguments passed to `register_block_type()`.
      *
-     * @since 0.7.0
-     *
      * @var array<string, mixed>
      */
     protected array $args;
 
     /**
      * Whether field values are stored in the block comment instead of post meta.
-     *
-     * @since 0.8.0
      */
     protected bool $saveAsContent = false;
 
     /**
      * Root repeaters, keyed by field name.
-     *
-     * @since 0.8.0
      *
      * @var array<string, Repeater>
      */
@@ -223,8 +186,6 @@ class Block
 
     /**
      * Top-level field names in declaration order.
-     *
-     * @since 0.8.0
      *
      * @var list<string>
      */
@@ -234,15 +195,11 @@ class Block
      * Theme template slug passed to `get_template_part()`.
      *
      * An empty string means the convention `template-parts/blocks/{block name}`.
-     *
-     * @since 0.10.0
      */
     private string $templateSlug;
 
     /**
      * Block names registered by this library.
-     *
-     * @since 0.10.0
      *
      * @var array<string, true>
      */
@@ -253,16 +210,12 @@ class Block
      *
      * An empty string means the slug was looked up and the file is absent.
      *
-     * @since 0.10.0
-     *
      * @var array<string, string>
      */
     private static array $locatedTemplates = [];
 
     /**
      * Editor schemas keyed by block name.
-     *
-     * @since 0.8.0
      *
      * @var array<string, array<string, mixed>>
      */
@@ -271,8 +224,6 @@ class Block
     /**
      * Meta keys included in post revisions.
      *
-     * @since 0.8.0
-     *
      * @var array<string, string>
      */
     private static array $revisionKeys = [];
@@ -280,37 +231,27 @@ class Block
     /**
      * Meta keys already passed to `register_meta()`.
      *
-     * @since 0.8.0
-     *
      * @var array<string, true>
      */
     private static array $registeredMeta = [];
 
     /**
      * Whether the editor script hook is registered.
-     *
-     * @since 0.8.0
      */
     private static bool $editorHooked = false;
 
     /**
      * Whether the editor script was attached to the page.
-     *
-     * @since 0.8.0
      */
     private static bool $editorScriptAdded = false;
 
     /**
      * Whether the revision meta filter is registered.
-     *
-     * @since 0.8.0
      */
     private static bool $revisionHooked = false;
 
     /**
      * Optionally registers a block immediately.
-     *
-     * @since 0.7.0
      *
      * @param string|null   $name   Block type name (`namespace/slug`).
      * @param string|null   $title  Human-readable title.
@@ -327,8 +268,6 @@ class Block
 
     /**
      * Resets the block configuration to defaults.
-     *
-     * @since 0.7.0
      *
      * @return static
      */
@@ -359,8 +298,6 @@ class Block
     /**
      * Sets the block type name.
      *
-     * @since 0.7.0
-     *
      * @param string $name Block type name (`namespace/slug`).
      *
      * @return static
@@ -388,8 +325,6 @@ class Block
     /**
      * Sets the human-readable block title.
      *
-     * @since 0.7.0
-     *
      * @param string $title Block title.
      *
      * @return static
@@ -405,8 +340,6 @@ class Block
 
     /**
      * Sets the block description.
-     *
-     * @since 0.7.0
      *
      * @param string $description Block description.
      *
@@ -426,8 +359,6 @@ class Block
      *
      * Core categories: `text`, `media`, `design`, `widgets`, `theme`, `embed`.
      *
-     * @since 0.7.0
-     *
      * @param string $category Category slug.
      *
      * @return static
@@ -445,8 +376,6 @@ class Block
      * Sets the block icon.
      *
      * Dashicon slugs must omit the `dashicons-` prefix.
-     *
-     * @since 0.7.0
      *
      * @param string $icon Dashicon slug or SVG markup.
      *
@@ -466,8 +395,6 @@ class Block
 
     /**
      * Sets inserter search keywords.
-     *
-     * @since 0.7.0
      *
      * @param string|list<string> $keywords Keyword or list of keywords.
      *
@@ -491,8 +418,6 @@ class Block
      *
      * Accepted types: `string`, `integer`, `number`, `boolean`.
      * Use `string` + `enum` for a select control.
-     *
-     * @since 0.7.0
      *
      * @param string               $name   Attribute name.
      * @param array<string, mixed> $schema Attribute schema (`type`, `default`, `label`, `enum`).
@@ -523,8 +448,6 @@ class Block
     /**
      * Adds a string attribute.
      *
-     * @since 0.7.0
-     *
      * @param string $name    Attribute name.
      * @param string $label   Inspector label.
      * @param string $default Default value.
@@ -544,8 +467,6 @@ class Block
 
     /**
      * Adds a boolean attribute.
-     *
-     * @since 0.7.0
      *
      * @param string $name    Attribute name.
      * @param string $label   Inspector label.
@@ -567,8 +488,6 @@ class Block
     /**
      * Adds an integer attribute.
      *
-     * @since 0.7.0
-     *
      * @param string $name    Attribute name.
      * @param string $label   Inspector label.
      * @param int    $default Default value.
@@ -588,8 +507,6 @@ class Block
 
     /**
      * Adds a string attribute with a fixed set of choices.
-     *
-     * @since 0.7.0
      *
      * @param string        $name    Attribute name.
      * @param string        $label   Inspector label.
@@ -627,8 +544,6 @@ class Block
     /**
      * Merges block supports. `autoRegister` is always forced on.
      *
-     * @since 0.7.0
-     *
      * @param array<string, mixed> $supports Block supports.
      *
      * @return static
@@ -651,8 +566,6 @@ class Block
      * Use `get_block_wrapper_attributes()` in the callback so color, spacing,
      * and border supports appear on the front end.
      *
-     * @since 0.7.0
-     *
      * @param callable $callback Render callback.
      *
      * @return static
@@ -673,8 +586,6 @@ class Block
      * `template-parts/blocks/hero` loads `template-parts/blocks/hero.php` from the child theme, then the parent.
      * A trailing `.php` is removed. An empty slug clears any previous slug and
      * the block uses `template-parts/blocks/{block name}`.
-     *
-     * @since 0.10.0
      *
      * @param string $slug Template slug, without `.php`.
      *
@@ -705,8 +616,6 @@ class Block
      *
      * PHP-only blocks do not load `wp_enqueue_block_style()` in the editor, so
      * the same handle is also enqueued on `enqueue_block_editor_assets`.
-     *
-     * @since 0.7.0
      *
      * @param string $src    Stylesheet URL.
      * @param string $handle Style handle. Generated from the block name when empty.
@@ -767,8 +676,6 @@ class Block
      * - style_handles
      * - view_style_handles
      *
-     * @since 0.7.0
-     *
      * @param string|array<string, mixed> $config Argument key or map of arguments.
      * @param mixed                       $val    Value when `$config` is a key.
      *
@@ -798,8 +705,6 @@ class Block
      * Without this call, each insertion is stored in post meta under {@see metaKey()},
      * keyed by the `wpbId` saved in that block comment.
      *
-     * @since 0.8.0
-     *
      * @return static
      */
     public function saveAsContent(): static
@@ -815,8 +720,6 @@ class Block
      * Nested repeaters use {@see Repeater::repeater()}. Call {@see Repeater::end()}
      * to return here. The repeater is registered immediately, so `end()` is only
      * needed to continue this chain.
-     *
-     * @since 0.8.0
      *
      * @param string $name  Field name.
      * @param string $label Inspector label.
@@ -855,8 +758,6 @@ class Block
      * The block name `namespace/slug` is stored as `namespace_slug`.
      * Each insertion has its own entry in that value, keyed by `wpbId`.
      *
-     * @since 0.8.0
-     *
      * @return string Meta key.
      */
     public function metaKey(): string
@@ -870,8 +771,6 @@ class Block
      * A `render()` callback receives those values and owns the HTML. Image
      * fields in that array stay attachment IDs. Otherwise a theme template
      * owns the HTML. With no template, the block prints a React mount point.
-     *
-     * @since 0.8.0
      *
      * @param array<string, mixed> $attributes Block attributes.
      * @param string               $content    Inner block HTML.
@@ -914,8 +813,6 @@ class Block
     /**
      * Includes a theme template and returns its output.
      *
-     * @since 0.10.0
-     *
      * @param string               $slug Template slug, without `.php`.
      * @param array<string, mixed> $args Variables extracted into the template and available as `$args`.
      *
@@ -945,8 +842,6 @@ class Block
     /**
      * Registers the public render filter for core blocks.
      *
-     * @since 0.10.0
-     *
      * @see https://developer.wordpress.org/reference/hooks/render_block/
      */
     public static function hookCoreTemplates(): void
@@ -966,8 +861,6 @@ class Block
      *
      * Names registered by this library keep the HTML returned by `renderBlock()`.
      * Any other non-core name keeps the HTML WordPress passed in.
-     *
-     * @since 0.10.0
      *
      * @param string               $content  HTML WordPress rendered, including inner blocks.
      * @param array<string, mixed> $block    Parsed block.
@@ -998,8 +891,6 @@ class Block
     /**
      * Copies field values and replaces image IDs with media objects.
      *
-     * @since 0.10.0
-     *
      * @param array<string, mixed> $values Normalized field values.
      *
      * @return array<string, mixed> Props shared by the theme template and `data-wpb-props`.
@@ -1011,8 +902,6 @@ class Block
 
     /**
      * Replaces image fields in one level of values.
-     *
-     * @since 0.10.0
      *
      * @param list<array<string, mixed>> $fields Field schemas for this level.
      * @param array<string, mixed>       $values Values for this level.
@@ -1057,8 +946,6 @@ class Block
     /**
      * Builds the React image object for one attachment.
      *
-     * @since 0.10.0
-     *
      * @param mixed $value Stored attachment ID.
      *
      * @return array{id: int, url: string, alt: string, width: int, height: int, srcset: string}|null Null when the attachment has no URL.
@@ -1097,8 +984,6 @@ class Block
      * An empty props array is encoded as `{}` so repeater lists inside a
      * non-empty payload stay JSON arrays. `JSON_FORCE_OBJECT` is not used.
      *
-     * @since 0.10.0
-     *
      * @param array<string, mixed> $props Props for `data-wpb-props`.
      *
      * @return string Mount element.
@@ -1134,8 +1019,6 @@ class Block
 
     /**
      * Queues the block for registration on `init`.
-     *
-     * @since 0.7.0
      *
      * @param string|null   $name   Block type name (`namespace/slug`).
      * @param string|null   $title  Human-readable title.
@@ -1184,8 +1067,6 @@ class Block
     /**
      * Registers the block with WordPress.
      *
-     * @since 0.7.0
-     *
      * @see https://developer.wordpress.org/reference/functions/register_block_type/
      */
     public function registerBlock(): void
@@ -1202,8 +1083,6 @@ class Block
     /**
      * Enqueues block styles in the editor.
      *
-     * @since 0.7.0
-     *
      * @see https://developer.wordpress.org/reference/functions/wp_enqueue_style/
      * @see https://developer.wordpress.org/reference/hooks/enqueue_block_editor_assets/
      */
@@ -1216,8 +1095,6 @@ class Block
 
     /**
      * Merges default arguments with user-provided arguments.
-     *
-     * @since 0.7.0
      */
     protected function setArgs(): void
     {
@@ -1293,8 +1170,6 @@ class Block
     /**
      * Registers stylesheets and hooks them into the block editor.
      *
-     * @since 0.7.0
-     *
      * @see https://developer.wordpress.org/reference/functions/wp_register_style/
      * @see https://developer.wordpress.org/reference/hooks/enqueue_block_editor_assets/
      */
@@ -1318,8 +1193,6 @@ class Block
     /**
      * Builds a style handle from the block name.
      *
-     * @since 0.7.0
-     *
      * @param int $index Stylesheet index.
      */
     private function defaultStyleHandle(int $index): string
@@ -1331,8 +1204,6 @@ class Block
 
     /**
      * Determines whether the running WordPress version supports autoRegister.
-     *
-     * @since 0.7.0
      *
      * @global string $wp_version WordPress version.
      *
@@ -1347,8 +1218,6 @@ class Block
 
     /**
      * Rejects reserved or empty field names.
-     *
-     * @since 0.8.0
      *
      * @param string $name Field name.
      *
@@ -1384,8 +1253,6 @@ class Block
     /**
      * Rejects reserved or empty attribute names.
      *
-     * @since 0.7.0
-     *
      * @param string $name Attribute name.
      *
      * @return bool False when the name is empty or reserved.
@@ -1397,8 +1264,6 @@ class Block
 
     /**
      * Rejects attribute schemas that cannot generate Inspector controls.
-     *
-     * @since 0.7.0
      *
      * @param string               $name   Attribute name.
      * @param array<string, mixed> $schema Attribute schema.
@@ -1457,8 +1322,6 @@ class Block
     /**
      * Rejects a scalar name that belongs to a repeater.
      *
-     * @since 0.8.0
-     *
      * @param string $name Field name.
      *
      * @return bool False when the name is already a repeater. The message is reported in the WordPress admin.
@@ -1480,8 +1343,6 @@ class Block
     /**
      * Records a top-level field in declaration order.
      *
-     * @since 0.8.0
-     *
      * @param string $name Field name.
      */
     private function trackField(string $name): void
@@ -1493,8 +1354,6 @@ class Block
 
     /**
      * Returns top-level field schemas in declaration order.
-     *
-     * @since 0.8.0
      *
      * @return list<array<string, mixed>> Field schemas.
      */
@@ -1519,8 +1378,6 @@ class Block
     /**
      * Returns root repeater schemas.
      *
-     * @since 0.8.0
-     *
      * @return list<array<string, mixed>> Repeater schemas.
      */
     private function repeaterSchemas(): array
@@ -1538,8 +1395,6 @@ class Block
 
     /**
      * Builds the editor schema for one scalar attribute.
-     *
-     * @since 0.8.0
      *
      * @param string $name Attribute name.
      *
@@ -1571,8 +1426,6 @@ class Block
     /**
      * Returns the empty value for a scalar field type.
      *
-     * @since 0.8.0
-     *
      * @param string $type Field type.
      *
      * @return mixed Empty value.
@@ -1588,8 +1441,6 @@ class Block
 
     /**
      * Registers post meta and queues the editor script.
-     *
-     * @since 0.8.0
      */
     private function prepareStorage(): void
     {
@@ -1607,8 +1458,6 @@ class Block
     /**
      * Determines whether this block needs the shared editor script.
      *
-     * @since 0.8.0
-     *
      * @return bool True when the inspector must be drawn by the script.
      */
     private function needsEditorScript(): bool
@@ -1622,8 +1471,6 @@ class Block
 
     /**
      * Registers the block meta key for every post type.
-     *
-     * @since 0.8.0
      *
      * @param list<array<string, mixed>> $fields Field schemas.
      *
@@ -1667,8 +1514,6 @@ class Block
     /**
      * Adds the block schema to the shared editor script.
      *
-     * @since 0.8.0
-     *
      * @see https://developer.wordpress.org/reference/hooks/enqueue_block_editor_assets/
      */
     private function queueEditorConfig(): void
@@ -1692,8 +1537,6 @@ class Block
      *
      * The handle depends on the block editor packages and is deferred with
      * them, so the field UI runs only after `wp.blockEditor` exists.
-     *
-     * @since 0.8.0
      *
      * @see https://developer.wordpress.org/reference/functions/wp_register_script/
      */
@@ -1723,8 +1566,6 @@ class Block
      *
      * When the library lives outside the content directory, the file URL is
      * empty and the script is printed inline on the same handle.
-     *
-     * @since 0.8.0
      *
      * @see https://developer.wordpress.org/reference/functions/wp_enqueue_script/
      * @see https://developer.wordpress.org/reference/functions/wp_add_inline_script/
@@ -1786,8 +1627,6 @@ class Block
     /**
      * Registers the frame styles shared by the editor and the front end.
      *
-     * @since 0.8.0
-     *
      * @see https://developer.wordpress.org/reference/functions/wp_register_style/
      */
     private static function registerSharedEditorStyle(): void
@@ -1820,8 +1659,6 @@ class Block
     /**
      * Adds block meta keys to post revisions.
      *
-     * @since 0.8.0
-     *
      * @param list<string> $keys Revision meta keys.
      *
      * @return list<string> Meta keys, including block storage keys.
@@ -1835,8 +1672,6 @@ class Block
 
     /**
      * Stores repeater arrays in the block comment, or the insertion id when values live in post meta.
-     *
-     * @since 0.8.0
      */
     private function applyStorageAttributes(): void
     {
@@ -1883,8 +1718,6 @@ class Block
      *
      * Post meta stores every insertion under {@see metaKey()}. The block comment
      * contributes `wpbId`, and the render callback receives that insertion's fields.
-     *
-     * @since 0.8.0
      *
      * @param array<string, mixed> $attributes Block attributes.
      * @param \WP_Block            $block      Block instance.
@@ -1937,8 +1770,6 @@ class Block
 
     /**
      * Determines whether the current request is the editor's server render preview.
-     *
-     * @since 0.8.0
      *
      * @return bool True on the block renderer REST route.
      */

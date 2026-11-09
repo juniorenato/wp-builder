@@ -18,64 +18,47 @@ use InvalidArgumentException;
  * Create it from {@see AdminForm::repeater()} or {@see Repeater::repeater()}.
  * Call {@see Repeater::end()} to return to the parent.
  *
- * @since  0.9.0
  * @author Renato Rodrigues Jr <juniorenato@msn.com>
  */
 class Repeater
 {
     /**
      * Form that stores the root repeater.
-     *
-     * @since 0.9.0
      */
     private object $owner;
 
     /**
      * Parent repeater, or null at the form root.
-     *
-     * @since 0.9.0
      */
     private ?Repeater $parent;
 
     /**
      * Field name.
-     *
-     * @since 0.9.0
      */
     private string $name;
 
     /**
      * Field label.
-     *
-     * @since 0.9.0
      */
     private string $label;
 
     /**
      * Field description.
-     *
-     * @since 0.9.0
      */
     private string $description;
 
     /**
      * Minimum item count shown in the form.
-     *
-     * @since 0.9.0
      */
     private int $min = 0;
 
     /**
      * Maximum item count accepted by the form. Zero means no limit.
-     *
-     * @since 0.9.0
      */
     private int $max = 0;
 
     /**
      * Scalar fields, keyed by name.
-     *
-     * @since 0.9.0
      *
      * @var array<string, array<string, mixed>>
      */
@@ -84,8 +67,6 @@ class Repeater
     /**
      * Nested repeaters, keyed by name.
      *
-     * @since 0.9.0
-     *
      * @var array<string, Repeater>
      */
     private array $children = [];
@@ -93,16 +74,12 @@ class Repeater
     /**
      * Field names in declaration order.
      *
-     * @since 0.9.0
-     *
      * @var list<string>
      */
     private array $order = [];
 
     /**
      * Creates a repeater level.
-     *
-     * @since 0.9.0
      *
      * @param object        $owner       Form that owns the root repeater.
      * @param Repeater|null $parent      Parent repeater, or null at the root.
@@ -127,8 +104,6 @@ class Repeater
     /**
      * Rejects a name that cannot be used in a request key.
      *
-     * @since 0.9.0
-     *
      * @param string $name Field name.
      *
      * @throws InvalidArgumentException If the name is empty or contains other characters.
@@ -145,8 +120,6 @@ class Repeater
 
     /**
      * Returns the field name.
-     *
-     * @since 0.9.0
      */
     public function name(): string
     {
@@ -157,8 +130,6 @@ class Repeater
      * Sets the minimum number of items the form shows.
      *
      * Saving fewer items is allowed. The next edit screen fills the list back up.
-     *
-     * @since 0.9.0
      *
      * @param int $min Minimum count.
      *
@@ -186,8 +157,6 @@ class Repeater
      *
      * Zero removes the limit. Extra submitted items are discarded.
      *
-     * @since 0.9.0
-     *
      * @param int $max Maximum count.
      *
      * @return static
@@ -212,8 +181,6 @@ class Repeater
     /**
      * Adds a text field.
      *
-     * @since 0.9.0
-     *
      * @param string               $name        Field name.
      * @param string               $label       Field label.
      * @param string               $description Field description.
@@ -236,8 +203,6 @@ class Repeater
 
     /**
      * Adds a textarea field.
-     *
-     * @since 0.9.0
      *
      * @param string               $name        Field name.
      * @param string               $label       Field label.
@@ -262,8 +227,6 @@ class Repeater
     /**
      * Adds a number field.
      *
-     * @since 0.9.0
-     *
      * @param string               $name        Field name.
      * @param string               $label       Field label.
      * @param string               $description Field description.
@@ -286,8 +249,6 @@ class Repeater
 
     /**
      * Adds a select field.
-     *
-     * @since 0.9.0
      *
      * @param string                   $name        Field name.
      * @param string                   $label       Field label.
@@ -324,8 +285,6 @@ class Repeater
     /**
      * Adds a radio field.
      *
-     * @since 0.9.0
-     *
      * @param string                   $name        Field name.
      * @param string                   $label       Field label.
      * @param array<string|int, mixed> $options     Radio options.
@@ -357,8 +316,6 @@ class Repeater
 
     /**
      * Adds a checkbox field.
-     *
-     * @since 0.9.0
      *
      * @param string                   $name        Field name.
      * @param string                   $label       Field label.
@@ -395,8 +352,6 @@ class Repeater
     /**
      * Adds an image field stored as one attachment ID or a list of IDs.
      *
-     * @since 0.9.0
-     *
      * @param string               $name        Field name.
      * @param string               $label       Field label.
      * @param string               $description Field description.
@@ -428,8 +383,6 @@ class Repeater
 
     /**
      * Adds a file field stored as one attachment ID or a list of IDs.
-     *
-     * @since 0.9.0
      *
      * @param string               $name        Field name.
      * @param string               $label       Field label.
@@ -465,8 +418,6 @@ class Repeater
      *
      * `wp_editor()` cannot be cloned into a new row.
      *
-     * @since 0.9.0
-     *
      * @param string               $name           Field name.
      * @param string               $label          Field label.
      * @param array<string, mixed> $editorSettings Unused editor settings.
@@ -493,8 +444,6 @@ class Repeater
     /**
      * Opens a nested repeater.
      *
-     * @since 0.9.0
-     *
      * @param string $name        Field name.
      * @param string $label       Field label.
      * @param string $description Field description.
@@ -517,8 +466,6 @@ class Repeater
     /**
      * Returns to the parent repeater, or to the form at the root.
      *
-     * @since 0.9.0
-     *
      * @return object Parent repeater or the owning form.
      */
     public function end(): object
@@ -528,8 +475,6 @@ class Repeater
 
     /**
      * Returns the schema used to render and sanitize this level.
-     *
-     * @since 0.9.0
      *
      * @return array<string, mixed> Repeater schema.
      */
@@ -548,8 +493,6 @@ class Repeater
 
     /**
      * Returns stored rows padded to the minimum shown in the form.
-     *
-     * @since 0.9.0
      *
      * @param mixed $stored Saved value.
      *
@@ -579,8 +522,6 @@ class Repeater
     /**
      * Returns the nested repeater with the given name.
      *
-     * @since 0.9.0
-     *
      * @param string $name Child field name.
      *
      * @return Repeater Nested repeater.
@@ -603,8 +544,6 @@ class Repeater
     /**
      * Returns the field schemas in declaration order.
      *
-     * @since 0.9.0
-     *
      * @return list<array<string, mixed>> Field schemas.
      */
     public function fieldSchemas(): array
@@ -626,8 +565,6 @@ class Repeater
     /**
      * Stores a scalar field.
      *
-     * @since 0.9.0
-     *
      * @param array<string, mixed> $field Field configuration.
      *
      * @return static
@@ -646,8 +583,6 @@ class Repeater
 
     /**
      * Rejects a field name that is invalid or already used on this level.
-     *
-     * @since 0.9.0
      *
      * @param string $name Field name.
      *
@@ -668,8 +603,6 @@ class Repeater
 
     /**
      * Rejects a minimum greater than a positive maximum.
-     *
-     * @since 0.9.0
      *
      * @throws InvalidArgumentException If the bounds are impossible.
      */

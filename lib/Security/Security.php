@@ -22,7 +22,6 @@ use WPB\Notices;
  * `disableFileEdit()` removes the theme and plugin file editors. Installing
  * and updating plugins and themes stays available.
  *
- * @since  0.10.0
  * @author Renato Rodrigues Jr <juniorenato@msn.com>
  */
 class Security
@@ -30,16 +29,12 @@ class Security
     /**
      * Features already hooked on this instance.
      *
-     * @since 0.10.0
-     *
      * @var array<string, true>
      */
     private array $active = [];
 
     /**
      * Enables the given security features.
-     *
-     * @since 0.10.0
      *
      * @param array<int|string, bool|string> $features Method names, or names mapped to `true` or `false`.
      */
@@ -65,8 +60,6 @@ class Security
      * On an `xmlrpc.php` request this ends the request with status 403 before
      * the XML-RPC server runs. The filters cover a server booted some other way.
      *
-     * @since 0.10.0
-     *
      * @see https://developer.wordpress.org/reference/hooks/xmlrpc_enabled/
      * @see https://developer.wordpress.org/reference/hooks/xmlrpc_methods/
      */
@@ -90,8 +83,6 @@ class Security
     /**
      * Removes every XML-RPC method.
      *
-     * @since 0.10.0
-     *
      * @return array<string, mixed>
      */
     public function removeXmlRpcMethods(): array
@@ -101,8 +92,6 @@ class Security
 
     /**
      * Removes the `X-Pingback` header.
-     *
-     * @since 0.10.0
      *
      * @param array<string, string> $headers Response headers.
      *
@@ -122,8 +111,6 @@ class Security
      * that already use the slug stay available. Guests also lose `GET /wp/v2/users`.
      * Logged-in users keep that route, because the block editor needs it.
      *
-     * @since 0.10.0
-     *
      * @see https://developer.wordpress.org/reference/functions/redirect_canonical/
      * @see https://developer.wordpress.org/reference/hooks/rest_pre_dispatch/
      */
@@ -139,8 +126,6 @@ class Security
 
     /**
      * Redirects numeric `author` queries from anonymous visitors.
-     *
-     * @since 0.10.0
      *
      * @see https://developer.wordpress.org/reference/functions/wp_safe_redirect/
      */
@@ -163,8 +148,6 @@ class Security
 
     /**
      * Rejects the public users route for anonymous REST requests.
-     *
-     * @since 0.10.0
      *
      * @param mixed            $result  Short-circuit result.
      * @param \WP_REST_Server  $server  REST server.
@@ -199,8 +182,6 @@ class Security
      * The constant covers that same check. The capability filter still denies
      * editing when `wp-config.php` defined the constant as false.
      *
-     * @since 0.10.0
-     *
      * @see https://developer.wordpress.org/reference/hooks/map_meta_cap/
      */
     public function disableFileEdit(): void
@@ -219,8 +200,6 @@ class Security
     /**
      * Denies the capabilities that open the theme and plugin file editors.
      *
-     * @since 0.10.0
-     *
      * @param list<string> $caps Primitive capabilities required for the check.
      * @param string       $cap  Capability being checked.
      *
@@ -237,8 +216,6 @@ class Security
 
     /**
      * Enables every security feature.
-     *
-     * @since 0.10.0
      */
     public function enableAll(): void
     {
@@ -249,8 +226,6 @@ class Security
 
     /**
      * Hooks one named feature.
-     *
-     * @since 0.10.0
      *
      * @param string $feature Method name.
      */
@@ -270,8 +245,6 @@ class Security
 
     /**
      * Records a feature the first time it is enabled.
-     *
-     * @since 0.10.0
      *
      * @param string $feature Feature name.
      *

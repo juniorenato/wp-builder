@@ -20,7 +20,6 @@ use WPB\Notices;
  * Fields use the same helpers as a post type or a taxonomy. Each value is
  * stored as post meta on the menu item and copied onto the item object.
  *
- * @since  0.11.0
  * @author Renato Rodrigues Jr <juniorenato@msn.com>
  *
  * @see https://developer.wordpress.org/reference/functions/register_nav_menu/
@@ -36,8 +35,6 @@ class Menu
      * Menu item properties WordPress already fills.
      *
      * A custom field with one of these names would replace the real value.
-     *
-     * @since 0.11.0
      *
      * @var list<string>
      */
@@ -64,23 +61,17 @@ class Menu
     /**
      * Field names already attached to menu items during this request.
      *
-     * @since 0.11.0
-     *
      * @var array<string, true>
      */
     private static array $registeredFields = [];
 
     /**
      * Whether the menu item field styles have been printed.
-     *
-     * @since 0.11.0
      */
     private static bool $styled = false;
 
     /**
      * Theme locations, keyed by slug.
-     *
-     * @since 0.11.0
      *
      * @var array<string, string>
      */
@@ -88,22 +79,16 @@ class Menu
 
     /**
      * Whether registration was queued on `init`.
-     *
-     * @since 0.11.0
      */
     private bool $queued = false;
 
     /**
      * Whether the menu item editor hooks are attached.
-     *
-     * @since 0.11.0
      */
     private bool $hooked = false;
 
     /**
      * Field names this instance has already claimed.
-     *
-     * @since 0.11.0
      *
      * @var array<string, true>
      */
@@ -114,8 +99,6 @@ class Menu
      *
      * Fields added before `init` are still attached. Call `register()` last
      * when the location is set with `location()`.
-     *
-     * @since 0.11.0
      *
      * @param string|null $location    Location slug.
      * @param string|null $description Location description shown in the admin.
@@ -131,8 +114,6 @@ class Menu
 
     /**
      * Resets the menu configuration to defaults.
-     *
-     * @since 0.11.0
      */
     public function init(): void
     {
@@ -151,8 +132,6 @@ class Menu
      * Adds a theme menu location.
      *
      * The slug passes through `sanitize_key()`.
-     *
-     * @since 0.11.0
      *
      * @param string $location    Location slug, such as `primary`.
      * @param string $description Location description shown in the admin.
@@ -178,8 +157,6 @@ class Menu
 
     /**
      * Queues location registration and menu item fields on `init`.
-     *
-     * @since 0.11.0
      *
      * @param string|null $location    Location slug.
      * @param string|null $description Location description.
@@ -220,8 +197,6 @@ class Menu
      *
      * Labels and fields are finalized here so registration runs on `init`.
      *
-     * @since 0.11.0
-     *
      * @see https://developer.wordpress.org/reference/functions/register_nav_menu/
      */
     public function registerMenu(): void
@@ -247,8 +222,6 @@ class Menu
 
     /**
      * Renders the custom fields inside one menu item in the editor.
-     *
-     * @since 0.11.0
      *
      * @param int|string $itemId   Menu item ID.
      * @param object     $menuItem Menu item being edited.
@@ -283,8 +256,6 @@ class Menu
      * The menu screen nonce is required. Other callers of
      * `wp_update_nav_menu_item()`, such as the Customizer, leave the stored
      * values untouched.
-     *
-     * @since 0.11.0
      *
      * @param int|string $menuId Menu term ID.
      * @param int|string $itemId Menu item ID.
@@ -332,8 +303,6 @@ class Menu
     /**
      * Copies stored field values onto the menu item object.
      *
-     * @since 0.11.0
-     *
      * @param object $item Menu item being prepared for display.
      *
      * @return object The same item, with one property per custom field.
@@ -357,8 +326,6 @@ class Menu
 
     /**
      * Drops field names that would collide or cannot be posted per item.
-     *
-     * @since 0.11.0
      */
     private function prepareFields(): void
     {
@@ -407,8 +374,6 @@ class Menu
      * The request name includes the item ID because the menu editor submits
      * every item in one form. The stored meta key stays the field name.
      *
-     * @since 0.11.0
-     *
      * @param int                  $itemId Menu item ID.
      * @param string               $name   Field name.
      * @param array<string, mixed> $field  Field configuration.
@@ -439,8 +404,6 @@ class Menu
     /**
      * Returns the request key for one field on one menu item.
      *
-     * @since 0.11.0
-     *
      * @param int    $itemId Menu item ID.
      * @param string $name   Field name.
      *
@@ -453,8 +416,6 @@ class Menu
 
     /**
      * Prints the spacing used by fields inside the menu item editor.
-     *
-     * @since 0.11.0
      *
      * @see https://developer.wordpress.org/reference/hooks/admin_head/
      */
