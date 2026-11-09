@@ -194,9 +194,15 @@ class Block
     /**
      * Theme template slug passed to `get_template_part()`.
      *
-     * An empty string means the convention `template-parts/blocks/{block name}`.
+     * An empty string means `{Builder::blockTemplates()}/{block name}`.
+     * That directory defaults to `template-parts/blocks`.
      */
     private string $templateSlug;
+
+    /**
+     * Whether this block enqueues its CSS and JavaScript when it renders.
+     */
+    private bool $enqueueAssets;
 
     /**
      * Block names registered by this library.
@@ -292,6 +298,7 @@ class Block
         $this->repeaters = [];
         $this->fieldOrder = [];
         $this->templateSlug = '';
+        $this->enqueueAssets = false;
 
         return $this;
     }
@@ -586,7 +593,8 @@ class Block
      *
      * `template-parts/blocks/hero` loads `template-parts/blocks/hero.php` from the child theme, then the parent.
      * A trailing `.php` is removed. An empty slug clears any previous slug and
-     * the block uses `template-parts/blocks/{block name}`.
+     * the block uses `{Builder::blockTemplates()}/{block name}`. That directory
+     * defaults to `template-parts/blocks`.
      *
      * @param string $slug Template slug, without `.php`.
      *
@@ -608,6 +616,28 @@ class Block
         }
 
         $this->templateSlug = $slug;
+
+        return $this;
+    }
+
+    /**
+     * Enqueues this block's CSS and JavaScript when the block renders.
+     *
+     * The files live in {@see Builder::blockAssets()}, which defaults to
+     * `assets/public/blocks`. `my-theme/cta` loads
+     * `assets/public/blocks/my-theme/cta.css` and
+     * `assets/public/blocks/my-theme/cta.js` from the child theme, then the parent.
+     * A missing file is skipped. The script prints in the footer.
+     *
+     * @return static
+     *
+     * @see https://developer.wordpress.org/reference/functions/wp_enqueue_style/
+     * @see https://developer.wordpress.org/reference/functions/wp_enqueue_script/
+     * @see https://developer.wordpress.org/reference/functions/get_theme_file_path/
+     */
+    public function assets(): static
+    {
+        $this->enqueueAssets = true;
 
         return $this;
     }
@@ -772,6 +802,7 @@ class Block
      * A `render()` callback receives those values and owns the HTML. Image
      * fields in that array stay attachment IDs. Otherwise a theme template
      * owns the HTML. With no template, the block prints a React mount point.
+     * `assets()` enqueues the block CSS and JavaScript before that HTML is built.
      *
      * @param array<string, mixed> $attributes Block attributes.
      * @param string               $content    Inner block HTML.
@@ -783,13 +814,14 @@ class Block
      */
     public function renderBlock(array $attributes, string $content, \WP_Block $block): string
     {
+        $this->enqueueBlockAssets();
         $values = $this->valuesForRender($attributes, $block);
 
         if (is_callable($this->renderCallback)) {
             return (string) ($this->renderCallback)($values, $content, $block);
         }
 
-        $slug = $this->templateSlug !== '' ? $this->templateSlug : 'template-parts/blocks/' . $this->name;
+        $slug = $this->templateSlug !== '' ? $this->templateSlug : Builder::blockTemplates() . '/' . $this->name;
         $rendered = self::captureTemplate($slug, [
             'attributes' => $this->propsForReact($values),
             'content'    => $content,
@@ -882,7 +914,7 @@ class Block
             return $content;
         }
 
-        $rendered = self::captureTemplate('template-parts/blocks/' . $name, [
+        $rendered = self::captureTemplate(Builder::blockTemplates() . '/' . $name, [
             'attributes' => is_array($block['attrs'] ?? null) ? $block['attrs'] : [],
             'content'    => $content,
             'block'      => $instance,
@@ -1191,6 +1223,74 @@ class Block
 
         if ($this->styleHandles) {
             add_action('enqueue_block_editor_assets', [$this, 'enqueueEditorStyles']);
+        }
+    }
+
+    /**
+     * Enqueues the convention CSS and JavaScript for this render.
+     *
+     * @see https://developer.wordpress.org/reference/functions/get_theme_file_path/
+     * @see https://developer.wordpress.org/reference/functions/get_theme_file_uri/
+     */
+    private function enqueueBlockAssets(): void
+    {
+        if (!$this->enqueueAssets || $this->name === '') {
+            return;
+        }
+
+        if (!function_exists('get_theme_file_path') || !function_exists('get_theme_file_uri')) {
+            return;
+        }
+
+        $stem = Builder::blockAssets() . '/' . $this->name;
+        $handle = 'wpb-' . str_replace('/', '-', $this->name);
+
+        $this->enqueueThemeFile($stem . '.css', $handle, 'style');
+        $this->enqueueThemeFile($stem . '.js', $handle, 'script');
+    }
+
+    /**
+     * Registers and enqueues one theme file when it exists.
+     *
+     * @param string $relative Path relative to the theme.
+     * @param string $handle   Style or script handle.
+     * @param 'style'|'script' $kind Asset kind.
+     */
+    private function enqueueThemeFile(string $relative, string $handle, string $kind): void
+    {
+        $path = get_theme_file_path($relative);
+
+        if (!is_string($path) || !is_readable($path)) {
+            return;
+        }
+
+        $url = get_theme_file_uri($relative);
+
+        if (!is_string($url) || $url === '') {
+            return;
+        }
+
+        $mtime = filemtime($path);
+        $version = $mtime === false ? false : (string) $mtime;
+
+        if ($kind === 'style') {
+            if (function_exists('wp_register_style')) {
+                wp_register_style($handle, $url, [], $version);
+            }
+
+            if (function_exists('wp_enqueue_style')) {
+                wp_enqueue_style($handle);
+            }
+
+            return;
+        }
+
+        if (function_exists('wp_register_script')) {
+            wp_register_script($handle, $url, [], $version, true);
+        }
+
+        if (function_exists('wp_enqueue_script')) {
+            wp_enqueue_script($handle);
         }
     }
 

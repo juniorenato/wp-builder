@@ -173,11 +173,15 @@ new Builder(Builder::PLUGIN);
 
 Constructors in this library are safe to call from a bootstrap file. Blocks, post types, taxonomies, menus, and meta boxes are created on `init`. A call made while `init` is running still creates them inside that hook. A call made after `init` has finished waits for the next request.
 
-`Builder::THEME` is `theme` and `Builder::PLUGIN` is `plugin`. `isTheme()` and `isPlugin()` read the environment stored by the constructor. `url()` turns an absolute path inside this install into a public URL, or returns an empty string when the path is outside it. `Builder::PATH` points at the packaged directories: `FORM` (`views/form/`), `LANG` (`lang/`), `PAGE` (`views/`), and `BLOCK` (`views/blocks/`).
+`Builder::THEME` is `theme` and `Builder::PLUGIN` is `plugin`. `isTheme()` and `isPlugin()` read the environment stored by the constructor. `url()` turns an absolute path inside this install into a public URL, or returns an empty string when the path is outside it. `Builder::PATH` points at the packaged directories: `FORM` (`views/form/`), `LANG` (`lang/`), `PAGE` (`views/`), and `BLOCK` (`views/blocks/`). `PATH['BLOCK']` is the library repeater view. It is not the public block PHP directory.
+
+`blockAssets()` sets the theme directory for block CSS and JavaScript. The default is `assets/public/blocks`. `blockTemplates()` sets the theme directory for public block PHP. The default is `template-parts/blocks`. Call either method with no argument to read the directory in effect. The path is relative to the child theme, then the parent. An empty path, or a path that contains `..`, is ignored and reported in the admin.
 
 ```php
 Builder::isTheme();
 Builder::url(get_stylesheet_directory() . '/assets/cta.css');
+Builder::blockAssets('assets/dist/blocks');
+Builder::blockTemplates('parts/blocks');
 ```
 
 ### `Notices`
@@ -645,15 +649,52 @@ new Block('my-theme/cta', 'Call to Action', $renderCallback);
 
 Use [`get_block_wrapper_attributes()`](https://developer.wordpress.org/reference/functions/get_block_wrapper_attributes/) in the render callback so color, spacing, and border supports print on the wrapper. `stylesheet()` loads CSS on the front end and in the editor.
 
+### Block assets
+
+`assets()` enqueues that block's CSS and JavaScript when the block renders. A page that does not render the block does not load the files. Calling `assets()` does not enqueue anything by itself.
+
+With no `Builder::blockAssets()` call, `my-theme/cta` looks for these files in the child theme, then the parent:
+
+- `assets/public/blocks/my-theme/cta.css`
+- `assets/public/blocks/my-theme/cta.js`
+
+A missing file is skipped. The other file still loads. Both use the handle `wpb-my-theme-cta`. The script prints in the footer. The style prints in the footer when the block renders after `wp_head`. WordPress omits assets enqueued during a render that prints nothing.
+
+```php
+use WPB\Blocks\Block;
+use WPB\Builder;
+
+Builder::blockAssets('assets/dist/blocks');
+
+$cta = new Block();
+$cta->name('my-theme/cta')
+    ->title('Call to Action')
+    ->assets()
+    ->render(function (array $attributes): string {
+        $wrapper = get_block_wrapper_attributes(['class' => 'my-cta']);
+
+        return sprintf(
+            '<div %1$s><h2>%2$s</h2></div>',
+            $wrapper,
+            esc_html($attributes['heading'] ?? '')
+        );
+    })
+    ->register();
+```
+
+That block then loads `assets/dist/blocks/my-theme/cta.css` and `assets/dist/blocks/my-theme/cta.js`.
+
+`stylesheet()` is separate. It registers a URL you pass and still loads that stylesheet on the front end and in the editor.
+
 ### Public HTML
 
 `render()` runs when it was set. The callback receives normalized fields, and an image is the attachment ID. Its return value is the block HTML.
 
 Otherwise the theme template is the block HTML:
 
-- `template('template-parts/blocks/hero')` loads `template-parts/blocks/hero.php` from the child theme, then the parent. A trailing `.php` is removed. `template('')` is ignored, reported in the admin, and the block falls back to the convention below.
+- `template('template-parts/blocks/hero')` loads `template-parts/blocks/hero.php` from the child theme, then the parent. A trailing `.php` is removed. `template('')` is ignored, reported in the admin, and the block falls back to the convention below. This slug is the full path. `blockTemplates()` does not prefix it.
 - A `template()` slug that does not exist is reported in the admin. The block then prints the mount point.
-- With no `template()` call, `my-theme/team` loads `template-parts/blocks/my-theme/team.php` when that file exists. A missing convention file is silent.
+- With no `template()` call, `my-theme/team` loads `template-parts/blocks/my-theme/team.php` when that file exists. A missing convention file is silent. `Builder::blockTemplates('parts/blocks')` changes that directory, so the same block loads `parts/blocks/my-theme/team.php`.
 
 `get_template_part()` receives `$args` with `attributes`, `content`, `block`, and `name`. `attributes` matches `data-wpb-props`. Call `get_block_wrapper_attributes()` inside the template when the markup needs alignment, color, or spacing.
 
@@ -726,7 +767,7 @@ Blocks saved in post meta, and any block with a repeater, load `assets/js/block-
 
 ### Core blocks
 
-`new Block()` attaches a `render_block` filter. Call `Block::hookCoreTemplates()` when the theme replaces core blocks and does not construct a `Block`. A theme file replaces the public HTML of a core block when the file exists. `core/paragraph` uses `template-parts/blocks/core/paragraph.php`. `core/image`, `core/group`, and `core/navigation` follow the same path: `template-parts/blocks/core/{slug}.php`.
+`new Block()` attaches a `render_block` filter. Call `Block::hookCoreTemplates()` when the theme replaces core blocks and does not construct a `Block`. A theme file replaces the public HTML of a core block when the file exists. The directory is `Builder::blockTemplates()`, which defaults to `template-parts/blocks`. `core/paragraph` uses `template-parts/blocks/core/paragraph.php`. `core/image`, `core/group`, and `core/navigation` follow the same path: `template-parts/blocks/core/{slug}.php`. `Builder::blockTemplates('parts/blocks')` moves those files to `parts/blocks/core/{slug}.php`.
 
 ```php
 use WPB\Blocks\Block;
