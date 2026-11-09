@@ -11,6 +11,10 @@ $formPath = Builder::PATH['FORM'];
 $fieldType = $this->field['type'] ?? 'text';
 $partialPath = $this->fieldPartialPath($fieldType);
 
+if ($partialPath === '' || !is_readable($partialPath)) {
+    return;
+}
+
 if ($fieldType === 'hidden') {
     require $partialPath;
 
@@ -35,6 +39,19 @@ elseif ($this->fieldsType === 'term') :
         <?php require $partialPath; ?>
         <?php require $formPath . 'partials/description.php'; ?>
     </div>
+
+    <?php
+elseif ($this->fieldsType === 'menu') :
+    $menuFieldKey = (string) ($this->field['key'] ?? $this->field['name']);
+    $menuTag = in_array($fieldType, ['image', 'file', 'repeater', 'rich-text'], true) ? 'div' : 'p';
+    ?>
+
+    <<?php echo $menuTag; ?> class="field-<?php echo esc_attr($menuFieldKey); ?> description description-wide wpb-menu-field">
+        <?php require $formPath . 'partials/label.php'; ?>
+        <br>
+        <?php require $partialPath; ?>
+        <?php require $formPath . 'partials/description.php'; ?>
+    </<?php echo $menuTag; ?>>
 
     <?php
 else :

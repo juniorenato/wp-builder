@@ -17,7 +17,6 @@ use WPB\Forms\TaxonomyCustomField;
 /**
  * Registers a custom taxonomy with WordPress.
  *
- * @since  0.1.0
  * @author Renato Rodrigues Jr <juniorenato@msn.com>
  *
  * @see https://developer.wordpress.org/reference/functions/register_taxonomy/
@@ -29,36 +28,26 @@ class Taxonomy
 
     /**
      * Taxonomy slug.
-     *
-     * @since 0.1.0
      */
     private string $taxonomy;
 
     /**
      * Singular label.
-     *
-     * @since 0.1.0
      */
     protected string $singular;
 
     /**
      * Plural label.
-     *
-     * @since 0.1.0
      */
     protected string $plural;
 
     /**
      * Whether generated labels use the masculine form.
-     *
-     * @since 0.1.0
      */
     private bool $male;
 
     /**
      * Taxonomy labels.
-     *
-     * @since 0.1.0
      *
      * @var array<string, string>
      */
@@ -66,15 +55,11 @@ class Taxonomy
 
     /**
      * Whether default translated labels have been generated.
-     *
-     * @since 0.1.0
      */
     private bool $defaultLabelsBuilt = false;
 
     /**
      * Rewrite arguments.
-     *
-     * @since 0.1.0
      *
      * @var array<string, mixed>
      */
@@ -83,16 +68,12 @@ class Taxonomy
     /**
      * Taxonomy capabilities.
      *
-     * @since 0.1.0
-     *
      * @var array<string, string>
      */
     private array $capabilities;
 
     /**
      * Attached post type slugs.
-     *
-     * @since 0.1.0
      *
      * @var list<string>
      */
@@ -101,16 +82,12 @@ class Taxonomy
     /**
      * Arguments passed to `register_taxonomy()`.
      *
-     * @since 0.1.0
-     *
      * @var array<string, mixed>
      */
     private array $args;
 
     /**
      * Optionally registers a taxonomy immediately.
-     *
-     * @since 0.1.0
      *
      * @param string|null              $taxonomy Taxonomy slug.
      * @param string|list<string>|null $postType Post type slug or list of slugs.
@@ -136,8 +113,6 @@ class Taxonomy
 
     /**
      * Resets the taxonomy configuration to defaults.
-     *
-     * @since 0.1.0
      */
     public function init(): void
     {
@@ -155,8 +130,6 @@ class Taxonomy
 
     /**
      * Sets the taxonomy slug.
-     *
-     * @since 0.1.0
      *
      * @param string $taxonomy Taxonomy key.
      *
@@ -176,8 +149,6 @@ class Taxonomy
      *
      * Translated strings are built on `init` so constructors can run from a
      * plugin or theme file without triggering the WordPress 6.7 notice.
-     *
-     * @since 0.1.0
      *
      * @param string $singular Singular name.
      * @param string $plural   Plural name.
@@ -199,8 +170,6 @@ class Taxonomy
 
     /**
      * Builds the default translated taxonomy labels.
-     *
-     * @since 0.1.0
      *
      * @see https://developer.wordpress.org/reference/functions/get_taxonomy_labels/
      */
@@ -243,8 +212,6 @@ class Taxonomy
 
     /**
      * Merges default arguments with user-provided arguments.
-     *
-     * @since 0.1.0
      *
      * @see https://developer.wordpress.org/reference/functions/register_taxonomy/
      */
@@ -305,8 +272,6 @@ class Taxonomy
      * - item_link
      * - item_link_description
      *
-     * @since 0.1.0
-     *
      * @param string|array<string, string> $labels  Label key or a map of labels.
      * @param string                       $val     Label value when `$labels` is a key.
      * @param bool                         $ucfirst Whether to uppercase the first character.
@@ -339,8 +304,6 @@ class Taxonomy
      * - with_front
      * - hierarchical
      * - ep_mask
-     *
-     * @since 0.1.0
      *
      * @param bool|string|array<string, mixed> $rewrite Rewrite flag, key, or map of values.
      * @param string|null                      $val     Value when `$rewrite` is a key.
@@ -381,8 +344,6 @@ class Taxonomy
      * - delete_terms
      * - assign_terms
      *
-     * @since 0.1.0
-     *
      * @param string|array<string, string> $capabilities Capability key or map of capabilities.
      * @param string|null                  $val          Capability value when `$capabilities` is a key.
      *
@@ -407,8 +368,6 @@ class Taxonomy
 
     /**
      * Attaches post types to the taxonomy.
-     *
-     * @since 0.1.0
      *
      * @param string|list<string> $post_types Post type slug or list of slugs.
      *
@@ -455,8 +414,6 @@ class Taxonomy
      * - sort
      * - _builtin
      *
-     * @since 0.1.0
-     *
      * @param string|array<string, mixed> $args Argument key or map of arguments.
      * @param mixed                       $val  Value when `$args` is a key.
      *
@@ -481,8 +438,6 @@ class Taxonomy
 
     /**
      * Queues the taxonomy for registration on `init`.
-     *
-     * @since 0.1.0
      *
      * @param string|null              $taxonomy Taxonomy slug.
      * @param string|list<string>|null $postType Post type slug or list of slugs.
@@ -521,8 +476,6 @@ class Taxonomy
      * Registers the taxonomy with WordPress.
      *
      * Labels and arguments are finalized here so `__()` runs on `init`.
-     *
-     * @since 0.1.0
      *
      * @see https://developer.wordpress.org/reference/functions/register_taxonomy/
      */

@@ -199,3 +199,129 @@ msgstr "%s mais %s"
 #: lib/Taxonomies/Taxonomy.php:95
 msgid "back to %s"
 msgstr "voltar para %s"
+
+#: lib/Blocks/Block.php
+msgid "Add"
+msgstr "Adicionar"
+
+#: lib/Blocks/Block.php
+msgid "Remove"
+msgstr "Remover"
+
+#: lib/Blocks/Block.php
+msgid "Move up"
+msgstr "Mover para cima"
+
+#: lib/Blocks/Block.php
+msgid "Move down"
+msgstr "Mover para baixo"
+
+#: lib/Blocks/Block.php
+msgid "Select image"
+msgstr "Selecionar imagem"
+
+#: lib/Blocks/Block.php
+msgid "Replace image"
+msgstr "Substituir imagem"
+
+#: lib/Blocks/Block.php
+msgid "Remove image"
+msgstr "Remover imagem"
+
+msgid "Select images"
+msgstr "Selecionar imagens"
+
+msgid "Add images"
+msgstr "Adicionar imagens"
+
+msgid "Select file"
+msgstr "Selecionar arquivo"
+
+msgid "Replace file"
+msgstr "Substituir arquivo"
+
+msgid "Remove file"
+msgstr "Remover arquivo"
+
+msgid "Select files"
+msgstr "Selecionar arquivos"
+
+msgid "Add files"
+msgstr "Adicionar arquivos"
+
+msgid "Cache"
+msgstr "Cache"
+
+msgid "Status"
+msgstr "Status"
+
+msgid "Enable page cache"
+msgstr "Ativar cache de página"
+
+msgid "Cache cleared."
+msgstr "Cache limpo."
+
+msgid "Page removed from the cache."
+msgstr "Página removida do cache."
+
+msgid "Page cache is off. Existing files stay on disk until you clear them."
+msgstr "O cache de página está desligado. Os arquivos existentes permanecem no disco até você limpá-los."
+
+msgid "Saving a post also clears that post, the post type archive and its pagination, and the pages selected here."
+msgstr "Salvar um post também limpa esse post, o arquivo do post type, a paginação e as páginas selecionadas aqui."
+
+msgid "Cached pages"
+msgstr "Páginas em cache"
+
+msgid "Clear all cache"
+msgstr "Limpar todo o cache"
+
+msgid "URL"
+msgstr "URL"
+
+msgid "Stored"
+msgstr "Armazenado"
+
+msgid "Clear"
+msgstr "Limpar"
+
+msgid "No cached pages."
+msgstr "Nenhuma página em cache."
+
+msgid "Disable cache"
+msgstr "Desativar o cache"
+
+msgid "Manage cache"
+msgstr "Gerenciar o cache"
+
+msgid "This page is rendered on every visit and is not stored."
+msgstr "Esta página é renderizada em toda visita e não é armazenada."
+
+msgid "Image files"
+msgstr "Arquivos de imagem"
+
+msgid "Rebuilds existing JPEG, PNG, WebP, and AVIF uploads. The longest edge is %d pixels."
+msgstr "Reconstrói os JPEG, PNG, WebP e AVIF já enviados. A maior aresta fica com %d pixels."
+
+msgid "%d image can be regenerated."
+msgid_plural "%d images can be regenerated."
+msgstr[0] "%d imagem pode ser regenerada."
+msgstr[1] "%d imagens podem ser regeneradas."
+
+msgid "Regenerate images"
+msgstr "Regenerar imagens"
+
+msgid "The images could not be regenerated."
+msgstr "Não foi possível regenerar as imagens."
+
+msgid "%1$d of %2$d images regenerated."
+msgstr "%1$d de %2$d imagens regeneradas."
+
+msgid "Finished. Regenerated %d images."
+msgstr "Concluído. %d imagens regeneradas."
+
+msgid "Finished. Regenerated %1$d images. %2$d failed."
+msgstr "Concluído. %1$d imagens regeneradas. %2$d falharam."
+
+msgid "Sorry, you are not allowed to do that."
+msgstr "Você não tem permissão para fazer isso."

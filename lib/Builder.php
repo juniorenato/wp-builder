@@ -13,46 +13,49 @@ namespace WPB;
 /**
  * Stores default library settings and loads translations.
  *
- * @since  0.1.0
  * @author Renato Rodrigues Jr <juniorenato@msn.com>
  */
 class Builder
 {
     /**
      * Theme environment identifier.
-     *
-     * @since 0.1.0
      */
     public const string THEME = 'theme';
 
     /**
      * Plugin environment identifier.
-     *
-     * @since 0.1.0
      */
     public const string PLUGIN = 'plugin';
 
     /**
      * Absolute paths used by the library.
      *
-     * @since 0.1.0
-     *
      * @var array{
      *     FORM: string,
      *     LANG: string,
-     *     PAGE: string
+     *     PAGE: string,
+     *     BLOCK: string
      * }
      */
     public const array PATH = [
-        'FORM' => __DIR__ . '/../views/form/',
-        'LANG' => __DIR__ . '/../lang',
-        'PAGE' => __DIR__ . '/../views/',
+        'FORM'  => __DIR__ . '/../views/form/',
+        'LANG'  => __DIR__ . '/../lang',
+        'PAGE'  => __DIR__ . '/../views/',
+        'BLOCK' => __DIR__ . '/../views/blocks/',
     ];
 
     /**
+     * Theme-relative directory for block CSS and JavaScript.
+     */
+    private static string $blockAssets = 'assets/public/blocks';
+
+    /**
+     * Theme-relative directory for public block PHP templates.
+     */
+    private static string $blockTemplates = 'template-parts/blocks';
+
+    /**
      * Registers the library bootstrap for the given environment.
-     *
-     * @since 0.1.0
      *
      * @param string $env `theme` or `plugin`.
      *
@@ -72,23 +75,26 @@ class Builder
     }
 
     /**
-     * Runs a callback on `init`, or immediately when `init` has already started.
+     * Runs a callback on `init`.
      *
-     * WordPress 6.7+ forbids loading translations before `after_setup_theme`.
-     * This keeps constructors safe to call from a plugin or theme bootstrap file.
-     *
-     * @since 0.1.0
+     * The callback is not executed after `init` has finished. A call made while
+     * `init` is running executes immediately, because that call is still inside
+     * the hook. Constructors stay safe to call from a plugin or theme file.
      *
      * @param callable $callback Callback to run.
      * @param int      $priority Hook priority.
      *
      * @see https://developer.wordpress.org/reference/functions/add_action/
-     * @see https://developer.wordpress.org/reference/functions/did_action/
+     * @see https://developer.wordpress.org/reference/functions/doing_action/
      * @see https://developer.wordpress.org/reference/hooks/init/
      */
     public static function onInit(callable $callback, int $priority = 10): void
     {
-        if (did_action('init')) {
+        if (!function_exists('add_action')) {
+            return;
+        }
+
+        if (function_exists('doing_action') && doing_action('init')) {
             $callback();
 
             return;
@@ -99,8 +105,6 @@ class Builder
 
     /**
      * Determines whether translation functions may run without a 6.7 notice.
-     *
-     * @since 0.1.0
      *
      * @return bool True after `after_setup_theme` has started.
      *
@@ -116,8 +120,6 @@ class Builder
     /**
      * Determines whether the library is running as a plugin.
      *
-     * @since 0.1.0
-     *
      * @global string $wp_builder Current library environment.
      *
      * @return bool True when the environment is a plugin.
@@ -132,8 +134,6 @@ class Builder
     /**
      * Determines whether the library is running as a theme.
      *
-     * @since 0.1.0
-     *
      * @global string $wp_builder Current library environment.
      *
      * @return bool True when the environment is a theme.
@@ -146,9 +146,200 @@ class Builder
     }
 
     /**
-     * Bootstraps library services hooked to `init`.
+     * Sets or reads the theme directory that holds block CSS and JavaScript.
      *
-     * @since 0.1.0
+     * Pass a path to change it. Call with no argument to read the current one.
+     * `assets/public/blocks` is the default. `my-theme/cta` then uses
+     * `assets/public/blocks/my-theme/cta.css` and `.js` when {@see \WPB\Blocks\Block::assets()}
+     * is enabled. The child theme is checked first, then the parent.
+     *
+     * An empty path, or a path that leaves the theme with `..`, is ignored and
+     * reported in the WordPress admin.
+     *
+     * @param string|null $directory Theme-relative directory, without a leading slash.
+     *
+     * @return string Directory in effect.
+     */
+    public static function blockAssets(?string $directory = null): string
+    {
+        if ($directory === null) {
+            return self::$blockAssets;
+        }
+
+        $normalized = self::themeDirectory($directory, 'Block asset');
+
+        if ($normalized !== null) {
+            self::$blockAssets = $normalized;
+        }
+
+        return self::$blockAssets;
+    }
+
+    /**
+     * Sets or reads the theme directory that holds public block PHP templates.
+     *
+     * Pass a path to change it. Call with no argument to read the current one.
+     * `template-parts/blocks` is the default. `my-theme/team` then uses
+     * `template-parts/blocks/my-theme/team.php` when the block has no `template()`
+     * slug. Core block overrides use the same directory. The child theme is
+     * checked first, then the parent.
+     *
+     * An empty path, or a path that leaves the theme with `..`, is ignored and
+     * reported in the WordPress admin.
+     *
+     * @param string|null $directory Theme-relative directory, without a leading slash.
+     *
+     * @return string Directory in effect.
+     *
+     * @see https://developer.wordpress.org/reference/functions/locate_template/
+     */
+    public static function blockTemplates(?string $directory = null): string
+    {
+        if ($directory === null) {
+            return self::$blockTemplates;
+        }
+
+        $normalized = self::themeDirectory($directory, 'Block template');
+
+        if ($normalized !== null) {
+            self::$blockTemplates = $normalized;
+        }
+
+        return self::$blockTemplates;
+    }
+
+    /**
+     * Normalizes a theme-relative directory.
+     *
+     * @param string $directory Raw directory.
+     * @param string $label     Name used in the admin notice.
+     *
+     * @return string|null Normalized directory, or null when the value is rejected.
+     */
+    private static function themeDirectory(string $directory, string $label): ?string
+    {
+        $directory = trim(str_replace('\\', '/', $directory), " \t\n\r\0\x0B/");
+
+        if ($directory === '') {
+            Notices::error($label . ' directory cannot be empty.');
+
+            return null;
+        }
+
+        if (
+            str_contains($directory, "\0")
+            || str_contains($directory, '..')
+            || preg_match('/^[A-Za-z]:/', $directory) === 1
+        ) {
+            Notices::error(sprintf(
+                '%s directory must stay inside the theme and cannot contain "..".',
+                $label
+            ));
+
+            return null;
+        }
+
+        return $directory;
+    }
+
+    /**
+     * Converts an absolute path inside this install to a URL.
+     *
+     * @param string $path Absolute filesystem path.
+     *
+     * @return string Public URL, or an empty string when the path is outside the install.
+     *
+     * @see https://developer.wordpress.org/reference/functions/content_url/
+     * @see https://developer.wordpress.org/reference/functions/site_url/
+     */
+    public static function url(string $path): string
+    {
+        $path = wp_normalize_path($path);
+        $resolved = realpath($path);
+        $file = wp_normalize_path($resolved !== false ? $resolved : $path);
+
+        foreach (self::urlBases() as $base) {
+            $baseResolved = realpath($base['dir']);
+            $dir = wp_normalize_path($baseResolved !== false ? $baseResolved : $base['dir']);
+
+            if ($dir !== '' && str_starts_with($file, $dir)) {
+                $relative = ltrim(substr($file, strlen($dir)), '/');
+
+                return rtrim($base['url'], '/') . '/' . $relative;
+            }
+        }
+
+        $contentDir = wp_normalize_path((string) (realpath(WP_CONTENT_DIR) ?: WP_CONTENT_DIR));
+
+        if (str_starts_with($file, $contentDir)) {
+            return content_url(substr($file, strlen($contentDir)));
+        }
+
+        $abspath = wp_normalize_path((string) (realpath(ABSPATH) ?: ABSPATH));
+
+        if (str_starts_with($file, $abspath)) {
+            return site_url(substr($file, strlen($abspath)));
+        }
+
+        return '';
+    }
+
+    /**
+     * Returns theme and plugin directories that can host this library.
+     *
+     * Symlinked themes and plugins keep their public URL while PHP sees the
+     * real path. Comparing those real paths is what makes the asset URL work.
+     *
+     * @return list<array{dir: string, url: string}> Directory and its public URL.
+     *
+     * @see https://developer.wordpress.org/reference/functions/get_stylesheet_directory/
+     * @see https://developer.wordpress.org/reference/functions/plugins_url/
+     */
+    private static function urlBases(): array
+    {
+        $bases = [];
+
+        if (function_exists('get_stylesheet_directory')) {
+            $bases[] = [
+                'dir' => get_stylesheet_directory(),
+                'url' => get_stylesheet_directory_uri(),
+            ];
+        }
+
+        if (
+            function_exists('get_template_directory')
+            && function_exists('get_stylesheet_directory')
+            && get_template_directory() !== get_stylesheet_directory()
+        ) {
+            $bases[] = [
+                'dir' => get_template_directory(),
+                'url' => get_template_directory_uri(),
+            ];
+        }
+
+        if (defined('WP_PLUGIN_DIR') && function_exists('plugins_url')) {
+            foreach (glob(WP_PLUGIN_DIR . '/*', GLOB_ONLYDIR) ?: [] as $dir) {
+                $bases[] = [
+                    'dir' => $dir,
+                    'url' => plugins_url('', $dir . '/plugin.php'),
+                ];
+            }
+        }
+
+        if (defined('WPMU_PLUGIN_DIR') && function_exists('plugins_url')) {
+            foreach (glob(WPMU_PLUGIN_DIR . '/*', GLOB_ONLYDIR) ?: [] as $dir) {
+                $bases[] = [
+                    'dir' => $dir,
+                    'url' => plugins_url('', $dir . '/plugin.php'),
+                ];
+            }
+        }
+
+        return $bases;
+    }
+
+    /**
+     * Loads translations on `init`.
      *
      * @return static
      */
@@ -161,8 +352,6 @@ class Builder
 
     /**
      * Loads the library text domain for the current environment.
-     *
-     * @since 0.1.0
      *
      * @see https://make.wordpress.org/core/2024/10/21/i18n-improvements-6-7/
      * @see https://developer.wordpress.org/reference/functions/load_theme_textdomain/
@@ -192,8 +381,6 @@ class Builder
      *
      * JIT loading looks for `{domain}-{locale}.mo` and `{domain}-{locale}.l10n.php`
      * inside `WP_LANG_DIR/plugins` or `WP_LANG_DIR/themes`.
-     *
-     * @since 0.1.0
      *
      * @param 'plugins'|'themes' $type    Language subdirectory for the environment.
      * @param list<string>       $locales Locales to install.

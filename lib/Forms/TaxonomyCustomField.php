@@ -13,7 +13,6 @@ namespace WPB\Forms;
 /**
  * Adds and saves custom fields on taxonomy term screens.
  *
- * @since  0.2.0
  * @author Renato Rodrigues Jr <juniorenato@msn.com>
  *
  * @see https://developer.wordpress.org/reference/hooks/taxonomy_add_form_fields/
@@ -23,8 +22,6 @@ trait TaxonomyCustomField
 {
     /**
      * Hooks term form rendering and save callbacks.
-     *
-     * @since 0.2.0
      *
      * @see https://developer.wordpress.org/reference/hooks/taxonomy_add_form_fields/
      * @see https://developer.wordpress.org/reference/hooks/taxonomy_edit_form_fields/
@@ -42,8 +39,6 @@ trait TaxonomyCustomField
     /**
      * Renders fields on the add-term form.
      *
-     * @since 0.2.0
-     *
      * @see https://developer.wordpress.org/reference/hooks/taxonomy_add_form_fields/
      */
     public function createTermFormFields(): void
@@ -55,8 +50,6 @@ trait TaxonomyCustomField
 
     /**
      * Renders fields on the edit-term form.
-     *
-     * @since 0.2.0
      *
      * @param \WP_Term $term Term being edited.
      *
@@ -72,8 +65,6 @@ trait TaxonomyCustomField
 
     /**
      * Saves custom fields when a term is created.
-     *
-     * @since 0.2.0
      *
      * @param int $term_id Created term ID.
      *
@@ -95,8 +86,6 @@ trait TaxonomyCustomField
 
     /**
      * Saves custom fields when a term is updated.
-     *
-     * @since 0.2.0
      *
      * @param int $term_id Updated term ID.
      *

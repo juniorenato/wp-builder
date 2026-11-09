@@ -1,4 +1,7 @@
+.superpowers/
 vendor/
-
+tests/
+docs/
+template-parts/
 /*.php
 /*.css

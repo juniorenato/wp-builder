@@ -199,3 +199,129 @@ msgstr "%s most %s"
 #: lib/Taxonomies/Taxonomy.php:95
 msgid "back to %s"
 msgstr "back to %s"
+
+#: lib/Blocks/Block.php
+msgid "Add"
+msgstr "Add"
+
+#: lib/Blocks/Block.php
+msgid "Remove"
+msgstr "Remove"
+
+#: lib/Blocks/Block.php
+msgid "Move up"
+msgstr "Move up"
+
+#: lib/Blocks/Block.php
+msgid "Move down"
+msgstr "Move down"
+
+#: lib/Blocks/Block.php
+msgid "Select image"
+msgstr "Select image"
+
+#: lib/Blocks/Block.php
+msgid "Replace image"
+msgstr "Replace image"
+
+#: lib/Blocks/Block.php
+msgid "Remove image"
+msgstr "Remove image"
+
+msgid "Select images"
+msgstr "Select images"
+
+msgid "Add images"
+msgstr "Add images"
+
+msgid "Select file"
+msgstr "Select file"
+
+msgid "Replace file"
+msgstr "Replace file"
+
+msgid "Remove file"
+msgstr "Remove file"
+
+msgid "Select files"
+msgstr "Select files"
+
+msgid "Add files"
+msgstr "Add files"
+
+msgid "Cache"
+msgstr "Cache"
+
+msgid "Status"
+msgstr "Status"
+
+msgid "Enable page cache"
+msgstr "Enable page cache"
+
+msgid "Cache cleared."
+msgstr "Cache cleared."
+
+msgid "Page removed from the cache."
+msgstr "Page removed from the cache."
+
+msgid "Page cache is off. Existing files stay on disk until you clear them."
+msgstr "Page cache is off. Existing files stay on disk until you clear them."
+
+msgid "Saving a post also clears that post, the post type archive and its pagination, and the pages selected here."
+msgstr "Saving a post also clears that post, the post type archive and its pagination, and the pages selected here."
+
+msgid "Cached pages"
+msgstr "Cached pages"
+
+msgid "Clear all cache"
+msgstr "Clear all cache"
+
+msgid "URL"
+msgstr "URL"
+
+msgid "Stored"
+msgstr "Stored"
+
+msgid "Clear"
+msgstr "Clear"
+
+msgid "No cached pages."
+msgstr "No cached pages."
+
+msgid "Disable cache"
+msgstr "Disable cache"
+
+msgid "Manage cache"
+msgstr "Manage cache"
+
+msgid "This page is rendered on every visit and is not stored."
+msgstr "This page is rendered on every visit and is not stored."
+
+msgid "Image files"
+msgstr "Image files"
+
+msgid "Rebuilds existing JPEG, PNG, WebP, and AVIF uploads. The longest edge is %d pixels."
+msgstr "Rebuilds existing JPEG, PNG, WebP, and AVIF uploads. The longest edge is %d pixels."
+
+msgid "%d image can be regenerated."
+msgid_plural "%d images can be regenerated."
+msgstr[0] "%d image can be regenerated."
+msgstr[1] "%d images can be regenerated."
+
+msgid "Regenerate images"
+msgstr "Regenerate images"
+
+msgid "The images could not be regenerated."
+msgstr "The images could not be regenerated."
+
+msgid "%1$d of %2$d images regenerated."
+msgstr "%1$d of %2$d images regenerated."
+
+msgid "Finished. Regenerated %d images."
+msgstr "Finished. Regenerated %d images."
+
+msgid "Finished. Regenerated %1$d images. %2$d failed."
+msgstr "Finished. Regenerated %1$d images. %2$d failed."
+
+msgid "Sorry, you are not allowed to do that."
+msgstr "Sorry, you are not allowed to do that."

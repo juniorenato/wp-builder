@@ -1,0 +1,80 @@
+/*
+ * Image field on meta boxes, term screens, and settings pages.
+ * The button opens the WordPress media modal.
+ */
+
+.wpb-image-field__preview img {
+	display: block;
+	box-sizing: border-box;
+	max-width: 266px;
+	height: auto;
+	margin: 0 0 8px;
+	border: 1px solid #c3c4c7;
+	background: #f0f0f1;
+}
+
+.wpb-image-field--multiple .wpb-image-field__preview {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 8px;
+	margin: 0 0 8px;
+}
+
+.wpb-image-field--multiple .wpb-image-field__item {
+	position: relative;
+	margin: 0;
+}
+
+.wpb-image-field--multiple .wpb-image-field__item img {
+	width: 80px;
+	height: 80px;
+	max-width: none;
+	margin: 0;
+	object-fit: cover;
+}
+
+.wpb-image-field--multiple .wpb-image-field__remove {
+	position: absolute;
+	top: 2px;
+	right: 2px;
+	min-height: 0;
+	padding: 0 4px;
+	border: 0;
+	background: #fff;
+	line-height: 1.4;
+}
+
+.wpb-image-field__actions {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 8px;
+	align-items: center;
+	margin: 0;
+}
+
+.wpb-image-field__actions .button,
+.wpb-image-field__actions .button-link,
+.wpb-file-field__actions .button,
+.wpb-file-field__actions .button-link {
+	margin: 0;
+}
+
+.wpb-file-field__name {
+	display: inline-block;
+	margin: 0 8px 8px 0;
+	word-break: break-word;
+}
+
+.wpb-file-field__actions,
+.wpb-file-field--multiple .wpb-file-field__item {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 8px;
+	align-items: center;
+	margin: 0 0 8px;
+}
+
+.wpb-file-field--multiple .wpb-file-field__name,
+.wpb-file-field--multiple .wpb-file-field__remove {
+	margin: 0;
+}
