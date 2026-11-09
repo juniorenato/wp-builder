@@ -15,9 +15,9 @@ use InvalidArgumentException;
 /**
  * Collects response headers and applies them on `wp_headers`.
  *
- * Call `set()` and `remove()` in any order, then `register()`. The last
- * operation for a name wins. Matching ignores case. This filter runs on the
- * public response. Admin, REST, and `admin-ajax` do not pass through it.
+ * Call `set()`, `setIfAbsent()`, and `remove()` in any order, then `register()`.
+ * The last operation for a name wins. Matching ignores case. This filter runs
+ * on the public response. Admin, REST, and `admin-ajax` do not pass through it.
  *
  * @since  0.11.0
  * @author Renato Rodrigues Jr <juniorenato@msn.com>
@@ -29,11 +29,12 @@ class Header
     /**
      * Last operation for each header, keyed by the lowercase name.
      *
-     * A null value removes the header.
+     * A null value removes the header. `replace` false keeps a value already
+     * present on the response.
      *
      * @since 0.11.0
      *
-     * @var array<string, array{name: string, value: string|null}>
+     * @var array<string, array{name: string, value: string|null, replace: bool}>
      */
     private array $operations = [];
 
@@ -62,10 +63,31 @@ class Header
     {
         $name = $this->assertName($name);
         $this->assertValue($value);
-        $this->operations[strtolower($name)] = [
-            'name'  => $name,
-            'value' => $value,
-        ];
+        $this->remember($name, $value, true);
+
+        return $this;
+    }
+
+    /**
+     * Stores a header value that is sent only when the response lacks that name.
+     *
+     * The stored name is trimmed. An empty value is kept. A header WordPress
+     * already set, in any capitalization, stays as it is.
+     *
+     * @since 0.11.0
+     *
+     * @param string $name  Header name.
+     * @param string $value Header value.
+     *
+     * @return static
+     *
+     * @throws InvalidArgumentException If the name or value cannot be sent.
+     */
+    public function setIfAbsent(string $name, string $value): static
+    {
+        $name = $this->assertName($name);
+        $this->assertValue($value);
+        $this->remember($name, $value, false);
 
         return $this;
     }
@@ -86,10 +108,7 @@ class Header
     public function remove(string $name): static
     {
         $name = $this->assertName($name);
-        $this->operations[strtolower($name)] = [
-            'name'  => $name,
-            'value' => null,
-        ];
+        $this->remember($name, null, true);
 
         return $this;
     }
@@ -145,6 +164,10 @@ class Header
                 continue;
             }
 
+            if ($operation['replace'] === false && $matches !== []) {
+                continue;
+            }
+
             foreach ($matches as $headerName) {
                 if ($headerName !== $operation['name']) {
                     unset($headers[$headerName]);
@@ -184,6 +207,24 @@ class Header
         }
 
         return $name;
+    }
+
+    /**
+     * Stores the last operation for a header name.
+     *
+     * @since 0.11.0
+     *
+     * @param string      $name    Trimmed header name.
+     * @param string|null $value   Header value, or null to remove it.
+     * @param bool        $replace False keeps a value already present on the response.
+     */
+    private function remember(string $name, ?string $value, bool $replace): void
+    {
+        $this->operations[strtolower($name)] = [
+            'name'    => $name,
+            'value'   => $value,
+            'replace' => $replace,
+        ];
     }
 
     /**
