@@ -71,6 +71,7 @@ class Builder
             $wp_builder = $env;
         }
 
+        self::removeCopiedTranslationFiles();
         self::onInit([$this, 'build'], 0);
     }
 
@@ -106,15 +107,22 @@ class Builder
     /**
      * Determines whether translation functions may run without a 6.7 notice.
      *
-     * @return bool True after `after_setup_theme` has started.
+     * WordPress warns when a text domain is translated before `after_setup_theme`.
+     * The user locale is ready on `init`, which is also when post types are registered.
+     *
+     * @return bool True once `init` has started.
      *
      * @see https://developer.wordpress.org/reference/functions/did_action/
-     * @see https://developer.wordpress.org/reference/hooks/after_setup_theme/
+     * @see https://developer.wordpress.org/reference/hooks/init/
      * @see https://make.wordpress.org/core/2024/10/21/i18n-improvements-6-7/
      */
     public static function canLoadTranslations(): bool
     {
-        return (bool) did_action('after_setup_theme');
+        if (!function_exists('did_action')) {
+            return false;
+        }
+
+        return did_action('init') > 0 || (function_exists('doing_action') && doing_action('init'));
     }
 
     /**
@@ -351,67 +359,61 @@ class Builder
     }
 
     /**
-     * Loads the library text domain for the current environment.
+     * Loads the packaged text domain on `init`.
      *
-     * @see https://make.wordpress.org/core/2024/10/21/i18n-improvements-6-7/
-     * @see https://developer.wordpress.org/reference/functions/load_theme_textdomain/
-     * @see https://developer.wordpress.org/reference/functions/load_plugin_textdomain/
+     * The file stays in `lang/`. Copying it into `WP_LANG_DIR` makes WordPress
+     * discover the `wpb` domain before `init` and emit the 6.7 notice.
+     *
+     * @see https://developer.wordpress.org/reference/functions/load_textdomain/
      * @see https://developer.wordpress.org/reference/functions/determine_locale/
+     * @see https://make.wordpress.org/core/2024/10/21/i18n-improvements-6-7/
      */
     private function i18n(): void
     {
-        $locales = array_unique([
-            'en_US',
-            determine_locale(),
-        ]);
+        self::loadTranslations();
+    }
 
-        if (!static::isPlugin()) {
-            $this->installTranslationFiles('themes', $locales);
-            load_theme_textdomain('wpb', self::PATH['LANG']);
+    /**
+     * Loads `lang/wpb-{locale}.mo` for the current locale.
+     *
+     * Safe to call more than once. A missing file leaves the source strings in place.
+     */
+    public static function loadTranslations(): void
+    {
+        static $loaded = false;
+
+        if ($loaded || !function_exists('load_textdomain') || !function_exists('determine_locale')) {
+            return;
         }
 
-        if (!static::isTheme()) {
-            $this->installTranslationFiles('plugins', $locales);
-            load_plugin_textdomain('wpb', false, plugin_basename(self::PATH['LANG']));
+        $loaded = true;
+        $locale = determine_locale();
+        $mofile = self::PATH['LANG'] . '/wpb-' . $locale . '.mo';
+
+        if (is_readable($mofile)) {
+            load_textdomain('wpb', $mofile, $locale);
         }
     }
 
     /**
-     * Copies packaged translations into the WordPress language directory.
+     * Deletes translations this library used to copy into `WP_LANG_DIR`.
      *
-     * JIT loading looks for `{domain}-{locale}.mo` and `{domain}-{locale}.l10n.php`
-     * inside `WP_LANG_DIR/plugins` or `WP_LANG_DIR/themes`.
-     *
-     * @param 'plugins'|'themes' $type    Language subdirectory for the environment.
-     * @param list<string>       $locales Locales to install.
-     *
-     * @see https://developer.wordpress.org/reference/functions/wp_mkdir_p/
-     * @see https://developer.wordpress.org/reference/functions/load_plugin_textdomain/
+     * Those copies are found by just-in-time loading before `init`.
      */
-    private function installTranslationFiles(string $type, array $locales): void
+    private static function removeCopiedTranslationFiles(): void
     {
-        $destinationDir = WP_LANG_DIR . '/' . $type;
+        if (!defined('WP_LANG_DIR')) {
+            return;
+        }
 
-        wp_mkdir_p($destinationDir);
+        foreach (['themes', 'plugins'] as $type) {
+            $directory = WP_LANG_DIR . '/' . $type;
 
-        foreach ($locales as $locale) {
             foreach (['mo', 'l10n.php'] as $extension) {
-                $destination = $destinationDir . '/wpb-' . $locale . '.' . $extension;
-                $sources = [
-                    self::PATH['LANG'] . '/wpb-' . $locale . '.' . $extension,
-                    self::PATH['LANG'] . '/' . $locale . '.' . $extension,
-                ];
-
-                foreach ($sources as $source) {
-                    if (!is_readable($source)) {
-                        continue;
+                foreach (glob($directory . '/wpb-*.' . $extension) ?: [] as $file) {
+                    if (is_file($file)) {
+                        unlink($file);
                     }
-
-                    if (!file_exists($destination) || filemtime($source) > filemtime($destination)) {
-                        copy($source, $destination);
-                    }
-
-                    break;
                 }
             }
         }

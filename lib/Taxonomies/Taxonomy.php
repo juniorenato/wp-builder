@@ -175,6 +175,8 @@ class Taxonomy
      */
     private function buildDefaultLabels(): void
     {
+        Builder::loadTranslations();
+
         $new    = $this->male ? __('new', 'wpb') : __('female_new', 'wpb');
         $found  = $this->male ? __('found', 'wpb') : __('female_found', 'wpb');
         $parent = $this->male ? __('parent', 'wpb') : __('female_parent', 'wpb');
