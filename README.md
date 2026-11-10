@@ -39,13 +39,13 @@ From your theme or plugin directory:
 composer require juniorenato/wp-builder
 ```
 
-Load Composer's autoloader before you use the library:
+Load Composer's autoloader from `wp-config.php`, before the line that loads `wp-settings.php`:
 
 ```php
-require_once get_stylesheet_directory() . '/vendor/autoload.php';
+require_once '/absolute/path/to/vendor/autoload.php';
 ```
 
-In a plugin, point that path at the plugin’s `vendor/autoload.php`.
+Requiring it from the theme or plugin works too. Construct `Builder` from the theme or plugin file, not from `wp-config.php`.
 
 ### Manual
 
@@ -149,14 +149,12 @@ wp-builder/
 
 ## Bootstrap
 
-Instantiate `WPB\Builder` once from your theme or plugin so translations and library services load on `init`.
+Instantiate `WPB\Builder` once from your theme or plugin. Composer’s autoload can be required from `wp-config.php`. `Builder` still belongs in the theme or plugin bootstrap. It loads `lang/wpb-{locale}.mo` on `init` and does not copy that file into `wp-content/languages`.
 
 Theme (`functions.php`):
 
 ```php
 use WPB\Builder;
-
-require_once get_stylesheet_directory() . '/vendor/autoload.php';
 
 new Builder(Builder::THEME);
 ```
@@ -165,8 +163,6 @@ Plugin:
 
 ```php
 use WPB\Builder;
-
-require_once __DIR__ . '/vendor/autoload.php';
 
 new Builder(Builder::PLUGIN);
 ```
