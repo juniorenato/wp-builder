@@ -1639,8 +1639,11 @@ class Block
     /**
      * Registers the shared editor script handle.
      *
-     * The handle depends on the block editor packages and is deferred with
-     * them, so the field UI runs only after `wp.blockEditor` exists.
+     * The handle depends on the block editor packages. When the file has a
+     * public URL it is deferred with them, so the field UI runs after
+     * `wp.blockEditor` exists. A library outside the content directory has no
+     * URL. WordPress then treats the handle as an alias, and an alias cannot
+     * use `defer`. The script is printed inline on that handle instead.
      *
      * @see https://developer.wordpress.org/reference/functions/wp_register_script/
      */
@@ -1652,16 +1655,18 @@ class Block
 
         $path = dirname(__DIR__, 2) . '/assets/js/block-editor.js';
         $url = Builder::url($path);
+        $args = ['in_footer' => true];
+
+        if ($url !== '') {
+            $args['strategy'] = 'defer';
+        }
 
         wp_register_script(
             'wpb-block-editor',
             $url !== '' ? $url : false,
             ['wp-hooks', 'wp-i18n', 'wp-element', 'wp-components', 'wp-blocks', 'wp-block-editor', 'wp-data'],
             is_readable($path) ? (string) filemtime($path) : false,
-            [
-                'in_footer' => true,
-                'strategy'  => 'defer',
-            ]
+            $args
         );
     }
 
