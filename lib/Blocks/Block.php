@@ -131,6 +131,25 @@ class Block
     protected array $keywords;
 
     /**
+     * Post types that may show this block in the inserter.
+     *
+     * An empty list means every editor.
+     *
+     * @var list<string>
+     */
+    private array $postTypes;
+
+    /**
+     * Whether the post type check is queued for `wp_loaded`.
+     */
+    private bool $postTypeRestrictionQueued;
+
+    /**
+     * Whether `allowed_block_types_all` is already filtering this block.
+     */
+    private bool $postTypeFilterAdded;
+
+    /**
      * Block attribute schemas.
      *
      * @var array<string, array<string, mixed>>
@@ -194,15 +213,19 @@ class Block
     /**
      * Theme template slug passed to `get_template_part()`.
      *
-     * An empty string means `{Builder::blockTemplates()}/{block name}`.
-     * That directory defaults to `template-parts/blocks`.
+     * An empty string means `{Builder::blockTemplates()}/{block name}`, with
+     * `/` replaced by `-`. That directory defaults to `template-parts/blocks`.
      */
     private string $templateSlug;
 
     /**
-     * Whether this block enqueues its CSS and JavaScript when it renders.
+     * Which convention assets to enqueue when the block renders.
+     *
+     * An empty string enqueues nothing. `style`, `script`, and `both` select the files.
+     *
+     * @var ''|'style'|'script'|'both'
      */
-    private bool $enqueueAssets;
+    private string $assetKind;
 
     /**
      * Block names registered by this library.
@@ -286,6 +309,9 @@ class Block
         $this->category = 'widgets';
         $this->icon = '';
         $this->keywords = [];
+        $this->postTypes = [];
+        $this->postTypeRestrictionQueued = false;
+        $this->postTypeFilterAdded = false;
         $this->attributes = [];
         $this->supports = [
             'autoRegister' => true,
@@ -298,7 +324,7 @@ class Block
         $this->repeaters = [];
         $this->fieldOrder = [];
         $this->templateSlug = '';
-        $this->enqueueAssets = false;
+        $this->assetKind = '';
 
         return $this;
     }
@@ -417,6 +443,50 @@ class Block
         } else {
             $this->keywords[] = $keywords;
         }
+
+        return $this;
+    }
+
+    /**
+     * Limits the inserter to the given post types.
+     *
+     * Accepts one post type slug or a list of slugs. Further calls add to the
+     * list. The check runs on `wp_loaded`, after post types registered on
+     * `init` exist. A missing slug is ignored and reported in the WordPress
+     * admin. When every slug is missing, the block stays available everywhere.
+     *
+     * The block remains registered. Content that already contains it still
+     * renders. Editors without a post, such as the site editor, do not show it.
+     *
+     * @param string|list<string> $postTypes Post type slug or list of slugs.
+     *
+     * @return static
+     *
+     * A value that is not a string is ignored and reported in the WordPress admin.
+     *
+     * @see https://developer.wordpress.org/reference/hooks/allowed_block_types_all/
+     */
+    public function postTypes(string|array $postTypes): static
+    {
+        if (!is_array($postTypes)) {
+            $postTypes = [$postTypes];
+        }
+
+        foreach ($postTypes as $postType) {
+            if (!is_string($postType)) {
+                Notices::error(sprintf(
+                    'Block post type must be a string, %s given.',
+                    get_debug_type($postType)
+                ));
+
+                continue;
+            }
+
+            $this->postTypes[] = $postType;
+        }
+
+        $this->postTypes = array_values(array_unique($this->postTypes));
+        $this->queuePostTypeRestriction();
 
         return $this;
     }
@@ -593,8 +663,9 @@ class Block
      *
      * `template-parts/blocks/hero` loads `template-parts/blocks/hero.php` from the child theme, then the parent.
      * A trailing `.php` is removed. An empty slug clears any previous slug and
-     * the block uses `{Builder::blockTemplates()}/{block name}`. That directory
-     * defaults to `template-parts/blocks`.
+     * the block uses `{Builder::blockTemplates()}/{block name}`, with `/`
+     * replaced by `-`. `my-theme/team` loads `template-parts/blocks/my-theme-team.php`.
+     * That directory defaults to `template-parts/blocks`.
      *
      * @param string $slug Template slug, without `.php`.
      *
@@ -624,20 +695,33 @@ class Block
      * Enqueues this block's CSS and JavaScript when the block renders.
      *
      * The files live in {@see Builder::blockAssets()}, which defaults to
-     * `assets/public/blocks`. `my-theme/cta` loads
-     * `assets/public/blocks/my-theme/cta.css` and
-     * `assets/public/blocks/my-theme/cta.js` from the child theme, then the parent.
+     * `assets/public/blocks`. `my-theme/team` loads `my-theme-team.css` and
+     * `my-theme-team.js` from that directory, in the child theme, then the parent.
+     * Pass `style` or `script` to load one file. `both` is the default.
      * A missing file is skipped. The script prints in the footer.
      *
+     * @param 'style'|'script'|'both' $kind Files to enqueue.
+     *
      * @return static
+     *
+     * An unknown kind is ignored and reported in the WordPress admin.
      *
      * @see https://developer.wordpress.org/reference/functions/wp_enqueue_style/
      * @see https://developer.wordpress.org/reference/functions/wp_enqueue_script/
      * @see https://developer.wordpress.org/reference/functions/get_theme_file_path/
      */
-    public function assets(): static
+    public function assets(string $kind = 'both'): static
     {
-        $this->enqueueAssets = true;
+        if (!in_array($kind, ['style', 'script', 'both'], true)) {
+            Notices::error(sprintf(
+                'Block assets must be "style", "script", or "both", "%s" given.',
+                $kind
+            ));
+
+            return $this;
+        }
+
+        $this->assetKind = $kind;
 
         return $this;
     }
@@ -821,7 +905,7 @@ class Block
             return (string) ($this->renderCallback)($values, $content, $block);
         }
 
-        $slug = $this->templateSlug !== '' ? $this->templateSlug : Builder::blockTemplates() . '/' . $this->name;
+        $slug = $this->templateSlug !== '' ? $this->templateSlug : self::conventionTemplate($this->name);
         $rendered = self::captureTemplate($slug, [
             'attributes' => $this->propsForReact($values),
             'content'    => $content,
@@ -841,6 +925,21 @@ class Block
         }
 
         return $this->renderMount($this->propsForReact($values));
+    }
+
+    /**
+     * Builds the theme template slug for a block name.
+     *
+     * `my-theme/team` becomes `template-parts/blocks/my-theme-team` when
+     * the template directory is the default.
+     *
+     * @param string $name Block type name (`namespace/slug`).
+     *
+     * @return string Template slug, without `.php`.
+     */
+    private static function conventionTemplate(string $name): string
+    {
+        return Builder::blockTemplates() . '/' . str_replace('/', '-', $name);
     }
 
     /**
@@ -914,7 +1013,7 @@ class Block
             return $content;
         }
 
-        $rendered = self::captureTemplate(Builder::blockTemplates() . '/' . $name, [
+        $rendered = self::captureTemplate(self::conventionTemplate($name), [
             'attributes' => is_array($block['attrs'] ?? null) ? $block['attrs'] : [],
             'content'    => $content,
             'block'      => $instance,
@@ -1114,6 +1213,96 @@ class Block
         self::$libraryBlocks[$this->name] = true;
 
         register_block_type($this->name, $this->args);
+        $this->queuePostTypeRestriction();
+    }
+
+    /**
+     * Checks post types after `init`, when custom post types exist.
+     */
+    private function queuePostTypeRestriction(): void
+    {
+        if ($this->postTypes === [] || !function_exists('add_action')) {
+            return;
+        }
+
+        if (function_exists('did_action') && did_action('wp_loaded')) {
+            $this->applyPostTypeRestriction();
+
+            return;
+        }
+
+        if ($this->postTypeRestrictionQueued) {
+            return;
+        }
+
+        $this->postTypeRestrictionQueued = true;
+
+        add_action('wp_loaded', [$this, 'applyPostTypeRestriction'], PHP_INT_MAX);
+    }
+
+    /**
+     * Drops unknown post types and hides the block outside the remaining ones.
+     *
+     * @see https://developer.wordpress.org/reference/functions/post_type_exists/
+     * @see https://developer.wordpress.org/reference/hooks/allowed_block_types_all/
+     */
+    public function applyPostTypeRestriction(): void
+    {
+        $valid = [];
+
+        foreach ($this->postTypes as $postType) {
+            if ($postType === '' || !post_type_exists($postType)) {
+                Notices::error(sprintf(
+                    'Block "%s" cannot be limited to post type "%s" because that post type is not registered.',
+                    $this->name,
+                    $postType
+                ));
+
+                continue;
+            }
+
+            $valid[] = $postType;
+        }
+
+        $this->postTypes = $valid;
+
+        if (
+            $valid === []
+            || $this->name === ''
+            || !isset(self::$libraryBlocks[$this->name])
+            || $this->postTypeFilterAdded
+        ) {
+            return;
+        }
+
+        $this->postTypeFilterAdded = true;
+
+        add_filter('allowed_block_types_all', [$this, 'filterAllowedBlockTypes'], 10, 2);
+    }
+
+    /**
+     * Removes this block from editors whose post type is not allowed.
+     *
+     * @param bool|list<string>        $allowed Block names, or true for every block.
+     * @param \WP_Block_Editor_Context $context Editor context.
+     *
+     * @return bool|list<string> Allowed block names.
+     *
+     * @see https://developer.wordpress.org/reference/hooks/allowed_block_types_all/
+     */
+    public function filterAllowedBlockTypes(bool|array $allowed, \WP_Block_Editor_Context $context): bool|array
+    {
+        $postType = $context->post instanceof \WP_Post ? $context->post->post_type : '';
+
+        if ($this->postTypes === [] || in_array($postType, $this->postTypes, true)) {
+            return $allowed;
+        }
+
+        $names = $allowed === true
+            ? array_keys(\WP_Block_Type_Registry::get_instance()->get_all_registered())
+            : $allowed;
+
+        return array_values(array_diff($names, [$this->name]));
     }
 
     /**
@@ -1234,7 +1423,7 @@ class Block
      */
     private function enqueueBlockAssets(): void
     {
-        if (!$this->enqueueAssets || $this->name === '') {
+        if ($this->assetKind === '' || $this->name === '') {
             return;
         }
 
@@ -1242,11 +1431,16 @@ class Block
             return;
         }
 
-        $stem = Builder::blockAssets() . '/' . $this->name;
+        $stem = Builder::blockAssets() . '/' . str_replace('/', '-', $this->name);
         $handle = 'wpb-' . str_replace('/', '-', $this->name);
 
-        $this->enqueueThemeFile($stem . '.css', $handle, 'style');
-        $this->enqueueThemeFile($stem . '.js', $handle, 'script');
+        if ($this->assetKind === 'style' || $this->assetKind === 'both') {
+            $this->enqueueThemeFile($stem . '.css', $handle, 'style');
+        }
+
+        if ($this->assetKind === 'script' || $this->assetKind === 'both') {
+            $this->enqueueThemeFile($stem . '.js', $handle, 'script');
+        }
     }
 
     /**
