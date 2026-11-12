@@ -647,12 +647,12 @@ Use [`get_block_wrapper_attributes()`](https://developer.wordpress.org/reference
 
 ### Block assets
 
-`assets()` enqueues that block's CSS and JavaScript when the block renders. A page that does not render the block does not load the files. Calling `assets()` does not enqueue anything by itself.
+`assets()` enqueues that block's CSS and JavaScript when the block renders. A page that does not render the block does not load the files. Calling `assets()` does not enqueue anything by itself. `assets('style')` loads only the stylesheet. `assets('script')` loads only the script. `assets()` and `assets('both')` load both.
 
-With no `Builder::blockAssets()` call, `my-theme/cta` looks for these files in the child theme, then the parent:
+With no `Builder::blockAssets()` call, `pluria/carousel` looks for these files in the child theme, then the parent:
 
-- `assets/public/blocks/my-theme/cta.css`
-- `assets/public/blocks/my-theme/cta.js`
+- `assets/public/blocks/pluria-carousel.css`
+- `assets/public/blocks/pluria-carousel.js`
 
 A missing file is skipped. The other file still loads. Both use the handle `wpb-my-theme-cta`. The script prints in the footer. The style prints in the footer when the block renders after `wp_head`. WordPress omits assets enqueued during a render that prints nothing.
 
@@ -678,7 +678,7 @@ $cta->name('my-theme/cta')
     ->register();
 ```
 
-That block then loads `assets/dist/blocks/my-theme/cta.css` and `assets/dist/blocks/my-theme/cta.js`.
+That block then loads `assets/dist/blocks/my-theme-cta.css` and `assets/dist/blocks/my-theme-cta.js`.
 
 `stylesheet()` is separate. It registers a URL you pass and still loads that stylesheet on the front end and in the editor.
 

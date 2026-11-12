@@ -219,9 +219,13 @@ class Block
     private string $templateSlug;
 
     /**
-     * Whether this block enqueues its CSS and JavaScript when it renders.
+     * Which convention assets to enqueue when the block renders.
+     *
+     * An empty string enqueues nothing. `style`, `script`, and `both` select the files.
+     *
+     * @var ''|'style'|'script'|'both'
      */
-    private bool $enqueueAssets;
+    private string $assetKind;
 
     /**
      * Block names registered by this library.
@@ -320,7 +324,7 @@ class Block
         $this->repeaters = [];
         $this->fieldOrder = [];
         $this->templateSlug = '';
-        $this->enqueueAssets = false;
+        $this->assetKind = '';
 
         return $this;
     }
@@ -690,20 +694,33 @@ class Block
      * Enqueues this block's CSS and JavaScript when the block renders.
      *
      * The files live in {@see Builder::blockAssets()}, which defaults to
-     * `assets/public/blocks`. `my-theme/cta` loads
-     * `assets/public/blocks/my-theme/cta.css` and
-     * `assets/public/blocks/my-theme/cta.js` from the child theme, then the parent.
+     * `assets/public/blocks`. `pluria/carousel` loads `pluria-carousel.css` and
+     * `pluria-carousel.js` from that directory, in the child theme, then the parent.
+     * Pass `style` or `script` to load one file. `both` is the default.
      * A missing file is skipped. The script prints in the footer.
      *
+     * @param 'style'|'script'|'both' $kind Files to enqueue.
+     *
      * @return static
+     *
+     * An unknown kind is ignored and reported in the WordPress admin.
      *
      * @see https://developer.wordpress.org/reference/functions/wp_enqueue_style/
      * @see https://developer.wordpress.org/reference/functions/wp_enqueue_script/
      * @see https://developer.wordpress.org/reference/functions/get_theme_file_path/
      */
-    public function assets(): static
+    public function assets(string $kind = 'both'): static
     {
-        $this->enqueueAssets = true;
+        if (!in_array($kind, ['style', 'script', 'both'], true)) {
+            Notices::error(sprintf(
+                'Block assets must be "style", "script", or "both", "%s" given.',
+                $kind
+            ));
+
+            return $this;
+        }
+
+        $this->assetKind = $kind;
 
         return $this;
     }
@@ -1390,7 +1407,7 @@ class Block
      */
     private function enqueueBlockAssets(): void
     {
-        if (!$this->enqueueAssets || $this->name === '') {
+        if ($this->assetKind === '' || $this->name === '') {
             return;
         }
 
@@ -1398,11 +1415,16 @@ class Block
             return;
         }
 
-        $stem = Builder::blockAssets() . '/' . $this->name;
+        $stem = Builder::blockAssets() . '/' . str_replace('/', '-', $this->name);
         $handle = 'wpb-' . str_replace('/', '-', $this->name);
 
-        $this->enqueueThemeFile($stem . '.css', $handle, 'style');
-        $this->enqueueThemeFile($stem . '.js', $handle, 'script');
+        if ($this->assetKind === 'style' || $this->assetKind === 'both') {
+            $this->enqueueThemeFile($stem . '.css', $handle, 'style');
+        }
+
+        if ($this->assetKind === 'script' || $this->assetKind === 'both') {
+            $this->enqueueThemeFile($stem . '.js', $handle, 'script');
+        }
     }
 
     /**

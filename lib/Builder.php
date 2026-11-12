@@ -157,8 +157,8 @@ class Builder
      * Sets or reads the theme directory that holds block CSS and JavaScript.
      *
      * Pass a path to change it. Call with no argument to read the current one.
-     * `assets/public/blocks` is the default. `my-theme/cta` then uses
-     * `assets/public/blocks/my-theme/cta.css` and `.js` when {@see \WPB\Blocks\Block::assets()}
+     * `assets/public/blocks` is the default. `pluria/carousel` then uses
+     * `assets/public/blocks/pluria-carousel.css` and `.js` when {@see \WPB\Blocks\Block::assets()}
      * is enabled. The child theme is checked first, then the parent.
      *
      * An empty path, or a path that leaves the theme with `..`, is ignored and
