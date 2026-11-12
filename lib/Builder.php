@@ -157,8 +157,8 @@ class Builder
      * Sets or reads the theme directory that holds block CSS and JavaScript.
      *
      * Pass a path to change it. Call with no argument to read the current one.
-     * `assets/public/blocks` is the default. `my-theme/cta` then uses
-     * `assets/public/blocks/my-theme/cta.css` and `.js` when {@see \WPB\Blocks\Block::assets()}
+     * `assets/public/blocks` is the default. `my-theme/team` then uses
+     * `assets/public/blocks/my-theme-team.css` and `.js` when {@see \WPB\Blocks\Block::assets()}
      * is enabled. The child theme is checked first, then the parent.
      *
      * An empty path, or a path that leaves the theme with `..`, is ignored and
@@ -188,9 +188,10 @@ class Builder
      *
      * Pass a path to change it. Call with no argument to read the current one.
      * `template-parts/blocks` is the default. `my-theme/team` then uses
-     * `template-parts/blocks/my-theme/team.php` when the block has no `template()`
-     * slug. Core block overrides use the same directory. The child theme is
-     * checked first, then the parent.
+     * `template-parts/blocks/my-theme-team.php` when the block has no `template()`
+     * slug. Core block overrides use the same directory and the same file name.
+     * `core/paragraph` loads `template-parts/blocks/core-paragraph.php`. The child
+     * theme is checked first, then the parent.
      *
      * An empty path, or a path that leaves the theme with `..`, is ignored and
      * reported in the WordPress admin.
