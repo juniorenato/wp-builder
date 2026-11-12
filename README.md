@@ -649,12 +649,12 @@ Use [`get_block_wrapper_attributes()`](https://developer.wordpress.org/reference
 
 `assets()` enqueues that block's CSS and JavaScript when the block renders. A page that does not render the block does not load the files. Calling `assets()` does not enqueue anything by itself. `assets('style')` loads only the stylesheet. `assets('script')` loads only the script. `assets()` and `assets('both')` load both.
 
-With no `Builder::blockAssets()` call, `pluria/carousel` looks for these files in the child theme, then the parent:
+With no `Builder::blockAssets()` call, `my-theme/team` looks for these files in the child theme, then the parent:
 
-- `assets/public/blocks/pluria-carousel.css`
-- `assets/public/blocks/pluria-carousel.js`
+- `assets/public/blocks/my-theme-team.css`
+- `assets/public/blocks/my-theme-team.js`
 
-A missing file is skipped. The other file still loads. Both use the handle `wpb-my-theme-cta`. The script prints in the footer. The style prints in the footer when the block renders after `wp_head`. WordPress omits assets enqueued during a render that prints nothing.
+A missing file is skipped. The other file still loads. Both use the handle `wpb-my-theme-team`. The script prints in the footer. The style prints in the footer when the block renders after `wp_head`. WordPress omits assets enqueued during a render that prints nothing.
 
 ```php
 use WPB\Blocks\Block;
@@ -690,7 +690,7 @@ Otherwise the theme template is the block HTML:
 
 - `template('template-parts/blocks/hero')` loads `template-parts/blocks/hero.php` from the child theme, then the parent. A trailing `.php` is removed. `template('')` is ignored, reported in the admin, and the block falls back to the convention below. This slug is the full path. `blockTemplates()` does not prefix it.
 - A `template()` slug that does not exist is reported in the admin. The block then prints the mount point.
-- With no `template()` call, `my-theme/team` loads `template-parts/blocks/my-theme/team.php` when that file exists. A missing convention file is silent. `Builder::blockTemplates('parts/blocks')` changes that directory, so the same block loads `parts/blocks/my-theme/team.php`.
+- With no `template()` call, `my-theme/team` loads `template-parts/blocks/my-theme-team.php` when that file exists. A missing convention file is silent. `Builder::blockTemplates('parts/blocks')` changes that directory, so the same block loads `parts/blocks/my-theme-team.php`.
 
 `get_template_part()` receives `$args` with `attributes`, `content`, `block`, and `name`. `attributes` matches `data-wpb-props`. Call `get_block_wrapper_attributes()` inside the template when the markup needs alignment, color, or spacing.
 
@@ -763,7 +763,7 @@ Blocks saved in post meta, and any block with a repeater, load `assets/js/block-
 
 ### Core blocks
 
-`new Block()` attaches a `render_block` filter. Call `Block::hookCoreTemplates()` when the theme replaces core blocks and does not construct a `Block`. A theme file replaces the public HTML of a core block when the file exists. The directory is `Builder::blockTemplates()`, which defaults to `template-parts/blocks`. `core/paragraph` uses `template-parts/blocks/core/paragraph.php`. `core/image`, `core/group`, and `core/navigation` follow the same path: `template-parts/blocks/core/{slug}.php`. `Builder::blockTemplates('parts/blocks')` moves those files to `parts/blocks/core/{slug}.php`.
+`new Block()` attaches a `render_block` filter. Call `Block::hookCoreTemplates()` when the theme replaces core blocks and does not construct a `Block`. A theme file replaces the public HTML of a core block when the file exists. The directory is `Builder::blockTemplates()`, which defaults to `template-parts/blocks`. `core/paragraph` uses `template-parts/blocks/core-paragraph.php`. `core/image`, `core/group`, and `core/navigation` follow the same file name: `template-parts/blocks/core-{slug}.php`. `Builder::blockTemplates('parts/blocks')` moves those files to `parts/blocks/core-{slug}.php`.
 
 ```php
 use WPB\Blocks\Block;

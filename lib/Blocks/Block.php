@@ -213,8 +213,8 @@ class Block
     /**
      * Theme template slug passed to `get_template_part()`.
      *
-     * An empty string means `{Builder::blockTemplates()}/{block name}`.
-     * That directory defaults to `template-parts/blocks`.
+     * An empty string means `{Builder::blockTemplates()}/{block name}`, with
+     * `/` replaced by `-`. That directory defaults to `template-parts/blocks`.
      */
     private string $templateSlug;
 
@@ -663,8 +663,9 @@ class Block
      *
      * `template-parts/blocks/hero` loads `template-parts/blocks/hero.php` from the child theme, then the parent.
      * A trailing `.php` is removed. An empty slug clears any previous slug and
-     * the block uses `{Builder::blockTemplates()}/{block name}`. That directory
-     * defaults to `template-parts/blocks`.
+     * the block uses `{Builder::blockTemplates()}/{block name}`, with `/`
+     * replaced by `-`. `my-theme/team` loads `template-parts/blocks/my-theme-team.php`.
+     * That directory defaults to `template-parts/blocks`.
      *
      * @param string $slug Template slug, without `.php`.
      *
@@ -694,8 +695,8 @@ class Block
      * Enqueues this block's CSS and JavaScript when the block renders.
      *
      * The files live in {@see Builder::blockAssets()}, which defaults to
-     * `assets/public/blocks`. `pluria/carousel` loads `pluria-carousel.css` and
-     * `pluria-carousel.js` from that directory, in the child theme, then the parent.
+     * `assets/public/blocks`. `my-theme/team` loads `my-theme-team.css` and
+     * `my-theme-team.js` from that directory, in the child theme, then the parent.
      * Pass `style` or `script` to load one file. `both` is the default.
      * A missing file is skipped. The script prints in the footer.
      *
@@ -904,7 +905,7 @@ class Block
             return (string) ($this->renderCallback)($values, $content, $block);
         }
 
-        $slug = $this->templateSlug !== '' ? $this->templateSlug : Builder::blockTemplates() . '/' . $this->name;
+        $slug = $this->templateSlug !== '' ? $this->templateSlug : self::conventionTemplate($this->name);
         $rendered = self::captureTemplate($slug, [
             'attributes' => $this->propsForReact($values),
             'content'    => $content,
@@ -924,6 +925,21 @@ class Block
         }
 
         return $this->renderMount($this->propsForReact($values));
+    }
+
+    /**
+     * Builds the theme template slug for a block name.
+     *
+     * `my-theme/team` becomes `template-parts/blocks/my-theme-team` when
+     * the template directory is the default.
+     *
+     * @param string $name Block type name (`namespace/slug`).
+     *
+     * @return string Template slug, without `.php`.
+     */
+    private static function conventionTemplate(string $name): string
+    {
+        return Builder::blockTemplates() . '/' . str_replace('/', '-', $name);
     }
 
     /**
@@ -997,7 +1013,7 @@ class Block
             return $content;
         }
 
-        $rendered = self::captureTemplate(Builder::blockTemplates() . '/' . $name, [
+        $rendered = self::captureTemplate(self::conventionTemplate($name), [
             'attributes' => is_array($block['attrs'] ?? null) ? $block['attrs'] : [],
             'content'    => $content,
             'block'      => $instance,
