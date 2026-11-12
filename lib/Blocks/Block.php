@@ -131,6 +131,25 @@ class Block
     protected array $keywords;
 
     /**
+     * Post types that may show this block in the inserter.
+     *
+     * An empty list means every editor.
+     *
+     * @var list<string>
+     */
+    private array $postTypes;
+
+    /**
+     * Whether the post type check is queued for `wp_loaded`.
+     */
+    private bool $postTypeRestrictionQueued;
+
+    /**
+     * Whether `allowed_block_types_all` is already filtering this block.
+     */
+    private bool $postTypeFilterAdded;
+
+    /**
      * Block attribute schemas.
      *
      * @var array<string, array<string, mixed>>
@@ -286,6 +305,9 @@ class Block
         $this->category = 'widgets';
         $this->icon = '';
         $this->keywords = [];
+        $this->postTypes = [];
+        $this->postTypeRestrictionQueued = false;
+        $this->postTypeFilterAdded = false;
         $this->attributes = [];
         $this->supports = [
             'autoRegister' => true,
@@ -417,6 +439,50 @@ class Block
         } else {
             $this->keywords[] = $keywords;
         }
+
+        return $this;
+    }
+
+    /**
+     * Limits the inserter to the given post types.
+     *
+     * Accepts one post type slug or a list of slugs. Further calls add to the
+     * list. The check runs on `wp_loaded`, after post types registered on
+     * `init` exist. A missing slug is ignored and reported in the WordPress
+     * admin. When every slug is missing, the block stays available everywhere.
+     *
+     * The block remains registered. Content that already contains it still
+     * renders. Editors without a post, such as the site editor, do not show it.
+     *
+     * @param string|list<string> $postTypes Post type slug or list of slugs.
+     *
+     * @return static
+     *
+     * A value that is not a string is ignored and reported in the WordPress admin.
+     *
+     * @see https://developer.wordpress.org/reference/hooks/allowed_block_types_all/
+     */
+    public function postTypes(string|array $postTypes): static
+    {
+        if (!is_array($postTypes)) {
+            $postTypes = [$postTypes];
+        }
+
+        foreach ($postTypes as $postType) {
+            if (!is_string($postType)) {
+                Notices::error(sprintf(
+                    'Block post type must be a string, %s given.',
+                    get_debug_type($postType)
+                ));
+
+                continue;
+            }
+
+            $this->postTypes[] = $postType;
+        }
+
+        $this->postTypes = array_values(array_unique($this->postTypes));
+        $this->queuePostTypeRestriction();
 
         return $this;
     }
@@ -1114,6 +1180,96 @@ class Block
         self::$libraryBlocks[$this->name] = true;
 
         register_block_type($this->name, $this->args);
+        $this->queuePostTypeRestriction();
+    }
+
+    /**
+     * Checks post types after `init`, when custom post types exist.
+     */
+    private function queuePostTypeRestriction(): void
+    {
+        if ($this->postTypes === [] || !function_exists('add_action')) {
+            return;
+        }
+
+        if (function_exists('did_action') && did_action('wp_loaded')) {
+            $this->applyPostTypeRestriction();
+
+            return;
+        }
+
+        if ($this->postTypeRestrictionQueued) {
+            return;
+        }
+
+        $this->postTypeRestrictionQueued = true;
+
+        add_action('wp_loaded', [$this, 'applyPostTypeRestriction'], PHP_INT_MAX);
+    }
+
+    /**
+     * Drops unknown post types and hides the block outside the remaining ones.
+     *
+     * @see https://developer.wordpress.org/reference/functions/post_type_exists/
+     * @see https://developer.wordpress.org/reference/hooks/allowed_block_types_all/
+     */
+    public function applyPostTypeRestriction(): void
+    {
+        $valid = [];
+
+        foreach ($this->postTypes as $postType) {
+            if ($postType === '' || !post_type_exists($postType)) {
+                Notices::error(sprintf(
+                    'Block "%s" cannot be limited to post type "%s" because that post type is not registered.',
+                    $this->name,
+                    $postType
+                ));
+
+                continue;
+            }
+
+            $valid[] = $postType;
+        }
+
+        $this->postTypes = $valid;
+
+        if (
+            $valid === []
+            || $this->name === ''
+            || !isset(self::$libraryBlocks[$this->name])
+            || $this->postTypeFilterAdded
+        ) {
+            return;
+        }
+
+        $this->postTypeFilterAdded = true;
+
+        add_filter('allowed_block_types_all', [$this, 'filterAllowedBlockTypes'], 10, 2);
+    }
+
+    /**
+     * Removes this block from editors whose post type is not allowed.
+     *
+     * @param bool|list<string>        $allowed Block names, or true for every block.
+     * @param \WP_Block_Editor_Context $context Editor context.
+     *
+     * @return bool|list<string> Allowed block names.
+     *
+     * @see https://developer.wordpress.org/reference/hooks/allowed_block_types_all/
+     */
+    public function filterAllowedBlockTypes(bool|array $allowed, \WP_Block_Editor_Context $context): bool|array
+    {
+        $postType = $context->post instanceof \WP_Post ? $context->post->post_type : '';
+
+        if ($this->postTypes === [] || in_array($postType, $this->postTypes, true)) {
+            return $allowed;
+        }
+
+        $names = $allowed === true
+            ? array_keys(\WP_Block_Type_Registry::get_instance()->get_all_registered())
+            : $allowed;
+
+        return array_values(array_diff($names, [$this->name]));
     }
 
     /**
