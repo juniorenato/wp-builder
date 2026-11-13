@@ -69,6 +69,11 @@ class Performance
     private int $imageQuality = 75;
 
     /**
+     * Whether the chosen editor encoded a one-pixel AVIF in this process.
+     */
+    private ?bool $avifWritable = null;
+
+    /**
      * Attachment image size preloaded as the LCP candidate.
      */
     private string $lcpImageSize = 'large';
@@ -508,11 +513,12 @@ class Performance
     }
 
     /**
-     * Saves new JPEG and PNG sizes as AVIF, or WebP when AVIF is unavailable.
+     * Saves new JPEG and PNG sizes as AVIF, or WebP when AVIF cannot be written.
      *
      * Generated sizes use the modern format. An uploaded AVIF or WebP is left
      * as it is. A JPEG or PNG that is already within the size threshold also
-     * gets one full-size modern file next to the original.
+     * gets one full-size modern file next to the original. Listing AVIF in
+     * Imagick is not enough: a decode-only build falls back to WebP.
      *
      * @see https://developer.wordpress.org/reference/hooks/image_editor_output_format/
      * @see https://developer.wordpress.org/reference/hooks/wp_generate_attachment_metadata/
@@ -1734,7 +1740,7 @@ class Performance
     }
 
     /**
-     * Returns AVIF when the editor supports it, otherwise WebP.
+     * Returns AVIF when the chosen editor can write it, otherwise WebP.
      *
      * @return string|null Null when neither format can be saved.
      */
@@ -1744,7 +1750,7 @@ class Performance
             return null;
         }
 
-        if (wp_image_editor_supports(['mime_type' => 'image/avif'])) {
+        if ($this->canWriteAvif()) {
             return 'image/avif';
         }
 
@@ -1753,6 +1759,89 @@ class Performance
         }
 
         return null;
+    }
+
+    /**
+     * Checks that the editor WordPress would use can encode AVIF.
+     *
+     * GD advertises AVIF only when imageavif() exists. Imagick advertises it
+     * whenever queryFormats() lists AVIF, including a build that can read the
+     * file and then fails to save with "no encode delegate".
+     *
+     * @return bool
+     */
+    private function canWriteAvif(): bool
+    {
+        if ($this->avifWritable !== null) {
+            return $this->avifWritable;
+        }
+
+        if (!wp_image_editor_supports(['mime_type' => 'image/avif'])) {
+            $this->avifWritable = false;
+
+            return false;
+        }
+
+        $editor = function_exists('_wp_image_editor_choose')
+            ? _wp_image_editor_choose(['mime_type' => 'image/avif'])
+            : false;
+
+        if ($editor !== 'WP_Image_Editor_Imagick') {
+            $this->avifWritable = is_string($editor) && $editor !== '';
+
+            return $this->avifWritable;
+        }
+
+        $this->avifWritable = $this->imagickCanEncode('AVIF');
+
+        return $this->avifWritable;
+    }
+
+    /**
+     * Writes a one-pixel image in the given Imagick format.
+     *
+     * @param string $format Imagick format name, such as AVIF.
+     *
+     * @return bool True when the file is written.
+     */
+    private function imagickCanEncode(string $format): bool
+    {
+        if (!class_exists(\Imagick::class) || !class_exists(\ImagickPixel::class)) {
+            return false;
+        }
+
+        $temporary = tempnam(sys_get_temp_dir(), 'wpb');
+
+        if ($temporary === false) {
+            return false;
+        }
+
+        $path = $temporary . '.' . strtolower($format);
+        $image = null;
+
+        try {
+            $image = new \Imagick();
+            $image->newImage(1, 1, new \ImagickPixel('white'));
+            $image->setImageFormat($format);
+            $written = $image->writeImage($path);
+            $size = is_file($path) ? filesize($path) : false;
+
+            return $written === true && $size !== false && $size > 0;
+        } catch (\Throwable) {
+            return false;
+        } finally {
+            if ($image instanceof \Imagick) {
+                $image->clear();
+            }
+
+            if (is_file($path)) {
+                unlink($path);
+            }
+
+            if (is_file($temporary)) {
+                unlink($temporary);
+            }
+        }
     }
 
     /**
