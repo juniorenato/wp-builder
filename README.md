@@ -839,7 +839,7 @@ new Performance([
 - `images()` turns on every image method below. A dimension, quality, or LCP size set earlier on the same instance stays. The defaults are a 2048-pixel edge, quality 75, and the `large` size.
 - `limitImageDimension(int $pixels = 2048)` caps the scaled full image through `big_image_size_threshold`. The original file stays available for editing. A value below 1 uses 2048.
 - `stripImageMetadata()` rotates a new JPEG from its EXIF orientation, then removes embedded metadata. Imagick also converts that JPEG to sRGB before stripping the profile. WebP and AVIF are stripped only when Imagick is available.
-- `modernImageFormat()` saves new JPEG and PNG sizes as AVIF when the editor supports it, otherwise WebP. An upload that is already AVIF or WebP is not encoded again. A JPEG or PNG within the size threshold also gets one full-size modern file beside the original.
+- `modernImageFormat()` saves new JPEG and PNG sizes as AVIF when the editor can write that format, otherwise WebP. Imagick listing AVIF is not enough: a one-pixel file is written first, and a decode-only build (`no encode delegate`) falls back to WebP. An upload that is already AVIF or WebP is not encoded again. A JPEG or PNG within the size threshold also gets one full-size modern file beside the original.
 - `imageQuality(int $quality = 75)` sets that quality for AVIF and WebP. JPEG and PNG keep the editor default. A value outside 1–100 uses 75.
 - `disableExtraImageSizes()` removes `medium_large`, 1536, and 2048. Thumbnail, medium, and large stay.
 - `capImageDensity()` drops srcset candidates wider than twice the requested width. The smallest candidate stays when every source is wider than that.
