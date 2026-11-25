@@ -132,6 +132,8 @@
         if (remove) {
             remove.hidden = id === '';
         }
+
+        notify(field);
     }
 
     function itemElement(field, attachment) {
@@ -185,6 +187,11 @@
         });
 
         updateButton(field);
+        notify(field);
+    }
+
+    function notify(field) {
+        field.dispatchEvent(new Event('change', { bubbles: true }));
     }
 
     function openFrame(field) {
@@ -274,6 +281,7 @@
                 }
 
                 updateButton(field);
+                notify(field);
                 return;
             }
 
