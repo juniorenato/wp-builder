@@ -2,7 +2,7 @@
 
 WordPress Builder is a PHP library **created for developers**. It is not an admin plugin and does not add a graphical interface to WordPress.
 
-Use it in a theme or plugin to register custom post types, taxonomies, navigation menus, meta boxes, admin pages, form fields, and server-rendered Gutenberg blocks, and to set response headers, with a small fluent API instead of repeating WordPress boilerplate.
+Use it in a theme or plugin to register custom post types, taxonomies, navigation menus, meta boxes, customizer sections, admin pages, form fields, and server-rendered Gutenberg blocks, and to set response headers, with a small fluent API instead of repeating WordPress boilerplate.
 
 ## Contents
 
@@ -13,6 +13,7 @@ Use it in a theme or plugin to register custom post types, taxonomies, navigatio
 - [Custom post types](#custom-post-types) — `PostType`, `CustomPostType`, `EditPostType`, `RemovePostType`
 - [Taxonomies](#taxonomies) — `Taxonomy`
 - [Menus](#menus) — `Menu`
+- [Customizer](#customizer) — `Customizer`, `Panel`, `Section`
 - [Meta boxes](#meta-boxes) — `MetaBox`
 - [Admin pages](#admin-pages) — `AdminPage`
 - [Form fields](#form-fields) — `AdminForm`, `Forms\Repeater`
@@ -83,6 +84,10 @@ wp-builder/
 │   │   └── Repeater.php
 │   ├── Comments/
 │   │   └── Comment.php
+│   ├── Customizer/
+│   │   ├── Customizer.php
+│   │   ├── Panel.php
+│   │   └── Section.php
 │   ├── Performance/
 │   │   ├── CacheScreen.php
 │   │   ├── PageCache.php
@@ -409,6 +414,58 @@ $menus->register();
 Field names must contain only letters, numbers, hyphens, and underscores. A name WordPress already uses on the item, such as `url`, `title`, or `classes`, is ignored and reported in the admin. The same name cannot be registered twice.
 
 The menu editor submits every item in one form. The library keeps the meta key equal to the field name and posts that item under its own input.
+
+## Customizer
+
+`Customizer` adds a section to Appearance → Customize, at the same level as Site Identity, and stores the fields declared on it.
+
+```php
+use WPB\Customizer\Customizer;
+
+$theme = new Customizer();
+
+$theme->section('contact', 'Contact')
+    ->description('Details shown in the footer.')
+    ->addTextField('phone', 'Phone', 'Include the area code.')
+    ->addTextareaField('address', 'Address')
+    ->addImageField('logo', 'Logo');
+
+$theme->register();
+```
+
+The section id and each field name pass through `sanitize_key()`. `register()` hooks `customize_register`. A section id that already exists is left in place and the fields are added to it. Site Identity itself is not changed.
+
+Read a saved value with `Customizer::get('phone')`. The result is not escaped. In a theme the value is a theme mod; in a plugin it is an option. `storage('theme_mod')` or `storage('option')` overrides that. An image field stores an attachment ID, so the template uses `wp_get_attachment_image()`.
+
+```php
+echo esc_html(Customizer::get('phone'));
+```
+
+The other field types use the same section, and they must be declared before `register()`:
+
+```php
+use WPB\Customizer\Customizer;
+
+$theme = new Customizer();
+$theme->section('contact', 'Contact')
+    ->addNumberField('columns', 'Columns', '', 3)
+    ->addCheckboxField('show_phone', 'Show phone', '', true)
+    ->addSelectField('align', 'Alignment', ['left' => 'Left', 'right' => 'Right'])
+    ->addRadioField('weight', 'Weight', ['400' => 'Normal', '700' => 'Bold'])
+    ->addColorField('primary_color', 'Primary color', '', '#112233');
+$theme->register();
+```
+
+A checkbox stores a boolean. A color stores a hex value. Select and radio only keep a value that belongs to their choices.
+
+Group several sections under one item with a panel. A section without a panel stays at the root:
+
+```php
+$theme->panel('site', 'Site')->description('General options.');
+$theme->section('contact', 'Contact')->panel('site');
+```
+
+An empty id, an empty label, a duplicated setting, or a choice default outside its options is ignored and reported with `Notices`.
 
 ## Meta boxes
 
