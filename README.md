@@ -395,25 +395,36 @@ Read the assigned menu with `get_nav_menu_locations()`. Print it with [`wp_nav_m
 
 ### Fields on the menu item
 
-Custom fields appear on every item in the menu editor and are saved as post meta on that item. WordPress edits items on the menu, so the fields are not limited to one theme location.
+Custom fields are saved as post meta on each menu item. A `Menu` that has locations shows those fields only while the menu assigned to one of those locations is being edited. A `Menu` with fields and no locations keeps the fields on every menu.
 
 ```php
 use WPB\Menus\Menu;
 
-$menus = new Menu();
-$menus->location('primary', 'Primary menu');
-$menus->addTextField('icon', 'Icon', 'Dashicon class or a short label.');
-$menus->addCheckboxField('highlight', 'Highlight', [
+$primary = new Menu();
+$primary->location('primary', 'Primary menu');
+$primary->addTextField('icon', 'Icon', 'Dashicon class or a short label.');
+$primary->addCheckboxField('highlight', 'Highlight', [
     '1' => 'Show as highlighted',
 ]);
-$menus->register();
+$primary->register();
 ```
+
+Registering the same field name on another menu does not create a second field. The first label, type, and choices stay in place, and that menu's locations are allowed to edit the same value:
+
+```php
+$footer = new Menu();
+$footer->location('footer', 'Footer menu');
+$footer->addTextField('icon', 'Icon');
+$footer->register();
+```
+
+`icon` then appears on the menus assigned to `primary` and `footer`. A menu assigned to neither location does not show it.
 
 `wp_setup_nav_menu_item` copies each value onto the item. A walker, or `wp_get_nav_menu_items()`, can read `$item->icon`. The same value is `get_post_meta($item->ID, 'icon', true)`.
 
-Field names must contain only letters, numbers, hyphens, and underscores. A name WordPress already uses on the item, such as `url`, `title`, or `classes`, is ignored and reported in the admin. The same name cannot be registered twice.
+Field names must contain only letters, numbers, hyphens, and underscores. A name WordPress already uses on the item, such as `url`, `title`, or `classes`, is ignored and reported in the admin.
 
-The menu editor submits every item in one form. The library keeps the meta key equal to the field name and posts that item under its own input.
+The menu editor submits every item in one form. The library keeps the meta key equal to the field name and posts that item under its own input. The same fields are saved from the Customizer. The preview refreshes with the unsaved value. A repeater stays on the menu screen. Rich text is edited there as a visual editor and in the Customizer as a textarea.
 
 ## Customizer
 

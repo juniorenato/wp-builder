@@ -43,10 +43,11 @@ elseif ($this->fieldsType === 'term') :
     <?php
 elseif ($this->fieldsType === 'menu') :
     $menuFieldKey = (string) ($this->field['key'] ?? $this->field['name']);
+    $menuItemToken = (string) ($this->field['template_item'] ?? '');
     $menuTag = in_array($fieldType, ['image', 'file', 'repeater', 'rich-text'], true) ? 'div' : 'p';
     ?>
 
-    <<?php echo $menuTag; ?> class="field-<?php echo esc_attr($menuFieldKey); ?> description description-wide wpb-menu-field">
+    <<?php echo $menuTag; ?> class="field-<?php echo esc_attr($menuFieldKey); ?> description description-wide wpb-menu-field" data-wpb-field="<?php echo esc_attr($menuFieldKey); ?>"<?php echo $menuItemToken !== '' ? ' data-wpb-item="' . esc_attr($menuItemToken) . '"' : ''; ?>>
         <?php require $formPath . 'partials/label.php'; ?>
         <br>
         <?php require $partialPath; ?>
