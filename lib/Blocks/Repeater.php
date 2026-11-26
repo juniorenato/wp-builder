@@ -200,6 +200,27 @@ class Repeater
     }
 
     /**
+     * Adds a number field. The saved value may be an integer or a float.
+     *
+     * @param string    $name    Field name.
+     * @param string    $label   Inspector label.
+     * @param int|float $default Default value.
+     *
+     * @return static
+     *
+     * An unusable name is ignored and reported in the WordPress admin.
+     */
+    public function addNumberAttribute(string $name, string $label, int|float $default = 0): static
+    {
+        return $this->addScalar($name, [
+            'name'    => $name,
+            'type'    => 'number',
+            'label'   => $label,
+            'default' => $default,
+        ]);
+    }
+
+    /**
      * Adds an integer field.
      *
      * @param string $name    Field name.
@@ -274,6 +295,104 @@ class Repeater
             'label'   => $label,
             'enum'    => $enum,
             'default' => $default ?? $enum[0],
+        ]);
+    }
+
+    /**
+     * Adds a multiline text field.
+     *
+     * @param string $name    Field name.
+     * @param string $label   Field label.
+     * @param string $default Default value.
+     *
+     * @return static
+     *
+     * An unusable name is ignored and reported in the WordPress admin.
+     */
+    public function addTextareaAttribute(string $name, string $label, string $default = ''): static
+    {
+        return $this->addScalar($name, [
+            'name'    => $name,
+            'type'    => 'textarea',
+            'label'   => $label,
+            'default' => $default,
+        ]);
+    }
+
+    /**
+     * Adds a color field. The saved value is a hex color.
+     *
+     * @param string $name    Field name.
+     * @param string $label   Field label.
+     * @param string $default Hex color used until the row is saved.
+     *
+     * @return static
+     *
+     * An unusable name is ignored and reported in the WordPress admin.
+     */
+    public function addColorAttribute(string $name, string $label, string $default = ''): static
+    {
+        return $this->addScalar($name, [
+            'name'    => $name,
+            'type'    => 'color',
+            'label'   => $label,
+            'default' => $default,
+        ]);
+    }
+
+    /**
+     * Adds radio choices. The saved value is one of the choices.
+     *
+     * @param string       $name    Field name.
+     * @param string       $label   Field label.
+     * @param list<string> $enum    Allowed values, also used as the labels.
+     * @param string|null  $default Default value, or the first choice.
+     *
+     * @return static
+     *
+     * An empty list or an unusable name is ignored and reported in the WordPress admin.
+     */
+    public function addRadioAttribute(string $name, string $label, array $enum, ?string $default = null): static
+    {
+        $enum = array_values($enum);
+
+        if ($enum === []) {
+            Notices::error(sprintf(
+                'Radio attribute "%s" requires at least one value.',
+                $name
+            ));
+
+            return $this;
+        }
+
+        return $this->addScalar($name, [
+            'name'    => $name,
+            'type'    => 'radio',
+            'label'   => $label,
+            'enum'    => $enum,
+            'default' => $default ?? $enum[0],
+        ]);
+    }
+
+    /**
+     * Adds a file field stored as an attachment ID.
+     *
+     * An empty file is stored as `0`.
+     *
+     * @param string $name  Field name.
+     * @param string $label Field label.
+     *
+     * @return static
+     *
+     * An unusable name is ignored and reported in the WordPress admin.
+     */
+    public function addFileAttribute(string $name, string $label): static
+    {
+        return $this->addScalar($name, [
+            'name'    => $name,
+            'type'    => 'file',
+            'label'   => $label,
+            'default' => 0,
         ]);
     }
 

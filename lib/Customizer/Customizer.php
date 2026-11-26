@@ -513,7 +513,7 @@ class Customizer
             'color' => static function (mixed $value): string {
                 return self::normalizeColor(is_scalar($value) ? (string) $value : '');
             },
-            'image' => static function (mixed $value): int {
+            'image', 'file' => static function (mixed $value): int {
                 return function_exists('absint') ? absint($value) : abs((int) $value);
             },
             default => static function (mixed $value): string {
@@ -554,8 +554,11 @@ class Customizer
             return;
         }
 
-        if ($field['type'] === 'image') {
-            $args['mime_type'] = 'image';
+        if ($field['type'] === 'image' || $field['type'] === 'file') {
+            if ($field['type'] === 'image') {
+                $args['mime_type'] = 'image';
+            }
+
             $manager->add_control(new \WP_Customize_Media_Control($manager, $field['id'], $args));
 
             return;

@@ -337,6 +337,21 @@ class Section
     }
 
     /**
+     * Adds a file field. The saved value is an attachment ID.
+     *
+     * @param string $name        Field name. It becomes the setting id.
+     * @param string $label       Field label.
+     * @param string $description Help text under the field.
+     * @param int    $default     Attachment ID used until the setting is saved.
+     *
+     * @return static
+     */
+    public function addFileField(string $name, string $label, string $description = '', int $default = 0): static
+    {
+        return $this->addField('file', $name, $label, $description, max(0, $default));
+    }
+
+    /**
      * Returns the sanitized section id.
      *
      * @return string Section id.

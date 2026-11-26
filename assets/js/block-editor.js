@@ -59,19 +59,22 @@
 
                 return select('core').getMedia(props.value);
             }, [props.value]);
-            var className = 'wp-block-image is-layout-flow wpb-field wpb-field--' + fieldClass(field.name) + ' wpb-field--image components-placeholder__fieldset';
+            var file = field.type === 'file';
+            var className = 'wp-block-image is-layout-flow wpb-field wpb-field--' + fieldClass(field.name) + ' wpb-field--' + (file ? 'file' : 'image') + ' components-placeholder__fieldset';
 
             return el(MediaUploadCheck, null,
                 el(MediaUpload, {
                     onSelect: function (selected) {
                         props.onChange(selected && selected.id ? selected.id : 0);
                     },
-                    allowedTypes: ['image'],
+                    allowedTypes: file ? undefined : ['image'],
                     value: props.value || 0,
                     render: function (mediaProps) {
                         return el('figure', { className: className },
-                            media && media.source_url
+                            media && media.source_url && !file
                                 ? el('img', { src: media.source_url, alt: '', onClick: mediaProps.open })
+                                : media && media.source_url && file
+                                    ? el('div', { className: 'components-placeholder', onClick: mediaProps.open }, el('div', { className: 'components-placeholder__label' }, media.title || media.source_url))
                                 : el('div', {
                                     className: 'components-placeholder',
                                     onClick: mediaProps.open
@@ -100,6 +103,53 @@
 
             if (field.type === 'boolean') {
                 return null;
+            }
+
+            if (field.type === 'textarea') {
+                return el('textarea', {
+                    className: className + ' components-textarea-control__input',
+                    rows: 4,
+                    'aria-label': field.label,
+                    placeholder: field.label,
+                    value: props.value || '',
+                    onMouseDown: stop,
+                    onChange: function (event) {
+                        props.onChange(event.target.value);
+                    }
+                });
+            }
+
+            if (field.type === 'color') {
+                return el('input', {
+                    type: 'color',
+                    className: className,
+                    'aria-label': field.label,
+                    value: props.value || '#000000',
+                    onMouseDown: stop,
+                    onChange: function (event) {
+                        props.onChange(event.target.value);
+                    }
+                });
+            }
+
+            if (field.type === 'radio') {
+                return el('div', { className: className, role: 'radiogroup', 'aria-label': field.label },
+                    (field.enum || []).map(function (choice) {
+                        return el('label', { key: choice, className: 'wpb-field__choice' },
+                            el('input', {
+                                type: 'radio',
+                                name: field.name,
+                                value: choice,
+                                checked: props.value === choice,
+                                onMouseDown: stop,
+                                onChange: function () {
+                                    props.onChange(choice);
+                                }
+                            }),
+                            ' ' + choice
+                        );
+                    })
+                );
             }
 
             if (field.type === 'enum') {
@@ -133,7 +183,7 @@
                 });
             }
 
-            if (field.type === 'image') {
+            if (field.type === 'image' || field.type === 'file') {
                 return el(ImageField, {
                     field: field,
                     value: value || 0,
