@@ -18,7 +18,8 @@ use WPB\Notices;
  *
  * A section without a panel appears at the root of Appearance → Customize,
  * on the same level as Site Identity. Values are theme mods when the library
- * runs as a theme, and options when it runs as a plugin.
+ * runs as a theme, and options when it runs as a plugin. A section can store
+ * its own fields as options with {@see Section::saveAsOption()}.
  *
  * @author Renato Rodrigues Jr <juniorenato@msn.com>
  *
@@ -62,6 +63,21 @@ class Customizer
     private bool $queued = false;
 
     /**
+     * Whether this instance declared a repeater.
+     */
+    private bool $repeaterAssets = false;
+
+    /**
+     * Whether a declared repeater contains an image or a file.
+     */
+    private bool $repeaterMedia = false;
+
+    /**
+     * Whether a declared repeater contains a color.
+     */
+    private bool $repeaterColor = false;
+
+    /**
      * Settings declared during this request, keyed by setting id.
      *
      * @var array<string, array{storage: string, default: mixed}>
@@ -84,6 +100,7 @@ class Customizer
      *     description: string,
      *     priority: int,
      *     panel: string,
+     *     saveAsOption: bool,
      *     fields: list<array<string, mixed>>
      * }>
      */
@@ -187,6 +204,9 @@ class Customizer
     /**
      * Chooses where this instance stores its settings.
      *
+     * A section that calls {@see Section::saveAsOption()} stores its fields as
+     * options even when this instance uses theme mods.
+     *
      * @param string $type `theme_mod` or `option`.
      *
      * @return static
@@ -243,12 +263,14 @@ class Customizer
 
             if ($manager instanceof \WP_Customize_Manager) {
                 $this->registerControls($manager);
+                $this->hookRepeaterAssets();
 
                 return $this;
             }
         }
 
         add_action('customize_register', [$this, 'registerControls']);
+        $this->hookRepeaterAssets();
 
         return $this;
     }
@@ -346,16 +368,34 @@ class Customizer
                 continue;
             }
 
+            $partial = ($field['type'] ?? '') === 'repeater' ? $this->repeaterPartial($field) : null;
+
             $manager->add_setting($field['id'], [
                 'type'              => self::$settings[$field['id']]['storage'] ?? $this->resolvedStorage(),
                 'default'           => $field['default'],
-                'transport'         => 'refresh',
+                'transport'         => $partial === null ? 'refresh' : 'postMessage',
                 'capability'        => self::CAPABILITY,
                 'sanitize_callback' => $this->sanitizeCallback($field),
             ]);
 
             $sectionId = $item['section'];
             $priorities[$sectionId] = ($priorities[$sectionId] ?? 0) + 10;
+
+            if (($field['type'] ?? '') === 'repeater') {
+                $this->addRepeaterControl($manager, $sectionId, $field, $priorities[$sectionId]);
+
+                if ($partial !== null && isset($manager->selective_refresh)) {
+                    $manager->selective_refresh->add_partial($field['id'], [
+                        'selector'            => $partial['selector'],
+                        'settings'            => [$field['id']],
+                        'render_callback'     => $partial['callback'],
+                        'container_inclusive' => true,
+                    ]);
+                }
+
+                continue;
+            }
+
             $this->addControl($manager, $sectionId, $field, $priorities[$sectionId]);
         }
     }
@@ -382,6 +422,7 @@ class Customizer
 
             $exported = $section->export();
             $this->sectionConfig[] = $exported;
+            $fieldStorage = $exported['saveAsOption'] ? 'option' : $storage;
 
             foreach ($exported['fields'] as $field) {
                 if (isset(self::$settings[$field['id']])) {
@@ -391,13 +432,17 @@ class Customizer
                 }
 
                 self::$settings[$field['id']] = [
-                    'storage' => $storage,
+                    'storage' => $fieldStorage,
                     'default' => $field['default'],
                 ];
                 $this->accepted[] = [
                     'section' => $exported['id'],
                     'field'   => $field,
                 ];
+
+                if (($field['type'] ?? '') === 'repeater' && is_array($field['schema'] ?? null)) {
+                    $this->noteRepeaterAssets($field['schema']);
+                }
             }
         }
     }
@@ -436,6 +481,11 @@ class Customizer
         $choices = $field['choices'];
 
         return match ($field['type']) {
+            'repeater' => static function (mixed $value) use ($field): array {
+                $schema = is_array($field['schema'] ?? null) ? $field['schema'] : [];
+
+                return Repeater::sanitize($schema, $value);
+            },
             'textarea' => static function (mixed $value): string {
                 $text = is_scalar($value) ? (string) $value : '';
 
@@ -463,7 +513,7 @@ class Customizer
             'color' => static function (mixed $value): string {
                 return self::normalizeColor(is_scalar($value) ? (string) $value : '');
             },
-            'image' => static function (mixed $value): int {
+            'image', 'file' => static function (mixed $value): int {
                 return function_exists('absint') ? absint($value) : abs((int) $value);
             },
             default => static function (mixed $value): string {
@@ -504,8 +554,11 @@ class Customizer
             return;
         }
 
-        if ($field['type'] === 'image') {
-            $args['mime_type'] = 'image';
+        if ($field['type'] === 'image' || $field['type'] === 'file') {
+            if ($field['type'] === 'image') {
+                $args['mime_type'] = 'image';
+            }
+
             $manager->add_control(new \WP_Customize_Media_Control($manager, $field['id'], $args));
 
             return;
@@ -550,5 +603,198 @@ class Customizer
         }
 
         return strtolower($value);
+    }
+
+    /**
+     * Records which repeater assets this schema needs.
+     *
+     * The repeater script loads when a repeater is declared. The media script
+     * loads when an image or a file is declared. The color picker loads when a
+     * color is declared. Nested repeaters are included.
+     *
+     * @param array<string, mixed> $schema Repeater schema.
+     */
+    private function noteRepeaterAssets(array $schema): void
+    {
+        $this->repeaterAssets = true;
+
+        foreach ($schema['fields'] ?? [] as $field) {
+            if (!is_array($field)) {
+                continue;
+            }
+
+            $type = (string) ($field['type'] ?? '');
+
+            if ($type === 'image' || $type === 'file') {
+                $this->repeaterMedia = true;
+            }
+
+            if ($type === 'color') {
+                $this->repeaterColor = true;
+            }
+
+            if ($type === 'repeater') {
+                $this->noteRepeaterAssets($field);
+            }
+        }
+    }
+
+    /**
+     * Queues the repeater control assets.
+     */
+    private function hookRepeaterAssets(): void
+    {
+        if (!$this->repeaterAssets || !function_exists('add_action')) {
+            return;
+        }
+
+        if (function_exists('did_action') && did_action('customize_controls_enqueue_scripts')) {
+            $this->enqueueRepeaterAssets();
+
+            return;
+        }
+
+        add_action('customize_controls_enqueue_scripts', [$this, 'enqueueRepeaterAssets']);
+    }
+
+    /**
+     * Returns the selective refresh partial for a repeater, when one can be registered.
+     *
+     * A requested preview without a selector or a callable callback is reported
+     * and the setting keeps the full preview refresh.
+     *
+     * @param array<string, mixed> $field Repeater field.
+     *
+     * @return array{selector: string, callback: callable|string|array<int|string, mixed>}|null Partial arguments.
+     */
+    private function repeaterPartial(array $field): ?array
+    {
+        $preview = is_array($field['preview'] ?? null) ? $field['preview'] : [];
+
+        if (empty($preview['requested'])) {
+            return null;
+        }
+
+        $selector = trim((string) ($preview['selector'] ?? ''));
+        $callback = $preview['callback'] ?? null;
+        $ready = is_string($callback) ? function_exists($callback) : is_callable($callback);
+
+        if ($selector === '' || !$ready) {
+            Notices::error(sprintf(
+                'Customizer setting "%s" preview needs a selector and a render callback.',
+                (string) ($field['id'] ?? '')
+            ));
+
+            return null;
+        }
+
+        return [
+            'selector' => $selector,
+            'callback' => $callback,
+        ];
+    }
+
+    /**
+     * Adds the repeater control for one setting.
+     *
+     * @param \WP_Customize_Manager $manager   Customizer manager.
+     * @param string                $sectionId Section id.
+     * @param array<string, mixed>  $field     Repeater field.
+     * @param int                   $priority  Control sort order.
+     */
+    private function addRepeaterControl(
+        \WP_Customize_Manager $manager,
+        string $sectionId,
+        array $field,
+        int $priority
+    ): void {
+        $manager->add_control(new RepeaterControl($manager, (string) $field['id'], [
+            'label'       => (string) ($field['label'] ?? ''),
+            'description' => (string) ($field['description'] ?? ''),
+            'section'     => $sectionId,
+            'priority'    => $priority,
+            'settings'    => (string) $field['id'],
+            'schema'      => is_array($field['schema'] ?? null) ? $field['schema'] : [],
+        ]));
+    }
+
+    /**
+     * Prints the scripts and styles used by repeater controls.
+     *
+     * @see https://developer.wordpress.org/reference/hooks/customize_controls_enqueue_scripts/
+     */
+    public function enqueueRepeaterAssets(): void
+    {
+        if (!$this->repeaterAssets || !function_exists('wp_enqueue_script')) {
+            return;
+        }
+
+        $root = dirname(__DIR__, 2);
+        $bridge = ['customize-controls', 'wpb-admin-repeater'];
+
+        $this->enqueueAsset(
+            'wpb-admin-repeater',
+            $root . '/assets/css/admin-repeater.css',
+            $root . '/assets/js/admin-repeater.js',
+            []
+        );
+
+        if ($this->repeaterMedia) {
+            if (function_exists('wp_enqueue_media')) {
+                wp_enqueue_media();
+            }
+
+            $this->enqueueAsset(
+                'wpb-admin-image',
+                $root . '/assets/css/admin-image.css',
+                $root . '/assets/js/admin-image.js',
+                ['media-editor']
+            );
+            $bridge[] = 'wpb-admin-image';
+        }
+
+        if ($this->repeaterColor) {
+            wp_enqueue_style('wp-color-picker');
+            wp_enqueue_script('wp-color-picker');
+            $bridge[] = 'jquery';
+            $bridge[] = 'wp-color-picker';
+        }
+
+        $this->enqueueAsset(
+            'wpb-customize-repeater',
+            $root . '/assets/css/customize-repeater.css',
+            $root . '/assets/js/customize-repeater.js',
+            $bridge
+        );
+    }
+
+    /**
+     * Enqueues one stylesheet and one footer script from the theme directory.
+     *
+     * @param string       $handle Style and script handle.
+     * @param string       $style  Absolute CSS path.
+     * @param string       $script Absolute JavaScript path.
+     * @param list<string> $deps   Script dependencies.
+     */
+    private function enqueueAsset(string $handle, string $style, string $script, array $deps): void
+    {
+        $styleUrl = is_readable($style) ? Builder::url($style) : '';
+        $scriptUrl = is_readable($script) ? Builder::url($script) : '';
+
+        if ($styleUrl !== '') {
+            wp_enqueue_style($handle, $styleUrl, [], (string) filemtime($style));
+        }
+
+        if ($scriptUrl === '' || wp_script_is($handle, 'enqueued')) {
+            return;
+        }
+
+        wp_enqueue_script(
+            $handle,
+            $scriptUrl,
+            $deps,
+            (string) filemtime($script),
+            true
+        );
     }
 }

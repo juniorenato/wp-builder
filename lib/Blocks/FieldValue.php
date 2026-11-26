@@ -74,7 +74,17 @@ class FieldValue
                 return self::normalizeEnum($field, $value);
 
             case 'image':
+            case 'file':
                 return self::normalizeImage($value);
+
+            case 'textarea':
+                return self::normalizeTextarea($value, $field['default'] ?? '');
+
+            case 'color':
+                return self::normalizeColor($value, $field['default'] ?? '');
+
+            case 'radio':
+                return self::normalizeEnum($field, $value);
 
             case 'string':
             default:
@@ -316,10 +326,73 @@ class FieldValue
     }
 
     /**
-     * Keeps a non-negative attachment ID.
+     * Keeps multiline text.
      *
-     * @param mixed $value Submitted attachment ID.
+     * @param mixed $value   Submitted text.
+     * @param mixed $default Fallback text.
      */
+    private static function normalizeTextarea(mixed $value, mixed $default): string
+    {
+        if (!is_scalar($value)) {
+            $value = $default;
+        }
+
+        $text = is_scalar($value) ? (string) $value : '';
+
+        return function_exists('sanitize_textarea_field') ? sanitize_textarea_field($text) : $text;
+    }
+
+    /**
+     * Keeps a hex color, or the default when the value is not a color.
+     *
+     * @param mixed $value   Submitted color.
+     * @param mixed $default Fallback color.
+     *
+     * @return string Hex color, or an empty string.
+     */
+    private static function normalizeColor(mixed $value, mixed $default): string
+    {
+        $color = self::hexColor(is_scalar($value) ? (string) $value : '');
+
+        if ($color !== '') {
+            return $color;
+        }
+
+        return self::hexColor(is_scalar($default) ? (string) $default : '');
+    }
+
+    /**
+     * Normalizes `#rgb` and `#rrggbb`.
+     *
+     * @param string $value Raw color.
+     *
+     * @return string Hex color, or an empty string.
+     */
+    private static function hexColor(string $value): string
+    {
+        $value = trim($value);
+
+        if ($value === '') {
+            return '';
+        }
+
+        if ($value[0] !== '#') {
+            $value = '#' . $value;
+        }
+
+        if (function_exists('sanitize_hex_color')) {
+            $color = sanitize_hex_color($value);
+
+            return is_string($color) ? $color : '';
+        }
+
+        if (preg_match('/^#(?:[0-9a-fA-F]{3}|[0-9a-fA-F]{6})$/', $value) !== 1) {
+            return '';
+        }
+
+        return strtolower($value);
+    }
+
     private static function normalizeImage(mixed $value): int
     {
         if (!is_numeric($value)) {
@@ -362,6 +435,7 @@ class FieldValue
 
             case 'integer':
             case 'image':
+            case 'file':
                 return ['type' => 'integer'];
 
             case 'number':
@@ -378,10 +452,15 @@ class FieldValue
                 ];
 
             case 'enum':
+            case 'radio':
                 return [
                     'type' => 'string',
                     'enum' => array_values($field['enum'] ?? []),
                 ];
+
+            case 'textarea':
+            case 'color':
+                return ['type' => 'string'];
 
             case 'string':
             default:

@@ -37,6 +37,7 @@ trait AdminForm
         'checkbox',
         'image',
         'file',
+        'color',
         'repeater',
     ];
 
@@ -436,6 +437,52 @@ trait AdminForm
         $attributes = array_merge($attributes, $attrs);
 
         return $this->defineFormField('number', $name, $label, $attributes, [], $description);
+    }
+
+    /**
+     * Adds a color field. The saved value is a hex color.
+     *
+     * @param string               $name        Field name.
+     * @param string               $label       Field label.
+     * @param string               $description Field description.
+     * @param string               $class       Extra CSS classes.
+     * @param array<string, mixed> $attrs       Extra HTML attributes.
+     */
+    public function addColorField(
+        string $name,
+        string $label,
+        string $description = '',
+        string $class = '',
+        array $attrs = []
+    ): void {
+        $this->registerDefinedField($this->defineColorField($name, $label, $description, $class, $attrs));
+    }
+
+    /**
+     * Builds a color field configuration.
+     *
+     * @param string               $name        Field name.
+     * @param string               $label       Field label.
+     * @param string               $description Field description.
+     * @param string               $class       Extra CSS classes.
+     * @param array<string, mixed> $attrs       Extra HTML attributes.
+     *
+     * @return array<string, mixed> Field configuration.
+     */
+    public function defineColorField(
+        string $name,
+        string $label,
+        string $description = '',
+        string $class = '',
+        array $attrs = []
+    ): array {
+        $attributes = [
+            'class' => trim('wpb-color-field ' . $class . ' ' . (string) ($attrs['class'] ?? '')),
+        ];
+        unset($attrs['class']);
+        $attributes = array_merge($attributes, $attrs);
+
+        return $this->defineFormField('color', $name, $label, $attributes, [], $description);
     }
 
     /**
@@ -1041,6 +1088,9 @@ trait AdminForm
             case 'rich-text':
                 return wp_kses_post((string) $value);
 
+            case 'color':
+                return $this->sanitizeHexColor(is_scalar($value) ? (string) $value : '');
+
             case 'number':
                 if ($value === '' || $value === null) {
                     return '';
@@ -1433,6 +1483,74 @@ trait AdminForm
         }
 
         wp_enqueue_script('wpb-admin-image');
+    }
+
+    /**
+     * Prints the color picker used by a color field.
+     *
+     * The picker is loaded only when a color field is rendered.
+     *
+     * @see https://developer.wordpress.org/reference/functions/wp_enqueue_script/
+     */
+    protected function enqueueAdminColor(): void
+    {
+        static $done = false;
+
+        if ($done || !function_exists('wp_enqueue_script')) {
+            return;
+        }
+
+        $done = true;
+        wp_enqueue_style('wp-color-picker');
+        wp_enqueue_script('wp-color-picker');
+
+        $root = dirname(__DIR__, 2);
+        $path = $root . '/assets/js/admin-color.js';
+        $url = is_readable($path) ? Builder::url($path) : '';
+
+        if ($url === '') {
+            return;
+        }
+
+        wp_enqueue_script(
+            'wpb-admin-color',
+            $url,
+            ['jquery', 'wp-color-picker'],
+            (string) filemtime($path),
+            true
+        );
+    }
+
+    /**
+     * Normalizes a hex color to `#rgb` or `#rrggbb`.
+     *
+     * @param string $value Raw color.
+     *
+     * @return string Hex color, or an empty string when the value is not a color.
+     */
+    private function sanitizeHexColor(string $value): string
+    {
+        $value = trim($value);
+
+        if ($value === '') {
+            return '';
+        }
+
+        if ($value[0] !== '#') {
+            $value = '#' . $value;
+        }
+
+        if (function_exists('sanitize_hex_color')) {
+            $color = sanitize_hex_color($value);
+
+            return is_string($color) ? $color : '';
+        }
+
+        if (preg_match('/^#(?:[0-9a-fA-F]{3}|[0-9a-fA-F]{6})$/', $value) !== 1) {
+            return '';
+        }
+
+        return strtolower($value);
     }
 
     /**

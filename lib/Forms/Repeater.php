@@ -350,6 +350,29 @@ class Repeater
     }
 
     /**
+     * Adds a color field. The saved value is a hex color.
+     *
+     * @param string               $name        Field name.
+     * @param string               $label       Field label.
+     * @param string               $description Field description.
+     * @param string               $class       Extra CSS classes.
+     * @param array<string, mixed> $attrs       Extra HTML attributes.
+     *
+     * @return static
+     *
+     * @throws InvalidArgumentException If the name is already used at this level.
+     */
+    public function addColorField(
+        string $name,
+        string $label,
+        string $description = '',
+        string $class = '',
+        array $attrs = []
+    ): static {
+        return $this->addScalar($this->owner->defineColorField($name, $label, $description, $class, $attrs));
+    }
+
+    /**
      * Adds an image field stored as one attachment ID or a list of IDs.
      *
      * @param string               $name        Field name.
