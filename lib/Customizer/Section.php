@@ -69,16 +69,18 @@ class Section
     /**
      * Fields declared on this section.
      *
-     * @var list<array{
-     *     id: string,
-     *     type: string,
-     *     label: string,
-     *     description: string,
-     *     default: mixed,
-     *     choices: array<string, string>
-     * }>
+     * A repeater is stored as an id stub and expanded in {@see Section::export()}.
+     *
+     * @var list<array<string, mixed>>
      */
     private array $fields = [];
+
+    /**
+     * Root repeaters, keyed by setting id.
+     *
+     * @var array<string, Repeater>
+     */
+    private array $repeaters = [];
 
     /**
      * Starts a section.
@@ -161,6 +163,45 @@ class Section
         $this->saveAsOption = true;
 
         return $this;
+    }
+
+    /**
+     * Starts a repeater and returns it so its fields can be chained.
+     *
+     * `end()` returns this section. The repeater is one setting. Its id is the
+     * sanitized name, and the saved value is a list.
+     *
+     * @param string $name        Field name. It becomes the setting id.
+     * @param string $label       Field label.
+     * @param string $description Help text under the field.
+     *
+     * @return Repeater Fluent repeater.
+     */
+    public function repeater(string $name, string $label, string $description = ''): Repeater
+    {
+        if (!$this->valid) {
+            return Repeater::inactive($this);
+        }
+
+        $repeater = new Repeater($this, true, $name, $label, $description);
+
+        if (!$repeater->isValid()) {
+            return $repeater;
+        }
+
+        if ($this->hasField($repeater->name())) {
+            Notices::error(sprintf('Customizer setting "%s" is already registered.', $repeater->name()));
+
+            return Repeater::inactive($this);
+        }
+
+        $this->repeaters[$repeater->name()] = $repeater;
+        $this->fields[] = [
+            'id'   => $repeater->name(),
+            'type' => 'repeater',
+        ];
+
+        return $repeater;
     }
 
     /**
@@ -335,14 +376,7 @@ class Section
      *     priority: int,
      *     panel: string,
      *     saveAsOption: bool,
-     *     fields: list<array{
-     *         id: string,
-     *         type: string,
-     *         label: string,
-     *         description: string,
-     *         default: mixed,
-     *         choices: array<string, string>
-     *     }>
+     *     fields: list<array<string, mixed>>
      * } Section arguments.
      */
     public function export(): array
@@ -354,8 +388,52 @@ class Section
             'priority'     => $this->priority,
             'panel'        => $this->panel,
             'saveAsOption' => $this->saveAsOption,
-            'fields'       => $this->fields,
+            'fields'       => $this->exportedFields(),
         ];
+    }
+
+    /**
+     * Returns the fields in declaration order, with repeater schemas filled in.
+     *
+     * @return list<array<string, mixed>> Fields ready for registration.
+     */
+    private function exportedFields(): array
+    {
+        $fields = [];
+
+        foreach ($this->fields as $field) {
+            if (($field['type'] ?? '') !== 'repeater') {
+                $fields[] = $field;
+
+                continue;
+            }
+
+            $repeater = $this->repeaters[$field['id']] ?? null;
+
+            if ($repeater instanceof Repeater) {
+                $fields[] = $repeater->field();
+            }
+        }
+
+        return $fields;
+    }
+
+    /**
+     * Reports whether a setting id is already used in this section.
+     *
+     * @param string $id Sanitized setting id.
+     *
+     * @return bool True when a field or a repeater uses the id.
+     */
+    private function hasField(string $id): bool
+    {
+        foreach ($this->fields as $field) {
+            if (($field['id'] ?? '') === $id) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     /**
@@ -432,12 +510,10 @@ class Section
             return $this;
         }
 
-        foreach ($this->fields as $field) {
-            if ($field['id'] === $id) {
-                Notices::error(sprintf('Customizer setting "%s" is already registered.', $id));
+        if ($this->hasField($id)) {
+            Notices::error(sprintf('Customizer setting "%s" is already registered.', $id));
 
-                return $this;
-            }
+            return $this;
         }
 
         if ($type === 'color' && $default !== '') {

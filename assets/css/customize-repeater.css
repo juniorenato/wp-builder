@@ -1,0 +1,26 @@
+/*
+ * Fits the shared repeater inside the customizer sidebar.
+ */
+
+.customize-control-wpb_repeater .wpb-repeater__field > label {
+	display: block;
+	margin: 8px 0 4px;
+	font-weight: 600;
+}
+
+.customize-control-wpb_repeater input[type="text"],
+.customize-control-wpb_repeater input[type="number"],
+.customize-control-wpb_repeater textarea,
+.customize-control-wpb_repeater select {
+	width: 100%;
+}
+
+.customize-control-wpb_repeater .wpb-image-field__preview img,
+.customize-control-wpb_repeater .wpb-file-field__name {
+	max-width: 100%;
+	height: auto;
+}
+
+.customize-control-wpb_repeater .wp-picker-container {
+	display: block;
+}
