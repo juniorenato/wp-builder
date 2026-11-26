@@ -63,9 +63,19 @@ class Customizer
     private bool $queued = false;
 
     /**
-     * Whether this instance registered a repeater and needs its control assets.
+     * Whether this instance declared a repeater.
      */
-    private bool $enqueueRepeater = false;
+    private bool $repeaterAssets = false;
+
+    /**
+     * Whether a declared repeater contains an image or a file.
+     */
+    private bool $repeaterMedia = false;
+
+    /**
+     * Whether a declared repeater contains a color.
+     */
+    private bool $repeaterColor = false;
 
     /**
      * Settings declared during this request, keyed by setting id.
@@ -430,8 +440,8 @@ class Customizer
                     'field'   => $field,
                 ];
 
-                if (($field['type'] ?? '') === 'repeater') {
-                    $this->enqueueRepeater = true;
+                if (($field['type'] ?? '') === 'repeater' && is_array($field['schema'] ?? null)) {
+                    $this->noteRepeaterAssets($field['schema']);
                 }
             }
         }
@@ -593,11 +603,45 @@ class Customizer
     }
 
     /**
+     * Records which repeater assets this schema needs.
+     *
+     * The repeater script loads when a repeater is declared. The media script
+     * loads when an image or a file is declared. The color picker loads when a
+     * color is declared. Nested repeaters are included.
+     *
+     * @param array<string, mixed> $schema Repeater schema.
+     */
+    private function noteRepeaterAssets(array $schema): void
+    {
+        $this->repeaterAssets = true;
+
+        foreach ($schema['fields'] ?? [] as $field) {
+            if (!is_array($field)) {
+                continue;
+            }
+
+            $type = (string) ($field['type'] ?? '');
+
+            if ($type === 'image' || $type === 'file') {
+                $this->repeaterMedia = true;
+            }
+
+            if ($type === 'color') {
+                $this->repeaterColor = true;
+            }
+
+            if ($type === 'repeater') {
+                $this->noteRepeaterAssets($field);
+            }
+        }
+    }
+
+    /**
      * Queues the repeater control assets.
      */
     private function hookRepeaterAssets(): void
     {
-        if (!$this->enqueueRepeater || !function_exists('add_action')) {
+        if (!$this->repeaterAssets || !function_exists('add_action')) {
             return;
         }
 
@@ -678,39 +722,47 @@ class Customizer
      */
     public function enqueueRepeaterAssets(): void
     {
-        if (!function_exists('wp_enqueue_script')) {
+        if (!$this->repeaterAssets || !function_exists('wp_enqueue_script')) {
             return;
         }
 
-        if (function_exists('wp_enqueue_media')) {
-            wp_enqueue_media();
-        }
-
-        wp_enqueue_style('wp-color-picker');
-        wp_enqueue_script('wp-color-picker');
-
         $root = dirname(__DIR__, 2);
-        $assets = [
-            'wpb-admin-repeater' => [
-                'style' => $root . '/assets/css/admin-repeater.css',
-                'script' => $root . '/assets/js/admin-repeater.js',
-                'deps' => [],
-            ],
-            'wpb-admin-image' => [
-                'style' => $root . '/assets/css/admin-image.css',
-                'script' => $root . '/assets/js/admin-image.js',
-                'deps' => ['media-editor'],
-            ],
-            'wpb-customize-repeater' => [
-                'style' => $root . '/assets/css/customize-repeater.css',
-                'script' => $root . '/assets/js/customize-repeater.js',
-                'deps' => ['customize-controls', 'jquery', 'wp-color-picker', 'wpb-admin-repeater', 'wpb-admin-image'],
-            ],
-        ];
+        $bridge = ['customize-controls', 'wpb-admin-repeater'];
 
-        foreach ($assets as $handle => $asset) {
-            $this->enqueueAsset($handle, $asset['style'], $asset['script'], $asset['deps']);
+        $this->enqueueAsset(
+            'wpb-admin-repeater',
+            $root . '/assets/css/admin-repeater.css',
+            $root . '/assets/js/admin-repeater.js',
+            []
+        );
+
+        if ($this->repeaterMedia) {
+            if (function_exists('wp_enqueue_media')) {
+                wp_enqueue_media();
+            }
+
+            $this->enqueueAsset(
+                'wpb-admin-image',
+                $root . '/assets/css/admin-image.css',
+                $root . '/assets/js/admin-image.js',
+                ['media-editor']
+            );
+            $bridge[] = 'wpb-admin-image';
         }
+
+        if ($this->repeaterColor) {
+            wp_enqueue_style('wp-color-picker');
+            wp_enqueue_script('wp-color-picker');
+            $bridge[] = 'jquery';
+            $bridge[] = 'wp-color-picker';
+        }
+
+        $this->enqueueAsset(
+            'wpb-customize-repeater',
+            $root . '/assets/css/customize-repeater.css',
+            $root . '/assets/js/customize-repeater.js',
+            $bridge
+        );
     }
 
     /**
