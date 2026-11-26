@@ -78,6 +78,79 @@ class Block
     ];
 
     /**
+     * Editor settings WordPress applies on the block wrapper.
+     *
+     * `supports()` replaces this set. `autoRegister` is forced back on.
+     *
+     * @var array<string, mixed>
+     *
+     * @see https://developer.wordpress.org/block-editor/reference-guides/block-api/block-supports/
+     */
+    private const array DEFAULT_SUPPORTS = [
+        'autoRegister'          => true,
+        'align'                 => ['left', 'center', 'right', 'wide', 'full'],
+        'anchor'                => true,
+        'ariaLabel'             => true,
+        'customClassName'       => true,
+        'color'                 => [
+            'text'       => true,
+            'background' => true,
+            'gradients'  => true,
+            'link'       => true,
+            'heading'    => true,
+            'button'     => true,
+        ],
+        'typography'            => [
+            'fontSize'                       => true,
+            'lineHeight'                     => true,
+            'textAlign'                      => true,
+            'textColumns'                    => true,
+            'textIndent'                     => true,
+            'fitText'                        => true,
+            '__experimentalFontFamily'       => true,
+            '__experimentalFontStyle'        => true,
+            '__experimentalFontWeight'       => true,
+            '__experimentalLetterSpacing'    => true,
+            '__experimentalTextDecoration'   => true,
+            '__experimentalTextTransform'    => true,
+            '__experimentalWritingMode'      => true,
+        ],
+        'spacing'               => [
+            'margin'   => true,
+            'padding'  => true,
+            'blockGap' => true,
+        ],
+        'dimensions'            => [
+            'aspectRatio' => true,
+            'height'      => true,
+            'minHeight'   => true,
+            'minWidth'    => true,
+            'width'       => true,
+        ],
+        '__experimentalBorder' => [
+            'color'  => true,
+            'radius' => true,
+            'style'  => true,
+            'width'  => true,
+        ],
+        'shadow'                => true,
+        'background'            => [
+            'backgroundImage'    => true,
+            'backgroundSize'     => true,
+            'backgroundPosition' => true,
+            'backgroundRepeat'   => true,
+            'gradient'           => true,
+        ],
+        'position'              => [
+            'sticky' => true,
+            'fixed'  => true,
+        ],
+        'filter'                => [
+            'duotone' => true,
+        ],
+    ];
+
+    /**
      * Implicit attribute names reserved by block supports.
      *
      * @var list<string>
@@ -313,9 +386,7 @@ class Block
         $this->postTypeRestrictionQueued = false;
         $this->postTypeFilterAdded = false;
         $this->attributes = [];
-        $this->supports = [
-            'autoRegister' => true,
-        ];
+        $this->supports = self::DEFAULT_SUPPORTS;
         $this->renderCallback = null;
         $this->stylesheets = [];
         $this->styleHandles = [];
@@ -744,7 +815,10 @@ class Block
     }
 
     /**
-     * Merges block supports. `autoRegister` is always forced on.
+     * Replaces block supports. `autoRegister` is always forced on.
+     *
+     * The default set is every editor setting WordPress applies on the wrapper.
+     * This call discards that set. Keys omitted here are off.
      *
      * @param array<string, mixed> $supports Block supports.
      *
@@ -755,7 +829,7 @@ class Block
      */
     public function supports(array $supports): static
     {
-        $this->supports = array_replace_recursive($this->supports, $supports);
+        $this->supports = $supports;
         $this->supports['autoRegister'] = true;
 
         return $this;

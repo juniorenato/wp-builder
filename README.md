@@ -676,11 +676,6 @@ $cta->name('my-theme/cta')
     ->addBooleanAttribute('featured', 'Featured', false)
     ->addIntegerAttribute('max_items', 'Max items', 3)
     ->addEnumAttribute('size', 'Size', ['Small', 'Medium', 'Large'], 'Medium')
-    ->supports([
-        'align'   => ['wide', 'full'],
-        'color'   => ['text' => true, 'background' => true],
-        'spacing' => ['padding' => true, 'margin' => true],
-    ])
     ->stylesheet(get_theme_file_uri('assets/cta.css'), 'my-theme-cta')
     ->render(function (array $attributes): string {
         $wrapper = get_block_wrapper_attributes(['class' => 'my-cta']);
@@ -717,6 +712,17 @@ Constructor shortcut when name, title, and render callback are already known:
 
 ```php
 new Block('my-theme/cta', 'Call to Action', $renderCallback);
+```
+
+Alignment, anchor, aria label, additional CSS class, color, typography, spacing, dimensions, border, shadow, background, position, and duotone are on by default. `supports()` replaces that set. Keys you omit are off. `autoRegister` stays on.
+
+The theme has to allow the same tools. `settings.appearanceTools` in `theme.json` turns on spacing, border, dimensions, link color, and line height. This theme does that. `position.fixed` and `typography.writingMode` are set beside it, because `appearanceTools` leaves them off.
+
+```php
+$cta->supports([
+    'align' => ['wide', 'full'],
+    'color' => ['text' => true, 'background' => true],
+]);
 ```
 
 Use [`get_block_wrapper_attributes()`](https://developer.wordpress.org/reference/functions/get_block_wrapper_attributes/) in the render callback so color, spacing, and border supports print on the wrapper. `stylesheet()` loads CSS on the front end and in the editor.
