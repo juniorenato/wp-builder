@@ -18,7 +18,8 @@ use WPB\Notices;
  *
  * A section without a panel appears at the root of Appearance → Customize,
  * on the same level as Site Identity. Values are theme mods when the library
- * runs as a theme, and options when it runs as a plugin.
+ * runs as a theme, and options when it runs as a plugin. A section can store
+ * its own fields as options with {@see Section::saveAsOption()}.
  *
  * @author Renato Rodrigues Jr <juniorenato@msn.com>
  *
@@ -84,6 +85,7 @@ class Customizer
      *     description: string,
      *     priority: int,
      *     panel: string,
+     *     saveAsOption: bool,
      *     fields: list<array<string, mixed>>
      * }>
      */
@@ -186,6 +188,9 @@ class Customizer
 
     /**
      * Chooses where this instance stores its settings.
+     *
+     * A section that calls {@see Section::saveAsOption()} stores its fields as
+     * options even when this instance uses theme mods.
      *
      * @param string $type `theme_mod` or `option`.
      *
@@ -382,6 +387,7 @@ class Customizer
 
             $exported = $section->export();
             $this->sectionConfig[] = $exported;
+            $fieldStorage = $exported['saveAsOption'] ? 'option' : $storage;
 
             foreach ($exported['fields'] as $field) {
                 if (isset(self::$settings[$field['id']])) {
@@ -391,7 +397,7 @@ class Customizer
                 }
 
                 self::$settings[$field['id']] = [
-                    'storage' => $storage,
+                    'storage' => $fieldStorage,
                     'default' => $field['default'],
                 ];
                 $this->accepted[] = [

@@ -446,7 +446,15 @@ $theme->register();
 
 The section id and each field name pass through `sanitize_key()`. `register()` hooks `customize_register`. A section id that already exists is left in place and the fields are added to it. Site Identity itself is not changed.
 
-Read a saved value with `Customizer::get('phone')`. The result is not escaped. In a theme the value is a theme mod; in a plugin it is an option. `storage('theme_mod')` or `storage('option')` overrides that. An image field stores an attachment ID, so the template uses `wp_get_attachment_image()`.
+Read a saved value with `Customizer::get('phone')`. The result is not escaped. In a theme the value is a theme mod; in a plugin it is an option. `storage('theme_mod')` or `storage('option')` overrides that for the whole customizer. One section can store its fields as options with `saveAsOption()`, including when the other sections stay theme mods:
+
+```php
+$theme->section('integrations', 'Integrations')
+    ->saveAsOption()
+    ->addTextField('api_key', 'API key');
+```
+
+`Customizer::get('api_key')` then reads `get_option()`. An image field stores an attachment ID, so the template uses `wp_get_attachment_image()`.
 
 ```php
 echo esc_html(Customizer::get('phone'));

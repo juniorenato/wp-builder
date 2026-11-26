@@ -57,6 +57,11 @@ class Section
     private string $panel = '';
 
     /**
+     * Whether this section's fields are stored as options.
+     */
+    private bool $saveAsOption = false;
+
+    /**
      * Whether the section has an id and a title.
      */
     private bool $valid = true;
@@ -138,6 +143,22 @@ class Section
         }
 
         $this->panel = $panel;
+
+        return $this;
+    }
+
+    /**
+     * Stores this section's fields as options.
+     *
+     * Fields in a section without this call follow the customizer storage:
+     * theme mods in a theme, options in a plugin, or the type passed to
+     * {@see Customizer::storage()}.
+     *
+     * @return static
+     */
+    public function saveAsOption(): static
+    {
+        $this->saveAsOption = true;
 
         return $this;
     }
@@ -313,6 +334,7 @@ class Section
      *     description: string,
      *     priority: int,
      *     panel: string,
+     *     saveAsOption: bool,
      *     fields: list<array{
      *         id: string,
      *         type: string,
@@ -326,12 +348,13 @@ class Section
     public function export(): array
     {
         return [
-            'id'          => $this->id,
-            'title'       => $this->title,
-            'description' => $this->description,
-            'priority'    => $this->priority,
-            'panel'       => $this->panel,
-            'fields'      => $this->fields,
+            'id'           => $this->id,
+            'title'        => $this->title,
+            'description'  => $this->description,
+            'priority'     => $this->priority,
+            'panel'        => $this->panel,
+            'saveAsOption' => $this->saveAsOption,
+            'fields'       => $this->fields,
         ];
     }
 
