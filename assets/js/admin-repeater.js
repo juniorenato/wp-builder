@@ -181,7 +181,10 @@
     }
 
     function refresh(repeater) {
-        reindex(outermost(repeater), '');
+        var root = outermost(repeater);
+
+        reindex(root, '');
+        root.dispatchEvent(new CustomEvent('wpb-repeater-change', { bubbles: true }));
     }
 
     function directTemplate(repeater) {

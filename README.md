@@ -446,7 +446,15 @@ $theme->register();
 
 The section id and each field name pass through `sanitize_key()`. `register()` hooks `customize_register`. A section id that already exists is left in place and the fields are added to it. Site Identity itself is not changed.
 
-Read a saved value with `Customizer::get('phone')`. The result is not escaped. In a theme the value is a theme mod; in a plugin it is an option. `storage('theme_mod')` or `storage('option')` overrides that. An image field stores an attachment ID, so the template uses `wp_get_attachment_image()`.
+Read a saved value with `Customizer::get('phone')`. The result is not escaped. In a theme the value is a theme mod; in a plugin it is an option. `storage('theme_mod')` or `storage('option')` overrides that for the whole customizer. One section can store its fields as options with `saveAsOption()`, including when the other sections stay theme mods:
+
+```php
+$theme->section('integrations', 'Integrations')
+    ->saveAsOption()
+    ->addTextField('api_key', 'API key');
+```
+
+`Customizer::get('api_key')` then reads `get_option()`. An image field stores an attachment ID, so the template uses `wp_get_attachment_image()`.
 
 ```php
 echo esc_html(Customizer::get('phone'));
@@ -668,11 +676,6 @@ $cta->name('my-theme/cta')
     ->addBooleanAttribute('featured', 'Featured', false)
     ->addIntegerAttribute('max_items', 'Max items', 3)
     ->addEnumAttribute('size', 'Size', ['Small', 'Medium', 'Large'], 'Medium')
-    ->supports([
-        'align'   => ['wide', 'full'],
-        'color'   => ['text' => true, 'background' => true],
-        'spacing' => ['padding' => true, 'margin' => true],
-    ])
     ->stylesheet(get_theme_file_uri('assets/cta.css'), 'my-theme-cta')
     ->render(function (array $attributes): string {
         $wrapper = get_block_wrapper_attributes(['class' => 'my-cta']);
@@ -709,6 +712,17 @@ Constructor shortcut when name, title, and render callback are already known:
 
 ```php
 new Block('my-theme/cta', 'Call to Action', $renderCallback);
+```
+
+Alignment, anchor, aria label, additional CSS class, color, typography, spacing, dimensions, border, shadow, background, position, and duotone are on by default. `supports()` replaces that set. Keys you omit are off. `autoRegister` stays on.
+
+The theme has to allow the same tools. `settings.appearanceTools` in `theme.json` turns on spacing, border, dimensions, link color, and line height. This theme does that. `position.fixed` and `typography.writingMode` are set beside it, because `appearanceTools` leaves them off.
+
+```php
+$cta->supports([
+    'align' => ['wide', 'full'],
+    'color' => ['text' => true, 'background' => true],
+]);
 ```
 
 Use [`get_block_wrapper_attributes()`](https://developer.wordpress.org/reference/functions/get_block_wrapper_attributes/) in the render callback so color, spacing, and border supports print on the wrapper. `stylesheet()` loads CSS on the front end and in the editor.

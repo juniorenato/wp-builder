@@ -78,6 +78,79 @@ class Block
     ];
 
     /**
+     * Editor settings WordPress applies on the block wrapper.
+     *
+     * `supports()` replaces this set. `autoRegister` is forced back on.
+     *
+     * @var array<string, mixed>
+     *
+     * @see https://developer.wordpress.org/block-editor/reference-guides/block-api/block-supports/
+     */
+    private const array DEFAULT_SUPPORTS = [
+        'autoRegister'          => true,
+        'align'                 => ['left', 'center', 'right', 'wide', 'full'],
+        'anchor'                => true,
+        'ariaLabel'             => true,
+        'customClassName'       => true,
+        'color'                 => [
+            'text'       => true,
+            'background' => true,
+            'gradients'  => true,
+            'link'       => true,
+            'heading'    => true,
+            'button'     => true,
+        ],
+        'typography'            => [
+            'fontSize'                       => true,
+            'lineHeight'                     => true,
+            'textAlign'                      => true,
+            'textColumns'                    => true,
+            'textIndent'                     => true,
+            'fitText'                        => true,
+            '__experimentalFontFamily'       => true,
+            '__experimentalFontStyle'        => true,
+            '__experimentalFontWeight'       => true,
+            '__experimentalLetterSpacing'    => true,
+            '__experimentalTextDecoration'   => true,
+            '__experimentalTextTransform'    => true,
+            '__experimentalWritingMode'      => true,
+        ],
+        'spacing'               => [
+            'margin'   => true,
+            'padding'  => true,
+            'blockGap' => true,
+        ],
+        'dimensions'            => [
+            'aspectRatio' => true,
+            'height'      => true,
+            'minHeight'   => true,
+            'minWidth'    => true,
+            'width'       => true,
+        ],
+        '__experimentalBorder' => [
+            'color'  => true,
+            'radius' => true,
+            'style'  => true,
+            'width'  => true,
+        ],
+        'shadow'                => true,
+        'background'            => [
+            'backgroundImage'    => true,
+            'backgroundSize'     => true,
+            'backgroundPosition' => true,
+            'backgroundRepeat'   => true,
+            'gradient'           => true,
+        ],
+        'position'              => [
+            'sticky' => true,
+            'fixed'  => true,
+        ],
+        'filter'                => [
+            'duotone' => true,
+        ],
+    ];
+
+    /**
      * Implicit attribute names reserved by block supports.
      *
      * @var list<string>
@@ -313,9 +386,7 @@ class Block
         $this->postTypeRestrictionQueued = false;
         $this->postTypeFilterAdded = false;
         $this->attributes = [];
-        $this->supports = [
-            'autoRegister' => true,
-        ];
+        $this->supports = self::DEFAULT_SUPPORTS;
         $this->renderCallback = null;
         $this->stylesheets = [];
         $this->styleHandles = [];
@@ -564,6 +635,26 @@ class Block
     }
 
     /**
+     * Adds a number attribute. The saved value may be an integer or a float.
+     *
+     * @param string    $name    Attribute name.
+     * @param string    $label   Inspector label.
+     * @param int|float $default Default value.
+     *
+     * @return static
+     *
+     * @see https://developer.wordpress.org/block-editor/reference-guides/block-api/block-attributes/
+     */
+    public function addNumberAttribute(string $name, string $label, int|float $default = 0): static
+    {
+        return $this->attribute($name, [
+            'type'    => 'number',
+            'default' => $default,
+            'label'   => $label,
+        ]);
+    }
+
+    /**
      * Adds an integer attribute.
      *
      * @param string $name    Attribute name.
@@ -571,8 +662,6 @@ class Block
      * @param int    $default Default value.
      *
      * @return static
-     *
-     * @see https://developer.wordpress.org/block-editor/reference-guides/block-api/block-attributes/
      */
     public function addIntegerAttribute(string $name, string $label, int $default = 0): static
     {
@@ -620,7 +709,116 @@ class Block
     }
 
     /**
-     * Merges block supports. `autoRegister` is always forced on.
+     * Adds a multiline text attribute.
+     *
+     * @param string $name    Attribute name.
+     * @param string $label   Inspector label.
+     * @param string $default Default value.
+     *
+     * @return static
+     */
+    public function addTextareaAttribute(string $name, string $label, string $default = ''): static
+    {
+        return $this->attribute($name, [
+            'type'    => 'string',
+            'default' => $default,
+            'label'   => $label,
+            'control' => 'textarea',
+        ]);
+    }
+
+    /**
+     * Adds a color attribute. The saved value is a hex color.
+     *
+     * @param string $name    Attribute name.
+     * @param string $label   Inspector label.
+     * @param string $default Hex color used until the attribute is saved.
+     *
+     * @return static
+     */
+    public function addColorAttribute(string $name, string $label, string $default = ''): static
+    {
+        return $this->attribute($name, [
+            'type'    => 'string',
+            'default' => $default,
+            'label'   => $label,
+            'control' => 'color',
+        ]);
+    }
+
+    /**
+     * Adds radio choices. The saved value is one of the choices.
+     *
+     * @param string       $name    Attribute name.
+     * @param string       $label   Inspector label.
+     * @param list<string> $enum    Allowed values, also used as the labels.
+     * @param string|null  $default Default value, or the first choice.
+     *
+     * @return static
+     */
+    public function addRadioAttribute(string $name, string $label, array $enum, ?string $default = null): static
+    {
+        $enum = array_values($enum);
+
+        if ($enum === []) {
+            Notices::error(sprintf(
+                'Radio attribute "%s" requires at least one value.',
+                $name
+            ));
+
+            return $this;
+        }
+
+        return $this->attribute($name, [
+            'type'    => 'string',
+            'enum'    => $enum,
+            'default' => $default ?? $enum[0],
+            'label'   => $label,
+            'control' => 'radio',
+        ]);
+    }
+
+    /**
+     * Adds an image attribute stored as an attachment ID.
+     *
+     * @param string $name  Attribute name.
+     * @param string $label Inspector label.
+     *
+     * @return static
+     */
+    public function addImageAttribute(string $name, string $label): static
+    {
+        return $this->attribute($name, [
+            'type'    => 'integer',
+            'default' => 0,
+            'label'   => $label,
+            'control' => 'image',
+        ]);
+    }
+
+    /**
+     * Adds a file attribute stored as an attachment ID.
+     *
+     * @param string $name  Attribute name.
+     * @param string $label Inspector label.
+     *
+     * @return static
+     */
+    public function addFileAttribute(string $name, string $label): static
+    {
+        return $this->attribute($name, [
+            'type'    => 'integer',
+            'default' => 0,
+            'label'   => $label,
+            'control' => 'file',
+        ]);
+    }
+
+    /**
+     * Replaces block supports. `autoRegister` is always forced on.
+     *
+     * The default set is every editor setting WordPress applies on the wrapper.
+     * This call discards that set. Keys omitted here are off.
      *
      * @param array<string, mixed> $supports Block supports.
      *
@@ -631,7 +829,7 @@ class Block
      */
     public function supports(array $supports): static
     {
-        $this->supports = array_replace_recursive($this->supports, $supports);
+        $this->supports = $supports;
         $this->supports['autoRegister'] = true;
 
         return $this;
@@ -1059,6 +1257,11 @@ class Block
                 continue;
             }
 
+            if ($type === 'file') {
+                $values[$name] = $this->fileProps($values[$name]);
+                continue;
+            }
+
             if ($type !== 'repeater' || !is_array($values[$name])) {
                 continue;
             }
@@ -1110,6 +1313,36 @@ class Block
             'width'  => is_array($src) ? (int) $src[1] : 0,
             'height' => is_array($src) ? (int) $src[2] : 0,
             'srcset' => is_string($srcset) ? $srcset : '',
+        ];
+    }
+
+    /**
+     * Builds the file object for one attachment.
+     *
+     * @param mixed $value Stored attachment ID.
+     *
+     * @return array{id: int, url: string, name: string}|null Null when the attachment has no URL.
+     */
+    private function fileProps(mixed $value): ?array
+    {
+        $id = (int) $value;
+
+        if ($id <= 0 || !function_exists('wp_get_attachment_url')) {
+            return null;
+        }
+
+        $url = wp_get_attachment_url($id);
+
+        if (!is_string($url) || $url === '') {
+            return null;
+        }
+
+        $name = function_exists('get_the_title') ? trim((string) get_the_title($id)) : '';
+
+        return [
+            'id'   => $id,
+            'url'  => $url,
+            'name' => $name !== '' ? $name : $url,
         ];
     }
 
@@ -1702,8 +1935,11 @@ class Block
     {
         $schema = $this->attributes[$name];
         $type = (string) ($schema['type'] ?? 'string');
+        $control = (string) ($schema['control'] ?? '');
 
-        if ($type === 'string' && !empty($schema['enum'])) {
+        if ($control !== '') {
+            $type = $control;
+        } elseif ($type === 'string' && !empty($schema['enum'])) {
             $type = 'enum';
         }
 
@@ -1714,7 +1950,7 @@ class Block
             'default' => $schema['default'] ?? $this->scalarDefault($type),
         ];
 
-        if ($type === 'enum') {
+        if ($type === 'enum' || $type === 'radio') {
             $field['enum'] = array_values($schema['enum'] ?? []);
         }
 
@@ -1731,7 +1967,7 @@ class Block
     private function scalarDefault(string $type): mixed
     {
         return match ($type) {
-            'integer', 'number', 'image' => 0,
+            'integer', 'number', 'image', 'file' => 0,
             'boolean' => false,
             default => '',
         };
