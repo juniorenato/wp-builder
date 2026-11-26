@@ -666,7 +666,7 @@
             };
         }
 
-        wp.hooks.addFilter('editor.BlockEdit', 'wpb/fields', withBlockFields);
+        wp.hooks.addFilter('editor.BlockEdit', 'wpb/fields', withBlockFields, 1);
 
         if (wp.data.subscribe) {
             wp.data.subscribe(reconcileMetaBlocks);
