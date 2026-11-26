@@ -640,7 +640,13 @@ class Customizer
     }
 
     /**
-     * Queues the repeater control assets.
+     * Hooks repeater assets on `customize_controls_enqueue_scripts`.
+     *
+     * The controls screen rebuilds the script queue after `customize_register`,
+     * so assets enqueued earlier never reach the page. This hook is the one
+     * that publishes them.
+     *
+     * @see https://developer.wordpress.org/reference/hooks/customize_controls_enqueue_scripts/
      */
     private function hookRepeaterAssets(): void
     {
@@ -721,6 +727,10 @@ class Customizer
     /**
      * Prints the scripts and styles used by repeater controls.
      *
+     * A package installed in `vendor/` is outside the theme and plugin
+     * directories, so {@see Builder::url()} has no public address for it.
+     * Those files are printed inline and the add button still has a handler.
+     *
      * @see https://developer.wordpress.org/reference/hooks/customize_controls_enqueue_scripts/
      */
     public function enqueueRepeaterAssets(): void
@@ -769,7 +779,10 @@ class Customizer
     }
 
     /**
-     * Enqueues one stylesheet and one footer script from the theme directory.
+     * Enqueues one stylesheet and one footer script.
+     *
+     * A readable file without a public URL is printed inline. That is the
+     * case when this library lives in `vendor/`.
      *
      * @param string       $handle Style and script handle.
      * @param string       $style  Absolute CSS path.
@@ -778,23 +791,88 @@ class Customizer
      */
     private function enqueueAsset(string $handle, string $style, string $script, array $deps): void
     {
+        if (function_exists('wp_script_is') && wp_script_is($handle, 'enqueued')) {
+            return;
+        }
+
         $styleUrl = is_readable($style) ? Builder::url($style) : '';
         $scriptUrl = is_readable($script) ? Builder::url($script) : '';
 
         if ($styleUrl !== '') {
             wp_enqueue_style($handle, $styleUrl, [], (string) filemtime($style));
+        } elseif (is_readable($style)) {
+            $this->inlineStyle($handle, $style);
         }
 
-        if ($scriptUrl === '' || wp_script_is($handle, 'enqueued')) {
+        if (!is_readable($script)) {
             return;
         }
 
-        wp_enqueue_script(
+        if ($scriptUrl !== '') {
+            wp_enqueue_script(
+                $handle,
+                $scriptUrl,
+                $deps,
+                (string) filemtime($script),
+                true
+            );
+
+            return;
+        }
+
+        $this->inlineScript($handle, $script, $deps);
+    }
+
+    /**
+     * Prints one stylesheet that has no public URL.
+     *
+     * @param string $handle Style handle.
+     * @param string $path   Absolute CSS path.
+     */
+    private function inlineStyle(string $handle, string $path): void
+    {
+        if (!function_exists('wp_register_style') || !function_exists('wp_add_inline_style')) {
+            return;
+        }
+
+        $css = file_get_contents($path);
+
+        if (!is_string($css)) {
+            return;
+        }
+
+        wp_register_style($handle, false, [], (string) filemtime($path));
+        wp_enqueue_style($handle);
+        wp_add_inline_style($handle, $css);
+    }
+
+    /**
+     * Prints one footer script that has no public URL.
+     *
+     * @param string       $handle Script handle.
+     * @param string       $path   Absolute JavaScript path.
+     * @param list<string> $deps   Script dependencies.
+     */
+    private function inlineScript(string $handle, string $path, array $deps): void
+    {
+        if (!function_exists('wp_register_script') || !function_exists('wp_add_inline_script')) {
+            return;
+        }
+
+        $source = file_get_contents($path);
+
+        if (!is_string($source)) {
+            return;
+        }
+
+        wp_register_script(
             $handle,
-            $scriptUrl,
+            false,
             $deps,
-            (string) filemtime($script),
+            (string) filemtime($path),
             true
         );
+        wp_add_inline_script($handle, $source);
+        wp_enqueue_script($handle);
     }
 }
