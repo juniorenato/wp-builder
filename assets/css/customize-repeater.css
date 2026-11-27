@@ -2,25 +2,27 @@
  * Fits the shared repeater inside the customizer sidebar.
  */
 
-.customize-control-wpb_repeater .wpb-repeater__field > label {
-	display: block;
-	margin: 8px 0 4px;
-	font-weight: 600;
-}
-
-.customize-control-wpb_repeater input[type="text"],
-.customize-control-wpb_repeater input[type="number"],
-.customize-control-wpb_repeater textarea,
-.customize-control-wpb_repeater select {
-	width: 100%;
-}
-
-.customize-control-wpb_repeater .wpb-image-field__preview img,
-.customize-control-wpb_repeater .wpb-file-field__name {
+.customize-control-wpb_repeater .wpb-repeater,
+.customize-control-wpb_repeater .wpb-repeater__item {
 	max-width: 100%;
-	height: auto;
 }
 
-.customize-control-wpb_repeater .wp-picker-container {
-	display: block;
+.customize-control-wpb_repeater .wpb-repeater__field > label {
+	margin-bottom: 4px;
+}
+
+.customize-control-wpb_repeater textarea.code,
+.customize-control textarea.code {
+	font-family: Menlo, Consolas, Monaco, monospace;
+	font-size: 12px;
+	line-height: 1.6;
+}
+
+.customize-control-wpb_repeater .wp-picker-container .wp-color-result.button {
+	margin: 0 6px 0 0;
+}
+
+.wp-core-ui .customize-control-wpb_repeater .wpb-repeater__footer .button {
+	width: 100%;
+	text-align: center;
 }

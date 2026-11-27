@@ -235,6 +235,23 @@ class Section
     }
 
     /**
+     * Adds a multiline field that keeps the HTML allowed in post content.
+     *
+     * @param string $name        Field name. It becomes the setting id.
+     * @param string $label       Field label.
+     * @param string $description Help text under the field.
+     * @param string $default     Value used until the setting is saved.
+     *
+     * @return static
+     *
+     * @see https://developer.wordpress.org/reference/functions/wp_kses_post/
+     */
+    public function addHtmlField(string $name, string $label, string $description = '', string $default = ''): static
+    {
+        return $this->addField('html', $name, $label, $description, $default);
+    }
+
+    /**
      * Adds a numeric field.
      *
      * @param string    $name        Field name. It becomes the setting id.

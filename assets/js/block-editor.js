@@ -105,31 +105,55 @@
                 return null;
             }
 
-            if (field.type === 'textarea') {
-                return el('textarea', {
-                    className: className + ' components-textarea-control__input',
-                    rows: 4,
-                    'aria-label': field.label,
-                    placeholder: field.label,
-                    value: props.value || '',
-                    onMouseDown: stop,
-                    onChange: function (event) {
-                        props.onChange(event.target.value);
-                    }
-                });
+            if (field.type === 'textarea' || field.type === 'html') {
+                var html = field.type === 'html';
+
+                return el('label', { className: className + ' wpb-text-control' },
+                    el('span', { className: 'wpb-field__label' }, field.label),
+                    el('textarea', {
+                        className: 'wpb-text-control__input' + (html ? ' wpb-text-control__input--html' : ''),
+                        rows: html ? 6 : 4,
+                        value: props.value || '',
+                        spellCheck: html ? false : undefined,
+                        onMouseDown: stop,
+                        onChange: function (event) {
+                            props.onChange(event.target.value);
+                        }
+                    })
+                );
             }
 
             if (field.type === 'color') {
-                return el('input', {
-                    type: 'color',
-                    className: className,
-                    'aria-label': field.label,
-                    value: props.value || '#000000',
-                    onMouseDown: stop,
-                    onChange: function (event) {
-                        props.onChange(event.target.value);
-                    }
-                });
+                var swatch = /^#(?:[0-9a-fA-F]{3}|[0-9a-fA-F]{6})$/.test(props.value || '')
+                    ? props.value
+                    : '#000000';
+
+                return el('div', { className: className + ' wpb-color-control' },
+                    el('span', { className: 'wpb-field__label' }, field.label),
+                    el('div', { className: 'wpb-color-control__row' },
+                        el('input', {
+                            type: 'color',
+                            className: 'wpb-color-control__swatch',
+                            'aria-label': field.label,
+                            value: swatch,
+                            onMouseDown: stop,
+                            onChange: function (event) {
+                                props.onChange(event.target.value);
+                            }
+                        }),
+                        el('input', {
+                            type: 'text',
+                            className: 'wpb-color-control__value components-text-control__input',
+                            value: props.value || '',
+                            placeholder: '#000000',
+                            spellCheck: false,
+                            onMouseDown: stop,
+                            onChange: function (event) {
+                                props.onChange(event.target.value);
+                            }
+                        })
+                    )
+                );
             }
 
             if (field.type === 'radio') {
@@ -284,7 +308,7 @@
 
                 return el('div', { key: index, className: classes.join(' ') },
                     fields,
-                    el('div', { className: 'components-placeholder__fieldset' },
+                    el('div', { className: 'wpb-repeater__actions' },
                         el(Button, {
                             variant: 'secondary',
                             __next40pxDefaultSize: true,
@@ -324,7 +348,7 @@
 
             return el('div', { className: 'is-layout-flow wpb-repeater wpb-repeater--' + fieldClass(field.name) },
                 rows,
-                el('div', { className: 'components-placeholder__fieldset' },
+                el('div', { className: 'wpb-repeater__actions' },
                 el(Button, {
                     variant: 'primary',
                     className: 'wpb-repeater__add',

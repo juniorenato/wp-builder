@@ -1,7 +1,13 @@
 /*
- * Frames for repeater rows on meta boxes, term screens, and settings pages.
- * WordPress supplies the inputs and buttons.
+ * Repeater rows on meta boxes, term screens, menu items, and settings pages.
+ * WordPress supplies the inputs and buttons. These rules keep the stack,
+ * the full-width controls, and the action row from fighting core margins.
  */
+
+.wpb-repeater {
+	container-type: inline-size;
+	container-name: wpb-repeater;
+}
 
 .wpb-repeater__items {
 	display: grid;
@@ -13,29 +19,148 @@
 }
 
 .wpb-repeater__item {
+	container-type: inline-size;
+	container-name: wpb-repeater-item;
 	box-sizing: border-box;
 	padding: 12px;
 	border: 1px solid #c3c4c7;
+	border-radius: 2px;
 	background: #fff;
 }
 
-.wpb-repeater__fields > * + * {
+.wpb-repeater__fields {
+	display: grid;
+	gap: 12px;
+}
+
+.wpb-repeater__field > label,
+.wpb-repeater__label {
+	display: block;
+	margin: 0 0 4px;
+	color: #1d2327;
+	font-size: 13px;
+	font-weight: 600;
+	line-height: 1.4;
+}
+
+.wpb-repeater__field input[type="text"],
+.wpb-repeater__field input[type="number"],
+.wpb-repeater__field input[type="email"],
+.wpb-repeater__field input[type="url"],
+.wpb-repeater__field input[type="tel"],
+.wpb-repeater__field textarea,
+.wpb-repeater__field select {
+	display: block;
+	box-sizing: border-box;
+	width: 100%;
+	max-width: 100%;
+	margin: 0;
+}
+
+.wpb-repeater__field input[type="text"],
+.wpb-repeater__field input[type="number"],
+.wpb-repeater__field input[type="email"],
+.wpb-repeater__field input[type="url"],
+.wpb-repeater__field input[type="tel"],
+.wpb-repeater__field select {
+	min-height: 40px;
+	padding: 0 12px;
+}
+
+.wpb-repeater__field textarea {
+	min-height: 80px;
+	padding: 8px 12px;
+	line-height: 1.5;
+}
+
+.wpb-repeater__field textarea.code {
+	font-family: Menlo, Consolas, Monaco, monospace;
+	font-size: 12px;
+	line-height: 1.6;
+}
+
+.wpb-repeater__field .description {
+	margin: 4px 0 0;
+}
+
+.wpb-repeater__field .wpb-image-field__preview img,
+.wpb-repeater__field .wpb-file-field__name {
+	max-width: 100%;
+	height: auto;
+}
+
+.wpb-repeater__field .wp-picker-container {
+	display: block;
+	max-width: 100%;
+	line-height: 1;
+}
+
+.wpb-repeater__field .wp-picker-container input[type="text"] {
+	width: 6.5rem;
+	max-width: none;
+	min-height: 30px;
+}
+
+.wpb-repeater__field .wp-picker-container .wp-color-result.button {
+	margin: 0 6px 0 0;
+}
+
+.wpb-repeater p.wpb-repeater__toolbar,
+.wpb-repeater p.wpb-repeater__footer,
+.wpb-repeater p.wpb-repeater__label,
+.wpb-repeater p.wpb-image-field__actions,
+.wpb-repeater p.wpb-file-field__actions,
+.form-table td .wpb-repeater p.wpb-repeater__toolbar,
+.form-table td .wpb-repeater p.wpb-repeater__footer,
+.form-table td .wpb-repeater p.wpb-repeater__label,
+.form-table td .wpb-repeater p.description,
+.form-table td .wpb-repeater p.wpb-image-field__actions,
+.form-table td .wpb-repeater p.wpb-file-field__actions {
+	margin: 0;
+}
+
+.wpb-repeater p.wpb-repeater__toolbar,
+.wpb-repeater p.wpb-repeater__footer,
+.form-table td .wpb-repeater p.wpb-repeater__toolbar,
+.form-table td .wpb-repeater p.wpb-repeater__footer {
 	margin-top: 12px;
 }
 
-.wpb-repeater__label {
-	margin: 0 0 8px;
+.form-table td .wpb-repeater .wpb-repeater__field > .description {
+	margin-top: 4px;
 }
 
 .wpb-repeater__toolbar,
 .wpb-repeater__footer {
 	display: flex;
 	flex-wrap: wrap;
+	align-items: center;
 	gap: 8px;
-	margin: 12px 0 0;
 }
 
-.wpb-repeater__toolbar .button,
-.wpb-repeater__footer .button {
+.wp-core-ui .wpb-repeater__toolbar .button,
+.wp-core-ui .wpb-repeater__footer .button {
 	margin: 0;
+}
+
+@container wpb-repeater-item (max-width: 420px) {
+	.wpb-repeater__toolbar {
+		display: grid;
+		grid-template-columns: 1fr;
+	}
+
+	.wp-core-ui .wpb-repeater__toolbar .button {
+		width: 100%;
+		min-height: 32px;
+		padding: 0 12px;
+		line-height: 2.3;
+		text-align: center;
+	}
+}
+
+@container wpb-repeater (max-width: 420px) {
+	.wp-core-ui .wpb-repeater__footer .button {
+		width: 100%;
+		text-align: center;
+	}
 }

@@ -159,8 +159,10 @@ class RepeaterControl extends \WP_Customize_Control
             ? ' aria-describedby="' . esc_attr($inputName . '-description') . '"'
             : '';
 
-        if ($type === 'textarea') {
-            echo '<textarea name="' . esc_attr($inputName) . '" id="' . esc_attr($inputId) . '"' . $described . '>';
+        if ($type === 'textarea' || $type === 'html') {
+            $class = $type === 'html' ? ' class="code"' : '';
+            $rows = $type === 'html' ? '6' : '4';
+            echo '<textarea' . $class . ' rows="' . $rows . '" name="' . esc_attr($inputName) . '" id="' . esc_attr($inputId) . '"' . $described . '>';
             echo esc_textarea(is_scalar($value) ? (string) $value : '');
             echo '</textarea>';
 
