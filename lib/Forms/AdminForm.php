@@ -437,8 +437,9 @@ trait AdminForm
      */
     public function defineHtmlField(string $name, string $label, string $description = '', string $class = '', array $attrs = []): array
     {
-        $class = $this->adminFieldClass('large-text', $class);
+        $class = $this->adminFieldClass('large-text code', $class);
         $attributes['class'] = trim($class);
+        $attributes['style'] = 'font-family: Menlo, Consolas, Monaco, monospace; font-size: 12px; line-height: 1.6;';
         $attributes = array_merge($attributes, $attrs);
 
         return $this->defineFormField('html', $name, $label, $attributes, [], $description);

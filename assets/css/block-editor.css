@@ -1,31 +1,121 @@
 /*
  * WordPress layout and component classes cover stacking, gap, buttons,
- * plain text, selects, and images. These rules are only the frames
- * core does not provide: a black border on the block, a lighter border
- * and sibling spacing on each repeater item, and a centered dashed
- * image upload box.
+ * plain text, selects, and images. These rules are the frames core does
+ * not provide, plus textarea, HTML, and color controls drawn in the canvas.
  */
 
 .wpb-block {
 	box-sizing: border-box;
-	padding: 1em;
+	padding: 16px;
 	border: 1px solid #000;
 }
 
 .wpb-repeater__item {
 	box-sizing: border-box;
 	width: 100%;
-	padding: 1em;
+	padding: 12px;
 	border: 1px solid var(--wp-components-color-gray-300, #ddd);
 	border-radius: 2px;
 }
 
-.wpb-repeater__item > * + * {
-    margin-top: 1em;
+.wpb-repeater__item > * + *,
+.wpb-repeater > * + * {
+	margin-top: 12px;
 }
 
-.wpb-repeater > * + * {
-	margin-top: 1em;
+.wpb-repeater__actions {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: 8px;
+	margin: 0;
+}
+
+.wpb-field__label {
+	display: block;
+	margin: 0 0 8px;
+	color: #1e1e1e;
+	font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen-Sans, Ubuntu, Cantarell, "Helvetica Neue", sans-serif;
+	font-size: 11px;
+	font-weight: 500;
+	letter-spacing: 0.04em;
+	line-height: 1.4;
+	text-transform: uppercase;
+}
+
+.wpb-text-control {
+	display: block;
+	width: 100%;
+	margin: 0;
+}
+
+.wpb-text-control__input {
+	display: block;
+	box-sizing: border-box;
+	width: 100%;
+	min-height: 80px;
+	margin: 0;
+	padding: 8px 12px;
+	border: 1px solid #949494;
+	border-radius: 2px;
+	background: #fff;
+	box-shadow: 0 0 0 transparent;
+	color: #1e1e1e;
+	font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen-Sans, Ubuntu, Cantarell, "Helvetica Neue", sans-serif;
+	font-size: 13px;
+	line-height: 1.5;
+	resize: vertical;
+}
+
+.wpb-text-control__input:focus {
+	border-color: var(--wp-admin-theme-color, #3858e9);
+	box-shadow: 0 0 0 0.5px var(--wp-admin-theme-color, #3858e9);
+	outline: 2px solid transparent;
+}
+
+.wpb-text-control__input--html {
+	direction: ltr;
+	font-family: Menlo, Consolas, Monaco, monospace;
+	font-size: 12px;
+	line-height: 1.6;
+}
+
+.wpb-color-control__row {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+}
+
+input[type="color"].wpb-color-control__swatch {
+	flex: 0 0 28px;
+	box-sizing: border-box;
+	width: 28px;
+	height: 28px;
+	margin: 0;
+	padding: 0;
+	border: 1px solid rgba(0, 0, 0, 0.2);
+	border-radius: 50%;
+	background: transparent;
+	cursor: pointer;
+	overflow: hidden;
+	appearance: none;
+	-webkit-appearance: none;
+}
+
+.wpb-color-control__swatch::-webkit-color-swatch-wrapper {
+	padding: 0;
+}
+
+.wpb-color-control__swatch::-webkit-color-swatch,
+.wpb-color-control__swatch::-moz-color-swatch {
+	border: none;
+	border-radius: 50%;
+}
+
+.wpb-color-control__value {
+	flex: 1 1 auto;
+	min-width: 0;
+	box-sizing: border-box;
 }
 
 .wpb-field--image > .components-placeholder {

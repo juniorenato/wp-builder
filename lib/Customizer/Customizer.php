@@ -571,6 +571,14 @@ class Customizer
 
         $args['type'] = $field['type'] === 'html' ? 'textarea' : $field['type'];
 
+        if ($field['type'] === 'html') {
+            $args['input_attrs'] = [
+                'class' => 'code',
+                'rows'  => 6,
+                'style' => 'font-family: Menlo, Consolas, Monaco, monospace; font-size: 12px; line-height: 1.6;',
+            ];
+        }
+
         if ($field['type'] === 'select' || $field['type'] === 'radio') {
             $args['choices'] = $field['choices'];
         }

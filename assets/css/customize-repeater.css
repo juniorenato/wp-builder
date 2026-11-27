@@ -4,15 +4,36 @@
 
 .customize-control-wpb_repeater .wpb-repeater__field > label {
 	display: block;
-	margin: 8px 0 4px;
+	margin: 0 0 4px;
 	font-weight: 600;
+}
+
+.customize-control-wpb_repeater .wpb-repeater__field + .wpb-repeater__field,
+.customize-control-wpb_repeater .wpb-repeater__item + .wpb-repeater__item {
+	margin-top: 12px;
 }
 
 .customize-control-wpb_repeater input[type="text"],
 .customize-control-wpb_repeater input[type="number"],
 .customize-control-wpb_repeater textarea,
 .customize-control-wpb_repeater select {
+	box-sizing: border-box;
 	width: 100%;
+	max-width: 100%;
+	margin: 0;
+}
+
+.customize-control-wpb_repeater textarea {
+	min-height: 80px;
+	padding: 8px 12px;
+	line-height: 1.5;
+}
+
+.customize-control-wpb_repeater textarea.code,
+.customize-control textarea.code {
+	font-family: Menlo, Consolas, Monaco, monospace;
+	font-size: 12px;
+	line-height: 1.6;
 }
 
 .customize-control-wpb_repeater .wpb-image-field__preview img,
@@ -23,4 +44,14 @@
 
 .customize-control-wpb_repeater .wp-picker-container {
 	display: block;
+	line-height: 1;
+}
+
+.customize-control-wpb_repeater .wp-picker-container input[type="text"] {
+	width: 6.5rem;
+	max-width: none;
+}
+
+.customize-control-wpb_repeater .wp-picker-container .wp-color-result.button {
+	margin: 0 6px 0 0;
 }

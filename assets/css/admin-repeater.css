@@ -23,6 +23,48 @@
 	margin-top: 12px;
 }
 
+.wpb-repeater__field > label {
+	display: block;
+	margin: 0 0 4px;
+	font-weight: 600;
+}
+
+.wpb-repeater__field textarea,
+.wpb-repeater__field input.regular-text,
+.wpb-repeater__field input.large-text,
+.wpb-repeater__field select {
+	display: block;
+	box-sizing: border-box;
+	width: 100%;
+	max-width: 100%;
+	margin: 0;
+}
+
+.wpb-repeater__field textarea {
+	min-height: 80px;
+	padding: 8px 12px;
+	line-height: 1.5;
+}
+
+.wpb-repeater__field textarea.code {
+	font-family: Menlo, Consolas, Monaco, monospace;
+	font-size: 12px;
+	line-height: 1.6;
+}
+
+.wpb-repeater__field .description {
+	margin: 4px 0 0;
+}
+
+.wpb-repeater__field .wp-picker-container {
+	display: block;
+	line-height: 1;
+}
+
+.wpb-repeater__field .wp-picker-container .wp-color-result.button {
+	margin: 0 6px 0 0;
+}
+
 .wpb-repeater__label {
 	margin: 0 0 8px;
 }
