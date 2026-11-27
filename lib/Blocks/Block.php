@@ -728,6 +728,27 @@ class Block
     }
 
     /**
+     * Adds a multiline attribute that keeps the HTML allowed in post content.
+     *
+     * @param string $name    Attribute name.
+     * @param string $label   Inspector label.
+     * @param string $default Default value.
+     *
+     * @return static
+     *
+     * @see https://developer.wordpress.org/reference/functions/wp_kses_post/
+     */
+    public function addHtmlAttribute(string $name, string $label, string $default = ''): static
+    {
+        return $this->attribute($name, [
+            'type'    => 'string',
+            'default' => $default,
+            'label'   => $label,
+            'control' => 'html',
+        ]);
+    }
+
+    /**
      * Adds a color attribute. The saved value is a hex color.
      *
      * @param string $name    Attribute name.

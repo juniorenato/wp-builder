@@ -269,6 +269,23 @@ class Repeater
     }
 
     /**
+     * Adds a multiline field that keeps the HTML allowed in post content.
+     *
+     * @param string $name        Field name.
+     * @param string $label       Field label.
+     * @param string $description Help text under the field.
+     * @param string $default     Value used for a new row.
+     *
+     * @return static
+     *
+     * @see https://developer.wordpress.org/reference/functions/wp_kses_post/
+     */
+    public function addHtmlField(string $name, string $label, string $description = '', string $default = ''): static
+    {
+        return $this->addScalar('html', $name, $label, $description, $default);
+    }
+
+    /**
      * Adds a numeric field.
      *
      * @param string    $name        Field name.
@@ -409,7 +426,7 @@ class Repeater
         unset($name, $label, $editorSettings, $description, $attrs);
 
         Notices::error(sprintf(
-            'Repeater "%s" cannot contain a rich text field. Use a textarea.',
+            'Repeater "%s" cannot contain a rich text field. Use a textarea or an HTML field.',
             $this->name === '' ? 'repeater' : $this->name
         ));
 
@@ -789,6 +806,7 @@ class Repeater
 
         return match ($type) {
             'textarea' => self::text($value, true),
+            'html' => self::html($value),
             'number' => self::number($value, $field['default'] ?? 0),
             'checkbox' => self::boolean($value),
             'select', 'radio' => self::choice($value, $field),
@@ -826,6 +844,26 @@ class Repeater
         }
 
         return trim($text);
+    }
+
+    /**
+     * Keeps the HTML allowed in post content.
+     *
+     * @param mixed $value Submitted markup.
+     *
+     * @return string Sanitized markup.
+     *
+     * @see https://developer.wordpress.org/reference/functions/wp_kses_post/
+     */
+    private static function html(mixed $value): string
+    {
+        $text = is_scalar($value) ? (string) $value : '';
+
+        if (function_exists('wp_kses_post')) {
+            return wp_kses_post($text);
+        }
+
+        return trim(strip_tags($text));
     }
 
     /**

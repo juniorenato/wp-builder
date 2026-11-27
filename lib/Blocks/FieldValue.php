@@ -80,6 +80,9 @@ class FieldValue
             case 'textarea':
                 return self::normalizeTextarea($value, $field['default'] ?? '');
 
+            case 'html':
+                return self::normalizeHtml($value, $field['default'] ?? '');
+
             case 'color':
                 return self::normalizeColor($value, $field['default'] ?? '');
 
@@ -343,6 +346,29 @@ class FieldValue
     }
 
     /**
+     * Keeps the HTML allowed in post content.
+     *
+     * @param mixed $value   Submitted markup.
+     * @param mixed $default Fallback markup.
+     *
+     * @see https://developer.wordpress.org/reference/functions/wp_kses_post/
+     */
+    private static function normalizeHtml(mixed $value, mixed $default): string
+    {
+        if (!is_scalar($value)) {
+            $value = $default;
+        }
+
+        $text = is_scalar($value) ? (string) $value : '';
+
+        if (function_exists('wp_kses_post')) {
+            return wp_kses_post($text);
+        }
+
+        return trim(strip_tags($text));
+    }
+
+    /**
      * Keeps a hex color, or the default when the value is not a color.
      *
      * @param mixed $value   Submitted color.
@@ -459,6 +485,7 @@ class FieldValue
                 ];
 
             case 'textarea':
+            case 'html':
             case 'color':
                 return ['type' => 'string'];
 

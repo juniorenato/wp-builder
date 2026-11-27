@@ -138,6 +138,7 @@ wp-builder/
             ├── description.php
             ├── file.php
             ├── hidden.php
+            ├── html.php
             ├── image.php
             ├── label.php
             ├── number.php
@@ -475,7 +476,7 @@ $theme->section('contact', 'Contact')
 $theme->register();
 ```
 
-A checkbox stores a boolean. A color stores a hex value. Select and radio only keep a value that belongs to their choices.
+A checkbox stores a boolean. A color stores a hex value. Select and radio only keep a value that belongs to their choices. `addHtmlField()` stores the HTML allowed in post content. Print that value with `wp_kses_post()`. The same method works inside a Customizer repeater.
 
 Group several sections under one item with a panel. A section without a panel stays at the root:
 
@@ -577,6 +578,7 @@ Values are stored as options. Read them with `get_option('company_name')`.
 | --- | --- |
 | `addTextField($name, $label, $description = '', $class = '', $attrs = [])` | Text |
 | `addTextareaField($name, $label, $description = '', $class = '', $attrs = [])` | Textarea |
+| `addHtmlField($name, $label, $description = '', $class = '', $attrs = [])` | HTML textarea |
 | `addNumberField($name, $label, $description = '', $class = '', $attrs = [])` | Number |
 | `addSelectField($name, $label, $options, $multiple = false, ...)` | Select |
 | `addRadioField($name, $label, $options, ...)` | Radio |
@@ -630,7 +632,7 @@ get_post_meta($post_id, 'authors', true);
 
 A taxonomy reads that list with `get_term_meta()`. An admin page reads it with `get_option()`.
 
-Nested repeaters use the same call. Inside a repeater, the scalar types are text, textarea, number, select, radio, checkbox, image, and file. Rich text stays on the parent form, because `wp_editor()` cannot be cloned into a new row.
+Nested repeaters use the same call. Inside a repeater, the scalar types are text, textarea, html, number, select, radio, checkbox, image, and file. `addHtmlField()` keeps the tags allowed in post content. Rich text stays on the parent form, because `wp_editor()` cannot be cloned into a new row.
 
 `min()` shows empty rows until the form reaches that count. Saving fewer rows is allowed; the next edit screen fills the gap. `max()` disables Add and discards extra submitted rows. `max(0)` has no ceiling.
 
@@ -825,7 +827,7 @@ get_post_meta($post_id, 'my-theme_team', true);
 
 The stored value and the `render()` callback keep that ID. The theme template and `data-wpb-props` replace the field in place with `{id, url, alt, width, height, srcset}` at size `large`. `0`, or an attachment with no URL, becomes `null`.
 
-Item fields: `addStringAttribute`, `addIntegerAttribute`, `addBooleanAttribute`, `addEnumAttribute`, `addImageAttribute`. A true boolean adds `wpb-repeater__item--{name}` to the item. Field names must be unique among siblings.
+Item fields: `addStringAttribute`, `addNumberAttribute`, `addIntegerAttribute`, `addBooleanAttribute`, `addEnumAttribute`, `addTextareaAttribute`, `addHtmlAttribute`, `addColorAttribute`, `addRadioAttribute`, `addFileAttribute`, `addImageAttribute`. `addHtmlAttribute()` keeps the tags allowed in post content. A true boolean adds `wpb-repeater__item--{name}` to the item. Field names must be unique among siblings.
 
 `saveAsContent()` keeps the same array in the block comment:
 
@@ -866,7 +868,7 @@ Blocks registered through `WPB\Blocks\Block` are not passed through this replace
 
 ### Block limits
 
-Content-mode inspector controls are generated for `string`, `integer`, `number`, `boolean`, and `string` plus `enum`. Meta-mode controls, repeaters, and image fields are drawn by the shared editor script. There are no inner blocks, no static `save`, and no textarea or rich-text fields.
+Content-mode inspector controls are generated for `string`, `integer`, `number`, `boolean`, and `string` plus `enum`. Meta-mode fields and repeater fields, including textarea and HTML, are drawn by the shared editor script. `addHtmlAttribute()` keeps the tags allowed in post content. There are no inner blocks and no static `save`.
 
 Attribute names reserved by block supports are rejected: `style`, `className`, `align`, `anchor`, `textColor`, `backgroundColor`, `fontSize`, `fontFamily`.
 
