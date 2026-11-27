@@ -30,6 +30,7 @@ trait AdminForm
         'hidden',
         'text',
         'textarea',
+        'html',
         'rich-text',
         'number',
         'select',
@@ -403,6 +404,44 @@ trait AdminForm
         $attributes = array_merge($attributes, $attrs);
 
         return $this->defineFormField('textarea', $name, $label, $attributes, [], $description);
+    }
+
+    /**
+     * Adds a multiline field that keeps the HTML allowed in post content.
+     *
+     * @param string               $name        Field name.
+     * @param string               $label       Field label.
+     * @param string               $description Field description.
+     * @param string               $class       Extra CSS classes.
+     * @param array<string, mixed> $attrs       Extra HTML attributes.
+     *
+     * @see https://developer.wordpress.org/reference/functions/wp_kses_post/
+     */
+    public function addHtmlField(string $name, string $label, string $description = '', string $class = '', array $attrs = []): void
+    {
+        $this->registerDefinedField($this->defineHtmlField($name, $label, $description, $class, $attrs));
+    }
+
+    /**
+     * Builds an HTML field configuration.
+     *
+     * @param string               $name        Field name.
+     * @param string               $label       Field label.
+     * @param string               $description Field description.
+     * @param string               $class       Extra CSS classes.
+     * @param array<string, mixed> $attrs       Extra HTML attributes.
+     *
+     * @return array<string, mixed> Field configuration.
+     *
+     * @see https://developer.wordpress.org/reference/functions/wp_kses_post/
+     */
+    public function defineHtmlField(string $name, string $label, string $description = '', string $class = '', array $attrs = []): array
+    {
+        $class = $this->adminFieldClass('large-text', $class);
+        $attributes['class'] = trim($class);
+        $attributes = array_merge($attributes, $attrs);
+
+        return $this->defineFormField('html', $name, $label, $attributes, [], $description);
     }
 
     /**
@@ -1085,6 +1124,7 @@ trait AdminForm
             case 'textarea':
                 return sanitize_textarea_field((string) $value);
 
+            case 'html':
             case 'rich-text':
                 return wp_kses_post((string) $value);
 

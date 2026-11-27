@@ -491,6 +491,11 @@ class Customizer
 
                 return function_exists('sanitize_textarea_field') ? sanitize_textarea_field($text) : $text;
             },
+            'html' => static function (mixed $value): string {
+                $text = is_scalar($value) ? (string) $value : '';
+
+                return function_exists('wp_kses_post') ? wp_kses_post($text) : trim(strip_tags($text));
+            },
             'number' => static function (mixed $value) use ($default): int|float {
                 if (!is_numeric($value)) {
                     return $default;
@@ -564,7 +569,7 @@ class Customizer
             return;
         }
 
-        $args['type'] = $field['type'];
+        $args['type'] = $field['type'] === 'html' ? 'textarea' : $field['type'];
 
         if ($field['type'] === 'select' || $field['type'] === 'radio') {
             $args['choices'] = $field['choices'];

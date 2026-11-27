@@ -320,6 +320,29 @@ class Repeater
     }
 
     /**
+     * Adds a multiline field that keeps the HTML allowed in post content.
+     *
+     * @param string $name    Field name.
+     * @param string $label   Field label.
+     * @param string $default Default value.
+     *
+     * @return static
+     *
+     * An unusable name is ignored and reported in the WordPress admin.
+     *
+     * @see https://developer.wordpress.org/reference/functions/wp_kses_post/
+     */
+    public function addHtmlAttribute(string $name, string $label, string $default = ''): static
+    {
+        return $this->addScalar($name, [
+            'name'    => $name,
+            'type'    => 'html',
+            'label'   => $label,
+            'default' => $default,
+        ]);
+    }
+
+    /**
      * Adds a color field. The saved value is a hex color.
      *
      * @param string $name    Field name.

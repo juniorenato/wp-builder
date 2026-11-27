@@ -225,6 +225,31 @@ class Repeater
     }
 
     /**
+     * Adds a multiline field that keeps the HTML allowed in post content.
+     *
+     * @param string               $name        Field name.
+     * @param string               $label       Field label.
+     * @param string               $description Field description.
+     * @param string               $class       Extra CSS classes.
+     * @param array<string, mixed> $attrs       Extra HTML attributes.
+     *
+     * @return static
+     *
+     * @throws InvalidArgumentException If the name is already used at this level.
+     *
+     * @see https://developer.wordpress.org/reference/functions/wp_kses_post/
+     */
+    public function addHtmlField(
+        string $name,
+        string $label,
+        string $description = '',
+        string $class = '',
+        array $attrs = []
+    ): static {
+        return $this->addScalar($this->owner->defineHtmlField($name, $label, $description, $class, $attrs));
+    }
+
+    /**
      * Adds a number field.
      *
      * @param string               $name        Field name.
@@ -459,7 +484,7 @@ class Repeater
         unset($name, $label, $editorSettings, $description, $attrs);
 
         throw new InvalidArgumentException(sprintf(
-            'Repeater "%s" cannot contain a rich text field. Use a textarea.',
+            'Repeater "%s" cannot contain a rich text field. Use a textarea or an HTML field.',
             $this->name
         ));
     }

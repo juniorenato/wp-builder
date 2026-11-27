@@ -105,7 +105,7 @@
                 return null;
             }
 
-            if (field.type === 'textarea') {
+            if (field.type === 'textarea' || field.type === 'html') {
                 return el('textarea', {
                     className: className + ' components-textarea-control__input',
                     rows: 4,

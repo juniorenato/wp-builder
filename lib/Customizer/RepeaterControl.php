@@ -159,7 +159,7 @@ class RepeaterControl extends \WP_Customize_Control
             ? ' aria-describedby="' . esc_attr($inputName . '-description') . '"'
             : '';
 
-        if ($type === 'textarea') {
+        if ($type === 'textarea' || $type === 'html') {
             echo '<textarea name="' . esc_attr($inputName) . '" id="' . esc_attr($inputId) . '"' . $described . '>';
             echo esc_textarea(is_scalar($value) ? (string) $value : '');
             echo '</textarea>';
